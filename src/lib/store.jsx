@@ -1,9 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { supabase } from './supabase';
 import { today, addDays } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 
-// Por enquanto os dados ficam no navegador (localStorage).
-// Quando o Supabase estiver ligado, o mesmo estado é sincronizado na nuvem.
+// Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
+// Tudo é salvo como um único documento por usuária, sincronizado entre PC e iPhone.
 
 const KEY = 'central-laura:v1';
 const uid = () => crypto.randomUUID().slice(0, 8);
@@ -33,9 +34,13 @@ function load() {
 
 const Ctx = createContext(null);
 
-export function StoreProvider({ children }) {
+export function StoreProvider({ user, children }) {
   const [state, setState] = useState(load);
+  const [sync, setSync] = useState('loading'); // loading | ok | saving | offline
+  const ready = useRef(false);
+  const lastJson = useRef(null); // o que a nuvem tem: evita salvar de volta o que acabou de chegar
 
+  // Cópia local: abre rápido e funciona sem internet.
   useEffect(() => {
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
@@ -43,6 +48,63 @@ export function StoreProvider({ children }) {
       /* ignora */
     }
   }, [state]);
+
+  // Ao entrar: puxa da nuvem. Se a nuvem estiver vazia, sobe o que está aqui.
+  useEffect(() => {
+    let alive = true;
+    const pull = async () => {
+      const { data, error } = await supabase.from('central_state').select('data').eq('user_id', user.id).maybeSingle();
+      if (!alive) return;
+      if (error) return setSync('offline');
+      if (data) {
+        lastJson.current = JSON.stringify(data.data);
+        setState(data.data);
+      } else {
+        await supabase.from('central_state').upsert({ user_id: user.id, data: state, updated_at: new Date().toISOString() });
+        lastJson.current = JSON.stringify(state);
+      }
+      ready.current = true;
+      setSync('ok');
+    };
+    pull();
+
+    // Outro aparelho mudou algo: atualiza aqui na hora.
+    const ch = supabase
+      .channel('central')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'central_state', filter: `user_id=eq.${user.id}` }, (p) => {
+        const json = JSON.stringify(p.new?.data);
+        if (p.new?.data && json !== lastJson.current) {
+          lastJson.current = json;
+          setState(p.new.data);
+        }
+      })
+      .subscribe();
+
+    // iPhone: ao voltar para o app, confere se tem novidade.
+    const onVis = () => document.visibilityState === 'visible' && ready.current && pull();
+    document.addEventListener('visibilitychange', onVis);
+    return () => {
+      alive = false;
+      supabase.removeChannel(ch);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id]);
+
+  // Cada mudança vai para a nuvem (agrupando cliques rápidos).
+  useEffect(() => {
+    if (!ready.current) return;
+    const json = JSON.stringify(state);
+    if (json === lastJson.current) return;
+    setSync('saving');
+    const t = setTimeout(async () => {
+      const { error } = await supabase.from('central_state').upsert({ user_id: user.id, data: state, updated_at: new Date().toISOString() });
+      if (error) return setSync('offline');
+      lastJson.current = json;
+      setSync('ok');
+    }, 700);
+    return () => clearTimeout(t);
+  }, [state, user.id]);
 
   const actions = useMemo(() => {
     const patchTask = (id, fn) => setState((s) => ({ ...s, tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...fn(t) } : t)) }));
@@ -109,7 +171,7 @@ export function StoreProvider({ children }) {
     };
   }, []);
 
-  return <Ctx.Provider value={{ state, ...actions }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ state, sync, user, ...actions }}>{children}</Ctx.Provider>;
 }
 
 export const useStore = () => useContext(Ctx);

@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from './lib/supabase';
+import Login from './pages/Login';
 import { StoreProvider, useStore } from './lib/store';
 import { buildOverdue } from './lib/engine';
 import Home from './pages/Home';
@@ -14,7 +16,7 @@ const TABS = [
 ];
 
 function Shell() {
-  const { state } = useStore();
+  const { state, sync, user } = useStore();
   const [tab, setTab] = useState('home');
   const Page = TABS.find((t) => t.id === tab).C;
   const late = buildOverdue(state, { area: 'all', who: 'all' }).length;
@@ -45,6 +47,8 @@ function Shell() {
           ))}
         </nav>
         <div className="mt-auto space-y-1.5 px-2 text-xs text-indigo-300">
+          <SyncDot sync={sync} />
+          <button onClick={() => supabase.auth.signOut()} title={user.email} className="mb-3 block text-indigo-400 hover:text-white">Sair</button>
           <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-400" />RANKEN</div>
           <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-sky-400" />Gralha Azul</div>
           <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-violet-400" />Pessoal</div>
@@ -52,6 +56,7 @@ function Shell() {
       </aside>
 
       <main className="mx-auto w-full max-w-5xl px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12">
+        <div className="mb-3 flex justify-end sm:hidden"><SyncDot sync={sync} dark /></div>
         <Page />
       </main>
 
@@ -68,9 +73,36 @@ function Shell() {
   );
 }
 
-export default function App() {
+const SYNC = {
+  loading: ['bg-slate-400', 'carregando…'],
+  saving: ['bg-amber-400', 'salvando…'],
+  ok: ['bg-emerald-400', 'salvo na nuvem'],
+  offline: ['bg-red-400', 'sem conexão: salvo só aqui'],
+};
+
+function SyncDot({ sync, dark }) {
+  const [cls, label] = SYNC[sync];
   return (
-    <StoreProvider>
+    <div className={`flex items-center gap-2 ${dark ? 'text-[11px] text-slate-400' : 'pb-2'}`}>
+      <span className={`h-2 w-2 rounded-full ${cls}`} />
+      {label}
+    </div>
+  );
+}
+
+export default function App() {
+  const [session, setSession] = useState(undefined);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  if (session === undefined) return <div className="min-h-screen bg-ink" />;
+  if (!session) return <Login />;
+  return (
+    <StoreProvider key={session.user.id} user={session.user}>
       <Shell />
     </StoreProvider>
   );
