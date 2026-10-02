@@ -167,14 +167,19 @@ export function projectProgress(state, pid) {
   return { total: ts.length, done, pct: ts.length ? Math.round((done / ts.length) * 100) : 0, next: ts.filter((t) => !t.done).sort((a, b) => a.due.localeCompare(b.due))[0] };
 }
 
-// Textos das notificações dos próximos 14 dias (o Supabase só lê e envia no horário).
-// manha 9h · tarde 13h30 (só se houver urgente/atrasado) · noite 18h (o que falta + amanhã)
+// Horários padrão das notificações (a Laura muda em Rotinas → Notificações)
+export const HORARIOS_PADRAO = { manha: '09:00', tarde: '13:30', noite: '18:00' };
+
+// Textos das notificações dos próximos 14 dias + os horários escolhidos.
+// O Supabase olha o relógio a cada 15 min e envia cada aviso no horário da Laura.
+// manha: resumo do dia · tarde: só se houver urgente/atrasado · noite: o que falta + amanhã
 export function buildAgenda(state, ref = today()) {
   const all = { area: 'all', who: 'all' };
   const cfg = { manha: true, tarde: true, noite: true, ...(state.notif || {}) };
+  const horarios = { ...HORARIOS_PADRAO, ...(cfg.horarios || {}) };
   const corta = (s, n = 60) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
   const lista = (xs, n = 3) => xs.slice(0, n).map((x) => `• ${corta(x.title)}`).join('\n');
-  const agenda = {};
+  const agenda = { horarios };
 
   for (let i = 0; i < 14; i++) {
     const date = addDays(ref, i);

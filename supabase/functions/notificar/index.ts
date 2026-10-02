@@ -20,7 +20,14 @@ webpush.setVapidDetails('mailto:contato@thbsistemas.com.br', env('VAPID_PUBLIC_K
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
 // Data de hoje no horário de Brasília (UTC-3, sem horário de verão)
-const hojeBR = () => new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 10);
+const agoraBR = () => new Date(Date.now() - 3 * 3600_000).toISOString(); // Brasília (UTC-3)
+const hojeBR = () => agoraBR().slice(0, 10);
+// Hora atual arredondada para o quarto de hora: "09:07" -> "09:00"
+const quartoBR = () => {
+  const hm = agoraBR().slice(11, 16);
+  return `${hm.slice(0, 3)}${String(Math.floor(Number(hm.slice(3)) / 15) * 15).padStart(2, '0')}`;
+};
+const PADRAO: Record<string, string> = { manha: '09:00', tarde: '13:30', noite: '18:00' };
 
 async function enviar(userId: string, payload: Record<string, unknown>) {
   const { data: subs } = await admin.from('push_subscriptions').select('*').eq('user_id', userId);
@@ -53,13 +60,18 @@ Deno.serve(async (req) => {
   // A senha do agendamento fica no próprio banco (tabela central_config, só o servidor lê)
   const { data: cfg } = await admin.from('central_config').select('valor').eq('chave', 'cron_secret').maybeSingle();
   if (!cfg?.valor || (req.headers.get('x-cron-secret') ?? '').trim() !== cfg.valor) return json({ erro: 'proibido' }, 403);
-  const slot = String(body.slot ?? '');
   const date = hojeBR();
+  const quarto = quartoBR();
   const { data: rows } = await admin.from('central_state').select('user_id, agenda');
   let total = 0;
   for (const r of rows ?? []) {
-    const msg = r.agenda?.[date]?.[slot];
-    if (msg) total += await enviar(r.user_id, { ...msg, tag: `${date}-${slot}` });
+    // auto: chamado a cada 15 min; manda os avisos cujo horário escolhido é agora
+    const horarios = { ...PADRAO, ...(r.agenda?.horarios ?? {}) };
+    const slots = body.auto ? Object.keys(PADRAO).filter((s) => horarios[s] === quarto) : [String(body.slot ?? '')];
+    for (const slot of slots) {
+      const msg = r.agenda?.[date]?.[slot];
+      if (msg) total += await enviar(r.user_id, { ...msg, tag: `${date}-${slot}` });
+    }
   }
-  return json({ slot, date, total });
+  return json({ date, quarto, total });
 });

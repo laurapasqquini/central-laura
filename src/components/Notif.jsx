@@ -1,12 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { pushSupported, isIOS, isInstalled, currentSubscription, enablePush, disablePush, sendTest } from '../lib/push';
+import { HORARIOS_PADRAO } from '../lib/engine';
 
 const SLOTS = [
-  ['manha', '☀️ 9h', 'Resumo do dia (quando você chega)'],
-  ['tarde', '⏰ 13h30', 'Só se tiver urgente ou atrasado'],
-  ['noite', '🌙 18h', 'O que falta de hoje + amanhã'],
+  ['manha', '☀️ Resumo do dia', 'tarefas, urgentes, atrasadas e 📌'],
+  ['tarde', '⏰ Pendências', 'só se tiver urgente ou atrasado'],
+  ['noite', '🌙 Fechamento', 'o que falta de hoje + amanhã'],
 ];
+
+// 06:00 até 22:45, de 15 em 15 minutos
+const HORAS = Array.from({ length: 68 }, (_, i) => {
+  const m = 6 * 60 + i * 15;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+});
+const rotulo = (h) => (h.endsWith(':00') ? `${Number(h.slice(0, 2))}h` : `${Number(h.slice(0, 2))}h${h.slice(3)}`);
 
 // Estado deste aparelho: 'carregando' | 'sem-suporte' | 'instalar' | 'bloqueado' | 'desligado' | 'ligado'
 function useDeviceState() {
@@ -29,6 +37,7 @@ export function NotifCard() {
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
   const cfg = { manha: true, tarde: true, noite: true, ...(state.notif || {}) };
+  const horarios = { ...HORARIOS_PADRAO, ...(cfg.horarios || {}) };
 
   const run = async (fn, ok) => {
     setBusy(true);
@@ -90,14 +99,28 @@ export function NotifCard() {
       {msg && <p className="text-sm font-medium text-slate-600">{msg}</p>}
 
       <div className="space-y-2 border-t border-slate-100 pt-3">
-        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Horários (valem para todos os aparelhos)</div>
-        {SLOTS.map(([k, hora, desc]) => (
-          <label key={k} className="flex items-center justify-between gap-3">
-            <span className="text-sm">
-              <b className="text-slate-800">{hora}</b> <span className="text-slate-500">· {desc}</span>
-            </span>
-            <input type="checkbox" checked={cfg[k]} onChange={(e) => setNotif({ [k]: e.target.checked })} className="h-5 w-5 accent-emerald-600" />
-          </label>
+        <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quando avisar (vale para todos os aparelhos)</div>
+        {SLOTS.map(([k, nome, desc]) => (
+          <div key={k} className={`flex items-center justify-between gap-3 ${cfg[k] ? '' : 'opacity-50'}`}>
+            <label className="flex min-w-0 items-center gap-2.5">
+              <input type="checkbox" checked={cfg[k]} onChange={(e) => setNotif({ [k]: e.target.checked })} className="h-5 w-5 shrink-0 accent-emerald-600" />
+              <span className="text-sm">
+                <b className="text-slate-800">{nome}</b> <span className="text-slate-500">· {desc}</span>
+              </span>
+            </label>
+            <select
+              value={horarios[k]}
+              disabled={!cfg[k]}
+              onChange={(e) => setNotif({ horarios: { [k]: e.target.value } })}
+              className="shrink-0 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm font-semibold text-slate-700"
+            >
+              {HORAS.map((h) => (
+                <option key={h} value={h}>
+                  {rotulo(h)}
+                </option>
+              ))}
+            </select>
+          </div>
         ))}
       </div>
     </div>

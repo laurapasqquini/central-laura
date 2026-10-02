@@ -361,7 +361,11 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
-      setNotif: (patch) => setState((s) => ({ ...s, notif: { manha: true, tarde: true, noite: true, ...(s.notif || {}), ...patch } })),
+      setNotif: (patch) =>
+        setState((s) => {
+          const atual = { manha: true, tarde: true, noite: true, ...(s.notif || {}) };
+          return { ...s, notif: { ...atual, ...patch, horarios: { ...(atual.horarios || {}), ...(patch.horarios || {}) } } };
+        }),
       replaceAll: (next) => setState(next),
     };
   }, []);
