@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue } from '../lib/engine';
+import { buildDay, buildOverdue, noDate } from '../lib/engine';
 import { today, addDays, fmtCurto, relativo } from '../lib/dates';
 import { ItemRow, Section, Empty, TaskModal } from '../components/ui';
 
@@ -12,6 +12,7 @@ export default function Lolis() {
   const ref = today();
   const late = buildOverdue(state, f, ref);
   const hoje = buildDay(state, ref, f).filter((x) => x.kind !== 'marco');
+  const semData = noDate(state, f);
   const semana = Array.from({ length: 6 }, (_, i) => addDays(ref, i + 1)).flatMap((d) => buildDay(state, d, f).filter((x) => x.kind === 'task'));
 
   // Texto pronto para mandar no WhatsApp da Lolis
@@ -21,6 +22,8 @@ export default function Lolis() {
     ...hoje.filter((x) => !x.done).map((x) => `• ${x.title}`),
     semana.length ? `\nPróximos dias:` : '',
     ...semana.map((x) => `• ${fmtCurto(x.date)}: ${x.title}`),
+    semData.length ? `\nEm andamento:` : '',
+    ...semData.map((x) => `• ${x.title}`),
     `\nQualquer dúvida me chama 💚`,
   ]
     .filter(Boolean)
@@ -59,6 +62,12 @@ export default function Lolis() {
       <Section title="Próximos dias" count={semana.length} tone="indigo">
         <div className="space-y-1.5">{semana.length ? semana.map((x) => <ItemRow key={x.key} item={x} showDate onEdit={setEditing} />) : <Empty>Sem tarefas avulsas nos próximos dias.</Empty>}</div>
       </Section>
+
+      {semData.length > 0 && (
+        <Section title="Em andamento (sem data)" count={semData.length}>
+          <div className="space-y-1.5">{semData.map((x) => <ItemRow key={x.key} item={x} onEdit={setEditing} />)}</div>
+        </Section>
+      )}
 
       {editing && <TaskModal id={editing} onClose={() => setEditing(null)} />}
     </div>

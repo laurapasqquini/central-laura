@@ -12,7 +12,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 2,
+    version: 3,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -23,30 +23,48 @@ function initial() {
 }
 
 // Ajustes que chegam com novas versões da Central e precisam valer para dados já salvos.
+const PIX = 'Cobrar mensalidades Pix de hoje e as atrasadas';
+const PIX_LOLIS = 'Mandar a 1ª mensagem de cobrança Pix (vencimentos do dia)';
+const MAPEAMENTO = 'Mapeamento de quadras de tênis no Brasil (em andamento)';
+
 function migrate(s) {
-  if (!s || (s.version || 1) >= 2) return s;
+  if (!s) return s;
   const hoje = today();
-  const routines = s.routines.map((r) => {
-    if (r.title === 'Cobrar mensalidades Pix de hoje e as atrasadas') return { ...r, title: 'Cobrar o Pix de quem não pagou após a 1ª mensagem' };
-    if (r.title === 'Conferir novas inscrições e mandar boas-vindas') return { ...r, who: 'lolis' };
-    return r;
-  });
   const nova = (title, who, freq, extra) => ({ id: uid(), title, area: 'ranken', who, freq, active: true, createdAt: hoje, ...extra });
-  routines.push(
-    nova('Mandar a 1ª mensagem de cobrança Pix (vencimentos do dia)', 'lolis', 'daily'),
-    nova('Conferência da semana com a Lolis (15 min)', 'laura', 'weekly', { weekday: 5 })
-  );
-  const tarefa = (title, due) => ({ id: uid(), title, area: 'ranken', who: 'laura', due, urgent: false, done: false, createdAt: hoje, postponed: 0, notes: '' });
-  return {
-    ...s,
-    version: 2,
-    routines,
-    tasks: [
-      tarefa('Escrever as mensagens padrão da Lolis (Pix, boas-vindas, 6x0, brindes, pendências, licenciamento)', nextWorkday(hoje)),
-      tarefa('Confirmar os acessos da Lolis: Hub, grupos do WhatsApp e Instagram', nextWorkday(hoje)),
-      ...s.tasks,
-    ],
-  };
+  const tarefa = (title, due, who = 'laura') => ({ id: uid(), title, area: 'ranken', who, due, urgent: false, done: false, createdAt: hoje, postponed: 0, notes: '' });
+
+  // v2: boas-vindas passa para a Lolis, conferência semanal e preparação da delegação
+  if ((s.version || 1) < 2) {
+    s = {
+      ...s,
+      version: 2,
+      routines: [
+        ...s.routines.map((r) => (r.title === 'Conferir novas inscrições e mandar boas-vindas' ? { ...r, who: 'lolis' } : r)),
+        nova('Conferência da semana com a Lolis (15 min)', 'laura', 'weekly', { weekday: 5 }),
+      ],
+      tasks: [
+        tarefa('Escrever as mensagens padrão da Lolis (boas-vindas, 6x0, brindes, pendências, licenciamento)', nextWorkday(hoje)),
+        tarefa('Confirmar os acessos da Lolis: Hub, grupos do WhatsApp e Instagram', nextWorkday(hoje)),
+        ...s.tasks,
+      ],
+    };
+  }
+
+  // v3: Pix fica só com a Laura (sai do número da empresa dela); mapeamento de quadras com a Lolis
+  if (s.version < 3) {
+    s = {
+      ...s,
+      version: 3,
+      routines: s.routines
+        .filter((r) => r.title !== PIX_LOLIS)
+        .map((r) => (r.title === 'Cobrar o Pix de quem não pagou após a 1ª mensagem' ? { ...r, title: PIX, who: 'laura' } : r)),
+      tasks: [
+        ...(s.tasks.some((t) => t.title === MAPEAMENTO) ? [] : [tarefa(MAPEAMENTO, null, 'lolis')]),
+        ...s.tasks.map((t) => (t.title.startsWith('Escrever as mensagens padrão da Lolis (Pix, ') ? { ...t, title: t.title.replace('(Pix, ', '(') } : t)),
+      ],
+    };
+  }
+  return s;
 }
 
 function load() {

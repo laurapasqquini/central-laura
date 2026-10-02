@@ -11,8 +11,7 @@ export const seedRoutines = () => [
   r('Responder o WhatsApp da RANKEN', 'laura', 'daily'),
   r('Publicar o sorteio diário no grupo do WhatsApp', 'lolis', 'daily'),
   r('Postar o sorteio diário no Instagram', 'lolis', 'daily'),
-  r('Mandar a 1ª mensagem de cobrança Pix (vencimentos do dia)', 'lolis', 'daily'),
-  r('Cobrar o Pix de quem não pagou após a 1ª mensagem', 'laura', 'daily'),
+  r('Cobrar mensalidades Pix de hoje e as atrasadas', 'laura', 'daily'),
   r('Conferir 6x0 6x0 novos e avisar os ganhadores', 'lolis', 'daily'),
   r('Conferir novas inscrições e mandar boas-vindas', 'lolis', 'daily'),
   r('Zerar os atrasados do Hub antes de encerrar o dia', 'laura', 'daily'),
@@ -131,6 +130,7 @@ export const seedTasks = (hoje) => [
   { id: id('t'), title: 'Revisar o Checklist RANKEN e mandar pro chefe', area: 'ranken', who: 'laura', due: hoje, urgent: true },
   { id: id('t'), title: 'Cobrar as 5 mensalidades Pix atrasadas', area: 'ranken', who: 'laura', due: hoje, urgent: true },
   { id: id('t'), title: 'Decidir data e local da confraternização (anúncio até 04/11)', area: 'ranken', who: 'laura', due: '2026-10-09', urgent: false },
+  { id: id('t'), title: 'Mapeamento de quadras de tênis no Brasil (em andamento)', area: 'ranken', who: 'lolis', due: null },
   { id: id('t'), title: 'Definir data de início do Padel', area: 'ranken', who: 'laura', due: '2026-10-16' },
   { id: id('t'), title: 'Mandar a planilha de preços da Gralha pra Central', area: 'gralha', who: 'laura', due: '2026-10-06' },
 ];
