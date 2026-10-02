@@ -134,6 +134,19 @@ export function suggestions(state, ref = today()) {
     if (d >= 0 && d <= 35 && /prazo|anunciar|último/i.test(m.title)) out.push({ tone: d <= 10 ? 'red' : 'sky', icon: '📅', text: d === 0 ? `${m.title}: é hoje!` : `${m.title}: faltam ${d} dias (${fmtCurto(m.date)}).` });
   }
 
+  // Prazos do calendário das etapas (último dia de encaixes, fim de etapa)
+  for (let d = 0; d <= 21; d++) {
+    const date = addDays(ref, d);
+    for (const m of marcosDoDia(date).filter((x) => /^cal:[ef]:/.test(x.key))) {
+      out.push({ tone: d <= 7 ? 'red' : 'sky', icon: '📅', text: d === 0 ? `${m.title}: é hoje!` : `${m.title}: faltam ${d} dias (${fmtCurto(date)}).` });
+    }
+  }
+
+  // Confraternização: o regulamento exige anunciar 30 dias antes, com os valores
+  if (!state.projects.some((p) => p.templateId === 'confra')) {
+    out.push({ tone: 'amber', icon: '🎉', text: 'A confraternização ainda não tem data. As etapas terminam em 13/12 e 20/12, e o anúncio precisa sair 30 dias antes da festa. Crie o projeto em Projetos → Confraternização.' });
+  }
+
   for (const p of state.projects) {
     const pts = state.tasks.filter((t) => t.projectId === p.id);
     const late = pts.filter((t) => !t.done && t.due < ref).length;

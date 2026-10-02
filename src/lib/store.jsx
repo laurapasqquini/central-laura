@@ -12,7 +12,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 9,
+    version: 10,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -131,6 +131,19 @@ function migrate(s) {
   // v9: "melhores da rodada" agora sai do calendário; a postagem semanal antiga fica desligada
   if (s.version < 9) {
     s = { ...s, version: 9, routines: s.routines.map((r) => (r.title === 'Postagem da semana: destaques, ganhadores, ranking' ? { ...r, active: false } : r)) };
+  }
+
+  // v10: Londrina vem do calendário oficial; prazo da confra (04/11) era do PDF e estava errado
+  if (s.version < 10) {
+    const velhos = ['Sorteio Londrina (7ª) às 20h', 'Último dia de encaixes em Londrina', 'Fim do ciclo 02 em Londrina', 'Prazo para anunciar a confraternização'];
+    s = {
+      ...s,
+      version: 10,
+      marcos: s.marcos.filter((m) => !velhos.includes(m.title)),
+      tasks: s.tasks.map((x) =>
+        x.title === 'Decidir data e local da confraternização (anúncio até 04/11)' ? { ...x, title: 'Decidir data e local da confraternização (anunciar 30 dias antes, com valores)' } : x
+      ),
+    };
   }
   return s;
 }

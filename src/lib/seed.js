@@ -138,7 +138,7 @@ export const TEMPLATES = [
 export const seedTasks = (hoje) => [
   { id: id('t'), title: 'Revisar o Checklist RANKEN e mandar pro chefe', area: 'ranken', who: 'laura', due: hoje, urgent: true },
   { id: id('t'), title: 'Cobrar as 5 mensalidades Pix atrasadas', area: 'ranken', who: 'laura', due: hoje, urgent: true },
-  { id: id('t'), title: 'Decidir data e local da confraternização (anúncio até 04/11)', area: 'ranken', who: 'laura', due: '2026-10-09', urgent: false },
+  { id: id('t'), title: 'Decidir data e local da confraternização (anunciar 30 dias antes, com valores)', area: 'ranken', who: 'laura', due: '2026-10-09', urgent: false },
   { id: id('t'), title: 'Mapeamento de quadras de tênis no Brasil (em andamento)', area: 'ranken', who: 'lolis', due: null },
   { id: id('t'), title: 'Definir data de início do Padel', area: 'ranken', who: 'laura', due: '2026-10-16' },
   { id: id('t'), title: 'Mandar a planilha de preços da Gralha pra Central', area: 'gralha', who: 'laura', due: '2026-10-06' },
@@ -146,8 +146,4 @@ export const seedTasks = (hoje) => [
 
 // Datas que não são tarefa, mas precisam aparecer (marcos).
 export const seedMarcos = () => [
-  { id: id('m'), title: 'Sorteio Londrina (7ª) às 20h', date: '2026-10-11', area: 'ranken' },
-  { id: id('m'), title: 'Prazo para anunciar a confraternização', date: '2026-11-04', area: 'ranken' },
-  { id: id('m'), title: 'Último dia de encaixes em Londrina', date: '2026-11-22', area: 'ranken' },
-  { id: id('m'), title: 'Fim do ciclo 02 em Londrina', date: '2026-12-04', area: 'ranken' },
 ];

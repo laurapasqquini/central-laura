@@ -61,6 +61,24 @@ export const CALENDARIOS = [
     ],
   },
   {
+    id: 'lda-tenis-simples-masc',
+    cidade: 'Londrina',
+    nome: 'Tênis Simples Masculino',
+    curto: 'Simples Masc',
+    esporte: 'tenis',
+    etapa: 'atual',
+    retaFinal: 8,
+    rodadas: [
+      r(4, '2026-09-13', '2026-09-14', '2026-09-20'),
+      r(5, '2026-09-21', '2026-09-21', '2026-10-04', '11:48'),
+      r(6, '2026-10-04', '2026-10-05', '2026-10-18'),
+      r(7, '2026-10-18', '2026-10-19', '2026-11-01'),
+      r(8, '2026-11-01', '2026-11-02', '2026-11-15'),
+      r(9, '2026-11-15', '2026-11-16', '2026-11-29'),
+      r(10, '2026-11-29', '2026-11-30', '2026-12-20'),
+    ],
+  },
+  {
     id: 'mga-beach',
     cidade: 'Maringá',
     nome: 'Beach Tennis',
@@ -119,6 +137,10 @@ export function marcosDoDia(date) {
     const quem = list.map(({ c, rd }) => `${c.curto} R${rd.n}${c.retaFinal && rd.n >= c.retaFinal ? ' (reta final)' : ''}`).join(' · ');
     out.push({ key: `cal:s:${cidade}:${date}`, title: `Sorteio ${cidade} ${hora}: ${quem}`, area: 'ranken', date });
   }
+  // Regulamento: encaixes de jogos só até a 9ª rodada (etapas de 10 rodadas)
+  const encaixe = CALENDARIOS.filter((c) => c.rodadas.some((x) => x.n === 9 && x.fim === date));
+  if (encaixe.length)
+    out.push({ key: `cal:e:${date}`, title: `Último dia de encaixes: ${encaixe.map((c) => `${c.cidade} ${c.curto}`).join(' · ')}`, area: 'ranken', date });
   for (const c of CALENDARIOS) {
     if (fimEtapa(c) === date) out.push({ key: `cal:f:${c.id}`, title: `Fim da etapa ${c.etapa}: ${c.cidade} · ${c.nome}`, area: 'ranken', date });
   }
