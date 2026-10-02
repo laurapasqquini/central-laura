@@ -2,7 +2,7 @@
 // - Agendado (pg_cron): POST {"slot":"manha"|"tarde"|"noite"} com o cabeçalho x-cron-secret.
 //   Lê a coluna "agenda" de cada usuária (escrita pelo próprio app) e manda o texto do dia/horário.
 // - Teste pelo app: POST {"test":true} com o login da usuária (Authorization: Bearer <token>).
-// Segredos (Edge Functions > Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, CRON_SECRET.
+// Segredos (Edge Functions > Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY. A senha do agendamento fica na tabela central_config.
 import webpush from 'npm:web-push@3.6.7';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -50,7 +50,9 @@ Deno.serve(async (req) => {
     return json({ enviadas: n });
   }
 
-  if ((req.headers.get('x-cron-secret') ?? '').trim() !== env('CRON_SECRET')) return json({ erro: 'proibido' }, 403);
+  // A senha do agendamento fica no próprio banco (tabela central_config, só o servidor lê)
+  const { data: cfg } = await admin.from('central_config').select('valor').eq('chave', 'cron_secret').maybeSingle();
+  if (!cfg?.valor || (req.headers.get('x-cron-secret') ?? '').trim() !== cfg.valor) return json({ erro: 'proibido' }, 403);
   const slot = String(body.slot ?? '');
   const date = hojeBR();
   const { data: rows } = await admin.from('central_state').select('user_id, agenda');
