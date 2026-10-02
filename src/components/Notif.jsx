@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { pushSupported, isIOS, isInstalled, currentSubscription, enablePush, disablePush, sendTest } from '../lib/push';
 
 const SLOTS = [
-  ['manha', '☀️ 7h30', 'Resumo do dia'],
+  ['manha', '☀️ 9h', 'Resumo do dia (quando você chega)'],
   ['tarde', '⏰ 13h30', 'Só se tiver urgente ou atrasado'],
   ['noite', '🌙 18h', 'O que falta de hoje + amanhã'],
 ];

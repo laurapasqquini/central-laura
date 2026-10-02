@@ -168,7 +168,7 @@ export function projectProgress(state, pid) {
 }
 
 // Textos das notificações dos próximos 14 dias (o Supabase só lê e envia no horário).
-// manha 7h30 · tarde 13h30 (só se houver urgente/atrasado) · noite 18h (o que falta + amanhã)
+// manha 9h · tarde 13h30 (só se houver urgente/atrasado) · noite 18h (o que falta + amanhã)
 export function buildAgenda(state, ref = today()) {
   const all = { area: 'all', who: 'all' };
   const cfg = { manha: true, tarde: true, noite: true, ...(state.notif || {}) };
