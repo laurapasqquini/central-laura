@@ -7,9 +7,11 @@ import Home from './pages/Home';
 import Projects from './pages/Projects';
 import Routines from './pages/Routines';
 import Lolis from './pages/Lolis';
+import Gralha from './pages/Gralha';
 
 const TABS = [
   { id: 'home', label: 'Início', icon: '☀️', C: Home },
+  { id: 'gralha', label: 'Gralha', icon: '🐦', C: Gralha },
   { id: 'projects', label: 'Projetos', icon: '🗺️', C: Projects },
   { id: 'lolis', label: 'Lolis', icon: '🙋', C: Lolis },
   { id: 'routines', label: 'Rotinas', icon: '↻', C: Routines },
@@ -60,7 +62,7 @@ function Shell() {
         <Page />
       </main>
 
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`relative flex flex-col items-center gap-0.5 py-1 text-[11px] font-semibold ${tab === t.id ? 'text-ink' : 'text-slate-400'}`}>
             <span className="text-xl leading-none">{t.icon}</span>

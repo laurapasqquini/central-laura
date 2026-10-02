@@ -32,6 +32,33 @@ function load() {
   return initial();
 }
 
+export const STAGES = [
+  { id: 'enviado', label: 'Orçamento enviado', task: (c) => `Follow-up do orçamento: ${c}`, days: 2 },
+  { id: 'arte', label: 'Arte com o marketing', task: (c) => `Cobrar arte do marketing: ${c}`, days: 2 },
+  { id: 'aprovacao', label: 'Arte em aprovação', task: (c) => `Cobrar aprovação da arte: ${c}`, days: 2 },
+  { id: 'fechado', label: 'Fechado', task: (c) => `Gerar contrato: ${c}`, days: 0, urgent: true },
+  { id: 'contrato', label: 'Contrato enviado', task: (c) => `Conferir pagamento dos 50%: ${c}`, days: 3 },
+  { id: 'perdido', label: 'Perdido' },
+];
+
+function stageTask(pedidoId, cliente, stage) {
+  const st = STAGES.find((x) => x.id === stage);
+  if (!st?.task) return null;
+  return {
+    id: uid(),
+    title: st.task(cliente),
+    area: 'gralha',
+    who: 'laura',
+    urgent: !!st.urgent,
+    due: addDays(today(), st.days),
+    pedidoId,
+    done: false,
+    createdAt: today(),
+    postponed: 0,
+    notes: '',
+  };
+}
+
 const Ctx = createContext(null);
 
 export function StoreProvider({ user, children }) {
@@ -166,6 +193,33 @@ export function StoreProvider({ user, children }) {
 
       addMarco: (m) => setState((s) => ({ ...s, marcos: [...s.marcos, { id: uid(), ...m }] })),
       deleteMarco: (id) => setState((s) => ({ ...s, marcos: s.marcos.filter((m) => m.id !== id) })),
+
+      // Gralha: cada mudança de etapa do pedido fecha a cobrança anterior e cria a próxima.
+      addPedido: (p) =>
+        setState((s) => {
+          const id = uid();
+          return {
+            ...s,
+            pedidos: [{ id, stage: 'enviado', createdAt: today(), history: [{ stage: 'enviado', date: today() }], ...p }, ...(s.pedidos || [])],
+            tasks: [stageTask(id, p.cliente, 'enviado'), ...s.tasks],
+          };
+        }),
+      moveStage: (id, stage) =>
+        setState((s) => {
+          const ped = (s.pedidos || []).find((p) => p.id === id);
+          const next = stageTask(id, ped.cliente, stage);
+          return {
+            ...s,
+            pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, stage, history: [...(p.history || []), { stage, date: today() }] } : p)),
+            tasks: [
+              ...(next ? [next] : []),
+              ...s.tasks.map((t) => (t.pedidoId === id && !t.done ? { ...t, done: true, doneAt: today() } : t)),
+            ],
+          };
+        }),
+      updatePedido: (id, patch) => setState((s) => ({ ...s, pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
+      deletePedido: (id) =>
+        setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       replaceAll: (next) => setState(next),
     };

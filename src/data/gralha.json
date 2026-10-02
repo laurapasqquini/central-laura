@@ -1,0 +1,7764 @@
+{
+ "origem": "ORÇAMENTO (1).xlsx",
+ "geradoEm": "2026-10-02",
+ "produtos": [
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 115
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 92
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 80.5
+    },
+    {
+     "min": 51,
+     "preco": 74.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo",
+   "tecido": "Piquet",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p1"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 102
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 91
+    },
+    {
+     "min": 51,
+     "preco": 84.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo",
+   "tecido": "Piquet",
+   "personalizacao": "Bordado (frente)",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p2"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 124
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 99.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 86.8
+    },
+    {
+     "min": 51,
+     "preco": 80.6
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo - Com recorte lateral",
+   "tecido": "Piquet",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p3"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 72
+    },
+    {
+     "min": 51,
+     "preco": 67.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camisa Manga Longa Raglan",
+   "tecido": "Dry com elastano e proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p4"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 130
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 110.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 104
+    },
+    {
+     "min": 51,
+     "preco": 97.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camisa Manga Longa - com zíper",
+   "tecido": "Dry com proteção UV e elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p5"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 100
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 80
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 70
+    },
+    {
+     "min": 51,
+     "preco": 65
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p6"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72.25
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 68
+    },
+    {
+     "min": 51,
+     "preco": 63.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camisa Manga Longa Tradicional",
+   "tecido": "Dry com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p7"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 63
+    },
+    {
+     "min": 51,
+     "preco": 58.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo",
+   "tecido": "Poliviscose",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p8"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 88
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 77
+    },
+    {
+     "min": 51,
+     "preco": 71.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo",
+   "tecido": "Algodão",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p9"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 120
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 102
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 96
+    },
+    {
+     "min": 51,
+     "preco": 90
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camisa Manga Longa",
+   "tecido": "Dry com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p10"
+  },
+  {
+   "aba": "CAMISAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 100
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 80
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 70
+    },
+    {
+     "min": 51,
+     "preco": 65
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo Sport",
+   "tecido": "Dry fit com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p11"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 55
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 49.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 48.4
+    },
+    {
+     "min": 51,
+     "preco": 46.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional / Abadá com mangas",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p12"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 60
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 54
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.8
+    },
+    {
+     "min": 51,
+     "preco": 51
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p13"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 55
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 44
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 38.5
+    },
+    {
+     "min": 51,
+     "preco": 35.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional Infantil",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p14"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 60
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.5
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "AeroDry",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p15"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p16"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 80
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 70
+    },
+    {
+     "min": 51,
+     "preco": 65
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Algodão",
+   "personalizacao": "Bordado (Frente e Costas)",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p17"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 110
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 88
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 77
+    },
+    {
+     "min": 51,
+     "preco": 71.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Ciclismo Manga longa",
+   "tecido": "Dry com elastano e proteção UV 50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p18"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 125
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 110
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 106.25
+    },
+    {
+     "min": 51,
+     "preco": 100
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Pesca",
+   "tecido": "Dry com elastano e proteção UV 50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p19"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 60
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.5
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Poliviscose",
+   "personalizacao": "Estampa",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p20"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Poliviscose",
+   "personalizacao": "Bordado Frente / Estampa Costas",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p21"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 76.93
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 61.54
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 53.85
+    },
+    {
+     "min": 51,
+     "preco": 50
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional gola V",
+   "tecido": "Viscolycra",
+   "personalizacao": "Estampa",
+   "prazo": "15 a 20 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p22"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 78
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 62.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 58.5
+    },
+    {
+     "min": 51,
+     "preco": 54.6
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional Adulto",
+   "tecido": "Eco Dry (Feito com PET reciclado)",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p23"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Modelo Sport",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p24"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 63
+    },
+    {
+     "min": 51,
+     "preco": 58.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Modelo Sport",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p25"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 150
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 120
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 105
+    },
+    {
+     "min": 51,
+     "preco": 97.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Conjunto comissão técnica",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p26"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 52
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 48.75
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional Infantil",
+   "tecido": "Eco Dry (Feito com PET reciclado)",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p27"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 55
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 44
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 38.5
+    },
+    {
+     "min": 51,
+     "preco": 35.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Infantil",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p28"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 60
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 48
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 42
+    },
+    {
+     "min": 51,
+     "preco": 39
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Infantil",
+   "tecido": "Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p29"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 60
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.5
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Poliamida",
+   "personalizacao": "Silk 1 cor frente, mangas e costas",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p30"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 60
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 54
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.8
+    },
+    {
+     "min": 51,
+     "preco": 51
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Raglan",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p31"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 58.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 57.2
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Raglan",
+   "tecido": "Dry Liso com Elastano Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p32"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 63
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 61.6
+    },
+    {
+     "min": 51,
+     "preco": 59.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Poliéster",
+   "personalizacao": "Silk",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p33"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola Padre",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p34"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 78
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 62.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 54.6
+    },
+    {
+     "min": 51,
+     "preco": 50.7
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola Padre",
+   "tecido": "Dry Liso com elastano Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p35"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 53
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 47.7
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 46.64
+    },
+    {
+     "min": 51,
+     "preco": 45.05
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Favo Dry",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p36"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Raglan",
+   "tecido": "Dry Liso e Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p37"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Raglan",
+   "tecido": "Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p38"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 55
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 49.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 48.4
+    },
+    {
+     "min": 51,
+     "preco": 46.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Oversized",
+   "tecido": "Poliviscose",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p39"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 88
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 79.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 77.44
+    },
+    {
+     "min": 51,
+     "preco": 74.8
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Oversized",
+   "tecido": "Suedine (100% algodão)",
+   "personalizacao": "Estampa",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p40"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 97
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 87.3
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 85.36
+    },
+    {
+     "min": 51,
+     "preco": 82.45
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Oversized Polo",
+   "tecido": "Suedine",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p41"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 52
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 45.5
+    },
+    {
+     "min": 51,
+     "preco": 42.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p42"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 62
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 57.04
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 55.8
+    },
+    {
+     "min": 51,
+     "preco": 54.56
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata",
+   "tecido": "Dry ECO PET Araca",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p43"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 42
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 37.8
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 36.96
+    },
+    {
+     "min": 51,
+     "preco": 35.7
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata",
+   "tecido": "Dry com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p44"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 47
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 42.3
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 41.36
+    },
+    {
+     "min": 51,
+     "preco": 39.95
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata",
+   "tecido": "Dry com elastano e proteção UV 50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p45"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66.5
+    },
+    {
+     "min": 51,
+     "preco": 61.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Canguru Baseball",
+   "tecido": "Dry com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p46"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 88
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 70.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 61.6
+    },
+    {
+     "min": 51,
+     "preco": 57.2
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Staff",
+   "tecido": "Dry com proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p47"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 57
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 45.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 39.9
+    },
+    {
+     "min": 51,
+     "preco": 37.05
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata Machão",
+   "tecido": "Dry com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p48"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 63
+    },
+    {
+     "min": 51,
+     "preco": 58.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Ciclismo",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p49"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 110
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 88
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 77
+    },
+    {
+     "min": 51,
+     "preco": 71.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Ciclismo",
+   "tecido": "Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p50"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata Machão",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p51"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola V",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p52"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola V",
+   "tecido": "Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p53"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 63
+    },
+    {
+     "min": 51,
+     "preco": 58.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola V",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p54"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66.5
+    },
+    {
+     "min": 51,
+     "preco": 61.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola V",
+   "tecido": "Algodão",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p55"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66.5
+    },
+    {
+     "min": 51,
+     "preco": 61.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola Polo com punho",
+   "tecido": "Piquet",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p56"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola Polo com punho",
+   "tecido": "Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p57"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola V",
+   "tecido": "Poliviscose",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p58"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola V",
+   "tecido": "Poliviscose",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p59"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 60
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.5
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Manga Longa",
+   "tecido": "Dry Liso e Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p60"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Manga Longa",
+   "tecido": "Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p61"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 74.8
+    },
+    {
+     "min": 51,
+     "preco": 72.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola Polo com punho",
+   "tecido": "Algodão",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p62"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 60
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.5
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Manga Longa",
+   "tecido": "Poliviscose",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p63"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66.5
+    },
+    {
+     "min": 51,
+     "preco": 61.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Modelo Baseball",
+   "tecido": "Algodão",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p64"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 51
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 45.9
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 44.88
+    },
+    {
+     "min": 51,
+     "preco": 43.35
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata Basquete",
+   "tecido": "Dry com proteção UV 50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p65"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta com recorte",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p66"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 105
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 84
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 73.5
+    },
+    {
+     "min": 51,
+     "preco": 68.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo Sport",
+   "tecido": "Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p67"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 106
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 84.8
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 74.2
+    },
+    {
+     "min": 51,
+     "preco": 68.9
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Dry Jacquard e Proteção UV50+ e Mangas Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação, DTF e Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p68"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped Oversized",
+   "tecido": "Suedine",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p69"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 60
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.5
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p70"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 93
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 74.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 65.1
+    },
+    {
+     "min": 51,
+     "preco": 60.45
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Staff",
+   "tecido": "Dry com elastano e proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p71"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66.5
+    },
+    {
+     "min": 51,
+     "preco": 61.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola Polo - com punho",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p72"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Gola Polo - com punho",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p73"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 79
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 63.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 55.3
+    },
+    {
+     "min": 51,
+     "preco": 51.35
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Raglan Baseball",
+   "tecido": "Dry com Elastano e Proteção UV50+",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p74"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Raglan Baseball",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p75"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 115.92
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 113.4
+    },
+    {
+     "min": 51,
+     "preco": 107.1
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo Retrô - com recorte lateral",
+   "tecido": "Dry Jacquard",
+   "personalizacao": "Sublimação + escudo bordado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p76"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 115.92
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 113.4
+    },
+    {
+     "min": 51,
+     "preco": 107.1
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Polo Retrô",
+   "tecido": "Dry Jacquard",
+   "personalizacao": "Sublimação + escudo bordado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p77"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 102.12
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 99.9
+    },
+    {
+     "min": 51,
+     "preco": 94.35
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped Polo Retrô",
+   "tecido": "Dry Jacquard",
+   "personalizacao": "Sublimação + escudo bordado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p78"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 111
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 102.12
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 99.9
+    },
+    {
+     "min": 51,
+     "preco": 94.35
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Retrô",
+   "tecido": "Dry Jacquard",
+   "personalizacao": "Sublimação + escudo bordado",
+   "prazo": "25 a 35 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p79"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 63
+    },
+    {
+     "min": 51,
+     "preco": 58.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Raglan",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "30 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p80"
+  },
+  {
+   "aba": "CAMISETA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 77
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 69.3
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 67.76
+    },
+    {
+     "min": 51,
+     "preco": 65.45
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Tradicional",
+   "tecido": "Dry Jacquard e Proteção UV50",
+   "personalizacao": "Sublimação, Aplique em ATK e Skin",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p81"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 230
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 184
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 161
+    },
+    {
+     "min": 51,
+     "preco": 149.5
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Canguru",
+   "tecido": "Moletom",
+   "personalizacao": "Estampado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p82"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 196
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 171.5
+    },
+    {
+     "min": 51,
+     "preco": 159.25
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Canguru",
+   "tecido": "Moletom",
+   "personalizacao": "Bordado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p83"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 245
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 196
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 171.5
+    },
+    {
+     "min": 51,
+     "preco": 159.25
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Canguru Sublimado",
+   "tecido": "Moletom",
+   "personalizacao": "Sublimação",
+   "prazo": "30 a 45 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p84"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 240
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 192
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 168
+    },
+    {
+     "min": 51,
+     "preco": 156
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Canguru Raglan",
+   "tecido": "Moletom",
+   "personalizacao": "Estampado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p85"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 20,
+     "max": 30,
+     "preco": 234
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 228.8
+    },
+    {
+     "min": 51,
+     "preco": 221
+    }
+   ],
+   "extras": [],
+   "nome": "Jaqueta College",
+   "tecido": "Moletom",
+   "personalizacao": "Bordado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 20,
+   "id": "p86"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 20,
+     "max": 30,
+     "preco": 216
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 211.2
+    },
+    {
+     "min": 51,
+     "preco": 204
+    }
+   ],
+   "extras": [],
+   "nome": "Jaqueta College",
+   "tecido": "Moletom",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 20,
+   "id": "p87"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 20,
+     "max": 30,
+     "preco": 240
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 210
+    },
+    {
+     "min": 51,
+     "preco": 195
+    }
+   ],
+   "extras": [],
+   "nome": "Jaqueta College Cropped",
+   "tecido": "Moletom",
+   "personalizacao": "Estampa",
+   "prazo": "30 a 45 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 20,
+   "id": "p88"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 190
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 152
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 133
+    },
+    {
+     "min": 51,
+     "preco": 123.5
+    }
+   ],
+   "extras": [],
+   "nome": "Corta Vento - Com capuz",
+   "tecido": "Microplus (Tactel)",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p89"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 170
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 136
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 119
+    },
+    {
+     "min": 51,
+     "preco": 110.5
+    }
+   ],
+   "extras": [],
+   "nome": "Corta Vento - Sem capuz",
+   "tecido": "Microplus (Tactel)",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p90"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 160
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 128
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 112
+    },
+    {
+     "min": 51,
+     "preco": 104
+    }
+   ],
+   "extras": [],
+   "nome": "Calça",
+   "tecido": "Moletom",
+   "personalizacao": "Estampa",
+   "prazo": "30 a 45 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p91"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 170
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 149.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 144.5
+    },
+    {
+     "min": 51,
+     "preco": 136
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Gola Careca",
+   "tecido": "Moletom",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p92"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 176
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 154
+    },
+    {
+     "min": 51,
+     "preco": 143
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Gola Redonda",
+   "tecido": "Moletom",
+   "personalizacao": "Bordado Frente / Estampa costas",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p93"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 140
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 126
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 123.2
+    },
+    {
+     "min": 51,
+     "preco": 119
+    }
+   ],
+   "extras": [],
+   "nome": "Agasalho Helanca",
+   "tecido": "Helanca adidas",
+   "personalizacao": "Sublimação",
+   "prazo": "30 a 45 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p94"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 160
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 128
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 112
+    },
+    {
+     "min": 51,
+     "preco": 104
+    }
+   ],
+   "extras": [],
+   "nome": "Agasalho",
+   "tecido": "Chimpa",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p95"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 120
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 96
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 84
+    },
+    {
+     "min": 51,
+     "preco": 78
+    }
+   ],
+   "extras": [],
+   "nome": "Calça",
+   "tecido": "Chimpa",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p96"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 105
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 84
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 73.5
+    },
+    {
+     "min": 51,
+     "preco": 68.25
+    }
+   ],
+   "extras": [],
+   "nome": "Calça",
+   "tecido": "Tactel",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p97"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 130
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 117
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 114.4
+    },
+    {
+     "min": 51,
+     "preco": 110.5
+    }
+   ],
+   "extras": [],
+   "nome": "Agasalho Helanca",
+   "tecido": "Helanca",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p98"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 63
+    },
+    {
+     "min": 51,
+     "preco": 58.5
+    }
+   ],
+   "extras": [],
+   "nome": "Calça",
+   "tecido": "Helanca",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p99"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 210
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 168
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 147
+    },
+    {
+     "min": 51,
+     "preco": 136.5
+    }
+   ],
+   "extras": [],
+   "nome": "Jaqueta Agasalho",
+   "tecido": "Helanca OU Tactel",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p100"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 100
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 80
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 70
+    },
+    {
+     "min": 51,
+     "preco": 65
+    }
+   ],
+   "extras": [],
+   "nome": "Calça",
+   "tecido": "Helanca",
+   "personalizacao": "Sublimação ou Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p101"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 265
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 212
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 185.5
+    },
+    {
+     "min": 51,
+     "preco": 172.25
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Canguru Raglan",
+   "tecido": "Moletom",
+   "personalizacao": "Estampado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p102"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 235
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 188
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 164.5
+    },
+    {
+     "min": 51,
+     "preco": 152.75
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Canguru Raglan",
+   "tecido": "Moletom",
+   "personalizacao": "Bordado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p103"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 240
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 192
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 168
+    },
+    {
+     "min": 51,
+     "preco": 156
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Quarter Zip",
+   "tecido": "Moletom",
+   "personalizacao": "Estampado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p104"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 264
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 211.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 184.8
+    },
+    {
+     "min": 51,
+     "preco": 171.6
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Canguru c/ ziper",
+   "tecido": "Moletom",
+   "personalizacao": "Bordado - frente e mangas",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p105"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 220
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 176
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 154
+    },
+    {
+     "min": 51,
+     "preco": 143
+    }
+   ],
+   "extras": [],
+   "nome": "Corta Vento - Com capuz - Com recorte",
+   "tecido": "Microplus (Tactel)",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p106"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 240
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 192
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 168
+    },
+    {
+     "min": 51,
+     "preco": 156
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Canguru c/ ziper",
+   "tecido": "Moletom",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p107"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 208
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 182
+    },
+    {
+     "min": 51,
+     "preco": 169
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom Quarter Zip",
+   "tecido": "Moletom",
+   "personalizacao": "Bordado",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p108"
+  },
+  {
+   "aba": "INVERNO",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 220
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 198
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 193.6
+    },
+    {
+     "min": 51,
+     "preco": 187
+    }
+   ],
+   "extras": [],
+   "nome": "Moletom c/ ziper",
+   "tecido": "Moletom",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p109"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 31
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 27.9
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 27.28
+    },
+    {
+     "min": 51,
+     "preco": 26.35
+    }
+   ],
+   "extras": [],
+   "nome": "Sacochila 38cm x 48cm",
+   "tecido": "Oxford",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p110"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 92
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 82.8
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 80.96
+    },
+    {
+     "min": 51,
+     "preco": 78.2
+    }
+   ],
+   "extras": [],
+   "nome": "Bandana 80x80 - Dupla face",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p111"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 295
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 250.75
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 236
+    },
+    {
+     "min": 51,
+     "preco": 221.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Scrub",
+   "tecido": "Poliamida",
+   "personalizacao": "1 estampa frente uma cor",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p112"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 40
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 32
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 28
+    },
+    {
+     "min": 51,
+     "preco": 26
+    }
+   ],
+   "extras": [],
+   "nome": "Ecobag / Bag",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p113"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 57
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 51.3
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 50.16
+    },
+    {
+     "min": 51,
+     "preco": 48.45
+    }
+   ],
+   "extras": [],
+   "nome": "Bandana 80 x 80 cm",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p114"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [],
+   "nome": "Camiseta Pijama Cirúrgico",
+   "tecido": "Microplus",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p115"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 1,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 52
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 45.5
+    },
+    {
+     "min": 51,
+     "preco": 42.25
+    }
+   ],
+   "extras": [],
+   "nome": "Bandeira Individual 0,90m x 1,40m",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 1,
+   "id": "p116"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 110
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 88
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 77
+    },
+    {
+     "min": 51,
+     "preco": 71.5
+    }
+   ],
+   "extras": [],
+   "nome": "Capa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p117"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [],
+   "nome": "Camiseta Pijama Cirúrgico",
+   "tecido": "Microplus",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p118"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 50
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 40
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 35
+    },
+    {
+     "min": 51,
+     "preco": 32.5
+    }
+   ],
+   "extras": [],
+   "nome": "Flamula",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p119"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 15
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 12
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 10.5
+    },
+    {
+     "min": 51,
+     "preco": 9.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Porta documento 11cm x 15cm com cordão Nylon",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p120"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 152
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 136.8
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 133.76
+    },
+    {
+     "min": 51,
+     "preco": 129.2
+    }
+   ],
+   "extras": [],
+   "nome": "Pijama Cirúrgico",
+   "tecido": "Brim",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p121"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 45
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 36
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 31.5
+    },
+    {
+     "min": 51,
+     "preco": 29.25
+    }
+   ],
+   "extras": [],
+   "nome": "Toalha",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p122"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 42
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 33.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 29.4
+    },
+    {
+     "min": 51,
+     "preco": 27.3
+    }
+   ],
+   "extras": [],
+   "nome": "Manguito",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p123"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 60
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 48
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 42
+    },
+    {
+     "min": 51,
+     "preco": 39
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Pijama Cirúrgico",
+   "tecido": "Microplus",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p124"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 46.8
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 45.76
+    },
+    {
+     "min": 51,
+     "preco": 44.2
+    }
+   ],
+   "extras": [],
+   "nome": "Boné",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p125"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 35
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 28
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 24.5
+    },
+    {
+     "min": 51,
+     "preco": 22.75
+    }
+   ],
+   "extras": [],
+   "nome": "Avental",
+   "personalizacao": "Estampa",
+   "prazo": "15 a 20 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p126"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 72
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 57.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 50.4
+    },
+    {
+     "min": 51,
+     "preco": 46.8
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Pijama Cirúrgico",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p127"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 20,
+     "max": 30,
+     "preco": 55.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 48.3
+    },
+    {
+     "min": 51,
+     "preco": 44.85
+    }
+   ],
+   "extras": [],
+   "nome": "Gorro",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 20,
+   "id": "p128"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 70.4
+    },
+    {
+     "min": 51,
+     "preco": 68
+    }
+   ],
+   "extras": [],
+   "nome": "Bandana 70x48 cm - Dupla face",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p129"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [],
+   "nome": "Camiseta Pijama Cirúrgico",
+   "tecido": "Microplus",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p130"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 160
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 128
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 112
+    },
+    {
+     "min": 51,
+     "preco": 104
+    }
+   ],
+   "extras": [],
+   "nome": "Capa dupla face com touca",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p131"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 52
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 45.5
+    },
+    {
+     "min": 51,
+     "preco": 42.25
+    }
+   ],
+   "extras": [],
+   "nome": "Bandana 70x48cm - Face unica",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p132"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 82
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 65.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 57.4
+    },
+    {
+     "min": 51,
+     "preco": 53.3
+    }
+   ],
+   "extras": [],
+   "nome": "Camiseta Pijama Cirúrgico",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p133"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 42
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 33.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 29.4
+    },
+    {
+     "min": 51,
+     "preco": 27.3
+    }
+   ],
+   "extras": [],
+   "nome": "Manguito",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p134"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 86
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 77.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 75.68
+    },
+    {
+     "min": 51,
+     "preco": 73.1
+    }
+   ],
+   "extras": [],
+   "nome": "Bandana 70x70 - Dupla face",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p135"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 164
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 131.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 114.8
+    },
+    {
+     "min": 51,
+     "preco": 106.6
+    }
+   ],
+   "extras": [],
+   "nome": "Camiseta e Calça Pijama Cirúrgico",
+   "tecido": "Algodão",
+   "personalizacao": "Logo bordada + Nome Estampado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p136"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 105
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 84
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 73.5
+    },
+    {
+     "min": 51,
+     "preco": 68.25
+    }
+   ],
+   "extras": [],
+   "nome": "Bandana Dupla Face 80x 80 cm",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p137"
+  },
+  {
+   "aba": "DIVERSOS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 57
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 51.3
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 50.16
+    },
+    {
+     "min": 51,
+     "preco": 48.45
+    }
+   ],
+   "extras": [],
+   "nome": "Bandana 70 x 70 cm",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p138"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 58
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 46.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 40.6
+    },
+    {
+     "min": 51,
+     "preco": 37.7
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Samba / Doll - sem escrita atrás",
+   "tecido": "Dry com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p139"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 63
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 50.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 44.1
+    },
+    {
+     "min": 51,
+     "preco": 40.95
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Samba / Doll - com escrita atrás",
+   "tecido": "Dry com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p140"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 58
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 46.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 40.6
+    },
+    {
+     "min": 51,
+     "preco": 37.7
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Shorts",
+   "tecido": "Dry Liso com elastano e Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p141"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 68
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 54.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 47.6
+    },
+    {
+     "min": 51,
+     "preco": 44.2
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Shorts",
+   "tecido": "Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p142"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 85.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 83.6
+    },
+    {
+     "min": 51,
+     "preco": 80.75
+    }
+   ],
+   "extras": [],
+   "nome": "Short Saia",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p143"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [],
+   "nome": "Saia com alça",
+   "tecido": "Creative com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p144"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Fitness",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p145"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 89
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 71.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 62.3
+    },
+    {
+     "min": 51,
+     "preco": 57.85
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts modelo casual / modelo praia",
+   "tecido": "Microplus (tactel)",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p146"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 89
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 71.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 62.3
+    },
+    {
+     "min": 51,
+     "preco": 57.85
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts modelo casual",
+   "tecido": "Microplus",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p147"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 170
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 136
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 119
+    },
+    {
+     "min": 51,
+     "preco": 110.5
+    }
+   ],
+   "extras": [],
+   "nome": "Conjunto Cheers Manga Longa",
+   "tecido": "Creative com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p148"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 180
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 144
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 126
+    },
+    {
+     "min": 51,
+     "preco": 117
+    }
+   ],
+   "extras": [],
+   "nome": "Conjunto Cheers Regata",
+   "tecido": "Creative com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p149"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 74
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 59.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 51.8
+    },
+    {
+     "min": 51,
+     "preco": 48.1
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts modelo casual",
+   "tecido": "Microplus",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p150"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 53
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 42.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 37.1
+    },
+    {
+     "min": 51,
+     "preco": 34.45
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Samba / Doll - sem escrita atrás",
+   "tecido": "PP",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p151"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 62
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 49.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 43.4
+    },
+    {
+     "min": 51,
+     "preco": 40.3
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Samba / Doll - com escrita atrás",
+   "tecido": "PP",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p152"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 58
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 46.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 40.6
+    },
+    {
+     "min": 51,
+     "preco": 37.7
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Shorts",
+   "tecido": "Dry Liso com elastano e Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p153"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66.5
+    },
+    {
+     "min": 51,
+     "preco": 61.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Shorts Duplo",
+   "tecido": "Suplex // Dry Liso com elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p154"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Shorts",
+   "tecido": "Dry Jacquard e Proteção UV50+",
+   "personalizacao": "Sublimação, transfer e DTF",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p155"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 87
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 80.04
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 78.3
+    },
+    {
+     "min": 51,
+     "preco": 76.56
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts",
+   "tecido": "Moletinho",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p156"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 82
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 65.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 57.4
+    },
+    {
+     "min": 51,
+     "preco": 53.3
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts",
+   "tecido": "Helanca",
+   "personalizacao": "Sublimação",
+   "prazo": "30 a 45 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p157"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 52
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 45.5
+    },
+    {
+     "min": 51,
+     "preco": 42.25
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Samba / Doll - com recorte lateral",
+   "tecido": "Dry com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p158"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts",
+   "tecido": "Microplus",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p159"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 78.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 76.5
+    },
+    {
+     "min": 51,
+     "preco": 74.8
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts",
+   "tecido": "Moletinho",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p160"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 103
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 82.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 72.1
+    },
+    {
+     "min": 51,
+     "preco": 66.95
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Casual - com bolso e recorte",
+   "tecido": "Tactel com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p161"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [],
+   "nome": "Saia",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p162"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Fitness",
+   "tecido": "Suplex",
+   "personalizacao": "Sem personalização",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p163"
+  },
+  {
+   "aba": "SHORTS  SAIA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 80
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 64
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 56
+    },
+    {
+     "min": 51,
+     "preco": 52
+    }
+   ],
+   "extras": [],
+   "nome": "Shorts Duplo",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p164"
+  },
+  {
+   "aba": "CANECATIRANTE",
+   "nome": "Caneca Tradicional 850 ml",
+   "faixas": [
+    {
+     "min": 1,
+     "preco": 28
+    }
+   ],
+   "extras": [],
+   "minimo": 1,
+   "id": "p165"
+  },
+  {
+   "aba": "CANECATIRANTE",
+   "nome": "Caneca Tradicional 500ml",
+   "faixas": [
+    {
+     "min": 1,
+     "preco": 25
+    }
+   ],
+   "extras": [],
+   "minimo": 1,
+   "id": "p166"
+  },
+  {
+   "aba": "CANECATIRANTE",
+   "nome": "Caneca Cônica 700ml",
+   "faixas": [
+    {
+     "min": 1,
+     "preco": 23
+    }
+   ],
+   "extras": [],
+   "minimo": 1,
+   "id": "p167"
+  },
+  {
+   "aba": "CANECATIRANTE",
+   "nome": "Caneca MAX 600ml",
+   "faixas": [
+    {
+     "min": 1,
+     "preco": 30
+    }
+   ],
+   "extras": [],
+   "minimo": 1,
+   "id": "p168"
+  },
+  {
+   "aba": "CANECATIRANTE",
+   "nome": "Tirante 4cm",
+   "faixas": [
+    {
+     "min": 1,
+     "preco": 15
+    }
+   ],
+   "extras": [],
+   "minimo": 1,
+   "id": "p169"
+  },
+  {
+   "aba": "CANECATIRANTE",
+   "nome": "Tirante 8cm - sem bolso",
+   "faixas": [
+    {
+     "min": 1,
+     "preco": 16
+    }
+   ],
+   "extras": [],
+   "minimo": 1,
+   "id": "p170"
+  },
+  {
+   "aba": "CANECATIRANTE",
+   "nome": "Tirante 8cm - com bolso",
+   "faixas": [
+    {
+     "min": 1,
+     "preco": 18
+    }
+   ],
+   "extras": [],
+   "minimo": 1,
+   "id": "p171"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 60
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 48
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 42
+    },
+    {
+     "min": 51,
+     "preco": 39
+    }
+   ],
+   "extras": [],
+   "nome": "Top (Fitness, alcinha, top faixa, mula manga, nadador)",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p172"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [],
+   "nome": "Top Dupla Face (Fitness, alcinha, top faixa, mula manga)",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p173"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 63
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 61.6
+    },
+    {
+     "min": 51,
+     "preco": 59.5
+    }
+   ],
+   "extras": [],
+   "nome": "Top Amarração",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p174"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 87
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 78.3
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 76.56
+    },
+    {
+     "min": 51,
+     "preco": 73.95
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Maiô / Body",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p175"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 117
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 93.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 81.9
+    },
+    {
+     "min": 51,
+     "preco": 76.05
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Maiô / Body com recorte",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p176"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 125
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 100
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 87.5
+    },
+    {
+     "min": 51,
+     "preco": 81.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Maiô / Body Manga Longa",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p177"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 67
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 53.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 46.9
+    },
+    {
+     "min": 51,
+     "preco": 43.55
+    }
+   ],
+   "extras": [],
+   "nome": "Top tube - Face Unica",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p178"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 77
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 61.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 53.9
+    },
+    {
+     "min": 51,
+     "preco": 50.05
+    }
+   ],
+   "extras": [],
+   "nome": "Tube Top - Dupla Face",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p179"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 77
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 69.3
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 67.76
+    },
+    {
+     "min": 51,
+     "preco": 65.45
+    }
+   ],
+   "extras": [],
+   "nome": "Regatinha",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p180"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 56
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 49
+    },
+    {
+     "min": 51,
+     "preco": 45.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped",
+   "tecido": "Suplex",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p181"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 55.25
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p182"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 88
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 74.8
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 70.4
+    },
+    {
+     "min": 51,
+     "preco": 66
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped Manga Longa",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p183"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 47
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 37.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 32.9
+    },
+    {
+     "min": 51,
+     "preco": 30.55
+    }
+   ],
+   "extras": [],
+   "nome": "Top faixa",
+   "tecido": "Dry com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p184"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 62
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 55.8
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 54.56
+    },
+    {
+     "min": 51,
+     "preco": 52.7
+    }
+   ],
+   "extras": [],
+   "nome": "Blusa alcinha",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p185"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 70
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 63
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 61.6
+    },
+    {
+     "min": 51,
+     "preco": 59.5
+    }
+   ],
+   "extras": [],
+   "nome": "Top Trançado",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p186"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 52
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 45.5
+    },
+    {
+     "min": 51,
+     "preco": 42.25
+    }
+   ],
+   "extras": [],
+   "nome": "Top Tube - com alça",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p187"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 67.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66
+    },
+    {
+     "min": 51,
+     "preco": 63.75
+    }
+   ],
+   "extras": [],
+   "nome": "Baby Tee",
+   "tecido": "Supla Light",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p188"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 58.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 57.2
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [],
+   "nome": "Blusinha",
+   "tecido": "Canelado / algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p189"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 120
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 96
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 84
+    },
+    {
+     "min": 51,
+     "preco": 78
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Maiô / Body - Mula manca / Manga longa",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p190"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 68
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 61.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.84
+    },
+    {
+     "min": 51,
+     "preco": 57.8
+    }
+   ],
+   "extras": [],
+   "nome": "Blusinha",
+   "tecido": "Supla Light",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p191"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 63
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 61.6
+    },
+    {
+     "min": 51,
+     "preco": 59.5
+    }
+   ],
+   "extras": [],
+   "nome": "Blusinha",
+   "tecido": "Canelado/Algodão",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 15,
+   "id": "p192"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 63
+    },
+    {
+     "min": 51,
+     "preco": 58.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped Manga longa",
+   "tecido": "Dry com Elastano e Proteção UV50+.",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p193"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66.5
+    },
+    {
+     "min": 51,
+     "preco": 61.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped Manga longa",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p194"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 74
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 59.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 51.8
+    },
+    {
+     "min": 51,
+     "preco": 48.1
+    }
+   ],
+   "extras": [],
+   "nome": "Cropped Nula Manga / Manga longa - Face Unica",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p195"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 55
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 49.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 48.4
+    },
+    {
+     "min": 51,
+     "preco": 46.75
+    }
+   ],
+   "extras": [],
+   "nome": "Regatinha",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p196"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 60
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.5
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [],
+   "nome": "Top alça larga",
+   "tecido": "Suplex",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p197"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 74.8
+    },
+    {
+     "min": 51,
+     "preco": 72.25
+    }
+   ],
+   "extras": [],
+   "nome": "Baby Tee",
+   "tecido": "Algodão",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p198"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 60
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 51
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 48
+    },
+    {
+     "min": 51,
+     "preco": 45
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Cropped",
+   "tecido": "Poliviscose",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p199"
+  },
+  {
+   "aba": "BODY  TOP",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 74.8
+    },
+    {
+     "min": 51,
+     "preco": 72.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Top Faixa Multi Amarração (360cm comprimento x 20 cm altura)",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p200"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 190
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 152
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 133
+    },
+    {
+     "min": 51,
+     "preco": 123.5
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Moletom",
+   "tecido": "Moletom",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p201"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 190
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 152
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 133
+    },
+    {
+     "min": 51,
+     "preco": 123.5
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Moletom",
+   "tecido": "Moletom",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p202"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 105
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 96.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 94.5
+    },
+    {
+     "min": 51,
+     "preco": 92.4
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Cargo",
+   "tecido": "Tactel",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p203"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 82
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 75.44
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 73.8
+    },
+    {
+     "min": 51,
+     "preco": 72.16
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Pijama",
+   "tecido": "Poliéster",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p204"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 130
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 119.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 117
+    },
+    {
+     "min": 51,
+     "preco": 114.4
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Cargo",
+   "tecido": "Brim",
+   "personalizacao": "Estampa",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p205"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 105
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 96.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 94.5
+    },
+    {
+     "min": 51,
+     "preco": 92.4
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Cargo com reforço",
+   "tecido": "Brim",
+   "personalizacao": "Sem personalização",
+   "prazo": "15 a 20 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p206"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 120
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 96
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 84
+    },
+    {
+     "min": 51,
+     "preco": 78
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Agasalho",
+   "tecido": "Microplus / Helanca",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p207"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 150
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 120
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 105
+    },
+    {
+     "min": 51,
+     "preco": 97.5
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Wide Leg",
+   "tecido": "Moletinho",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p208"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 150
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 120
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 105
+    },
+    {
+     "min": 51,
+     "preco": 97.5
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Wide Leg",
+   "tecido": "Tactel",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p209"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 110
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 88
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 77
+    },
+    {
+     "min": 51,
+     "preco": 71.5
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Legging",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p210"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 200
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 160
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 140
+    },
+    {
+     "min": 51,
+     "preco": 130
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Jogger",
+   "tecido": "Moletinho",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p211"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 59.5
+    },
+    {
+     "min": 51,
+     "preco": 55.25
+    }
+   ],
+   "extras": [],
+   "nome": "Calça",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p212"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 66.5
+    },
+    {
+     "min": 51,
+     "preco": 61.75
+    }
+   ],
+   "extras": [],
+   "nome": "Calça",
+   "tecido": "Helanca",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p213"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 65
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 52
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 45.5
+    },
+    {
+     "min": 51,
+     "preco": 42.25
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Calça Goleiro",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p214"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 75
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 60
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 52.5
+    },
+    {
+     "min": 51,
+     "preco": 48.75
+    }
+   ],
+   "extras": [
+    "50% no fechamento do pedido e 50% no envio",
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Calça Goleiro",
+   "tecido": "Tactel com elastano",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "minimo": 5,
+   "id": "p215"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 125
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 100
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 87.5
+    },
+    {
+     "min": 51,
+     "preco": 81.25
+    }
+   ],
+   "extras": [],
+   "nome": "Calça com reforço interno e no joelho",
+   "tecido": "Brim",
+   "personalizacao": "Bordado",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p216"
+  },
+  {
+   "aba": "CALÇAS",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 130
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 119.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 117
+    },
+    {
+     "min": 51,
+     "preco": 114.4
+    }
+   ],
+   "extras": [],
+   "nome": "Calça Sticker",
+   "tecido": "Tactel",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p217"
+  },
+  {
+   "aba": "TATUAGEM ATUALIZADA",
+   "faixas": [
+    {
+     "min": 50,
+     "preco": 4.5
+    },
+    {
+     "min": 100,
+     "preco": 2.7
+    },
+    {
+     "min": 200,
+     "preco": 1.9
+    },
+    {
+     "min": 300,
+     "preco": 1.5
+    },
+    {
+     "min": 400,
+     "preco": 1.2
+    },
+    {
+     "min": 500,
+     "preco": 1
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Tatuagem",
+   "tamanho": "5x5",
+   "personalizacao": "Padrão (sem branco)",
+   "prazo": "10 a 20 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 50,
+   "id": "p218"
+  },
+  {
+   "aba": "TATUAGEM ATUALIZADA",
+   "faixas": [
+    {
+     "min": 50,
+     "preco": 4.4
+    },
+    {
+     "min": 100,
+     "preco": 2.3
+    },
+    {
+     "min": 200,
+     "preco": 1.95
+    },
+    {
+     "min": 300,
+     "preco": 1.5
+    },
+    {
+     "min": 400,
+     "preco": 1.1
+    },
+    {
+     "min": 500,
+     "preco": 0.95
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Tatuagem",
+   "tamanho": "7x7",
+   "personalizacao": "Padrão (sem branco)",
+   "prazo": "10 a 20 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 50,
+   "id": "p219"
+  },
+  {
+   "aba": "TATUAGEM ATUALIZADA",
+   "faixas": [
+    {
+     "min": 50,
+     "preco": 6.6
+    },
+    {
+     "min": 100,
+     "preco": 4
+    },
+    {
+     "min": 200,
+     "preco": 3.2
+    },
+    {
+     "min": 300,
+     "preco": 2.7
+    },
+    {
+     "min": 400,
+     "preco": 1.9
+    },
+    {
+     "min": 500,
+     "preco": 1.2
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Tatuagem",
+   "tamanho": "10x10",
+   "personalizacao": "Padrão (sem branco)",
+   "prazo": "10 a 20 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 50,
+   "id": "p220"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 128
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 117.76
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 115.2
+    },
+    {
+     "min": 51,
+     "preco": 112.64
+    }
+   ],
+   "extras": [],
+   "nome": "Jersey MLB (botão)",
+   "tecido": "Jersey Dry",
+   "personalizacao": "Sublimação e termocolante",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p221"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 108
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 99.36
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 97.2
+    },
+    {
+     "min": 51,
+     "preco": 95.04
+    }
+   ],
+   "extras": [],
+   "nome": "Jersey NFL",
+   "tecido": "Jersey Dry",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p222"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 55
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 44
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 38.5
+    },
+    {
+     "min": 51,
+     "preco": 35.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata Basquete",
+   "tecido": "Dry com proteção UV",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p223"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 62
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 49.6
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 43.4
+    },
+    {
+     "min": 51,
+     "preco": 40.3
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata Basquete",
+   "tecido": "Dry com proteção UV 50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p224"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 79
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 72.68
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 71.1
+    },
+    {
+     "min": 51,
+     "preco": 69.52
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata Basquete",
+   "tecido": "Jersey Dry",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p225"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 85
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 78.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 76.5
+    },
+    {
+     "min": 51,
+     "preco": 74.8
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata Basquete com recorte lateral",
+   "tecido": "Jersey Dry",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p226"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 90
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 82.8
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 81
+    },
+    {
+     "min": 51,
+     "preco": 79.2
+    }
+   ],
+   "extras": [],
+   "nome": "Cropped NFL",
+   "tecido": "Jersey Dry",
+   "personalizacao": "Sublimação",
+   "prazo": "40 dias úteis",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p227"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 69
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 55.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 48.3
+    },
+    {
+     "min": 51,
+     "preco": 44.85
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Regata Basquete",
+   "tecido": "Dry Jacquard",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p228"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 98
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 90.16
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 88.2
+    },
+    {
+     "min": 51,
+     "preco": 86.24
+    }
+   ],
+   "extras": [],
+   "nome": "Jersey NFL",
+   "tecido": "Dry Furadinho",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p229"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 115
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 103.5
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 101.2
+    },
+    {
+     "min": 51,
+     "preco": 97.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Oversized",
+   "tecido": "Jersey Dry",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p230"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 108
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 99.36
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 97.2
+    },
+    {
+     "min": 51,
+     "preco": 95.04
+    }
+   ],
+   "extras": [],
+   "nome": "Camiseta Polo Oversized",
+   "tecido": "Jersey Dry",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p231"
+  },
+  {
+   "aba": "JERSEY",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 95
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 87.4
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 85.5
+    },
+    {
+     "min": 51,
+     "preco": 83.6
+    }
+   ],
+   "extras": [],
+   "nome": "Cropped Oversized",
+   "tecido": "Jersey Dry",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p232"
+  },
+  {
+   "aba": "TROFÉU",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 52.9
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 42.32
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 37.03
+    },
+    {
+     "min": 51,
+     "preco": 34.39
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Troféu",
+   "tecido": "MDF",
+   "personalizacao": "Sublimação",
+   "prazo": "10 a 20 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p233"
+  },
+  {
+   "aba": "MACACÃO JARDINEIRA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 160
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 128
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 112
+    },
+    {
+     "min": 51,
+     "preco": 104
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Macaquinho",
+   "tecido": "Microplus",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p234"
+  },
+  {
+   "aba": "MACACÃO JARDINEIRA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 235
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 188
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 164.5
+    },
+    {
+     "min": 51,
+     "preco": 152.75
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Macacão manga longa",
+   "tecido": "Brim",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p235"
+  },
+  {
+   "aba": "MACACÃO JARDINEIRA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 180
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 144
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 126
+    },
+    {
+     "min": 51,
+     "preco": 117
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Jardineira",
+   "tecido": "Brim",
+   "personalizacao": "Estampa",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p236"
+  },
+  {
+   "aba": "MACACÃO JARDINEIRA",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 130
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 104
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 91
+    },
+    {
+     "min": 51,
+     "preco": 84.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Camiseta Manga Longa com abertura em velcro e bolso",
+   "tecido": "Brim",
+   "personalizacao": "Bordado frente",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p237"
+  },
+  {
+   "aba": "COLETE  ABADÁ",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 40
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 36
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 35.2
+    },
+    {
+     "min": 51,
+     "preco": 34
+    }
+   ],
+   "extras": [],
+   "nome": "Abadá sem mangas / Colete",
+   "tecido": "Dry Liso com Proteção UV20+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p238"
+  },
+  {
+   "aba": "COLETE  ABADÁ",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 49
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 39.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 34.3
+    },
+    {
+     "min": 51,
+     "preco": 31.85
+    }
+   ],
+   "extras": [],
+   "nome": "Abadá / Colete",
+   "tecido": "Dry Liso com Elastano e Proteção UV50+",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p239"
+  },
+  {
+   "aba": "COLETE  ABADÁ",
+   "faixas": [
+    {
+     "min": 5,
+     "max": 14,
+     "preco": 60
+    },
+    {
+     "min": 15,
+     "max": 30,
+     "preco": 55.2
+    },
+    {
+     "min": 31,
+     "max": 50,
+     "preco": 54
+    },
+    {
+     "min": 51,
+     "preco": 52.8
+    }
+   ],
+   "extras": [],
+   "nome": "Colete dupla face",
+   "tecido": "Dry",
+   "personalizacao": "Sublimação",
+   "prazo": "20 a 30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 5,
+   "id": "p240"
+  },
+  {
+   "aba": "ÓCULOS",
+   "faixas": [
+    {
+     "min": 20,
+     "max": 29,
+     "preco": 25
+    },
+    {
+     "min": 30,
+     "max": 49,
+     "preco": 19.5
+    },
+    {
+     "min": 50,
+     "max": 99,
+     "preco": 16.5
+    },
+    {
+     "min": 101,
+     "preco": 14.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Óculos Retro STD",
+   "personalizacao": "02 hastes 01 cor de gravação",
+   "prazo": "30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 20,
+   "id": "p241"
+  },
+  {
+   "aba": "ÓCULOS",
+   "faixas": [
+    {
+     "min": 20,
+     "max": 29,
+     "preco": 25
+    },
+    {
+     "min": 30,
+     "max": 49,
+     "preco": 19.5
+    },
+    {
+     "min": 50,
+     "max": 99,
+     "preco": 16.5
+    },
+    {
+     "min": 101,
+     "preco": 14.5
+    }
+   ],
+   "extras": [
+    "5% de desconto no pagamento a vista"
+   ],
+   "nome": "Óculos Way",
+   "personalizacao": "02 hastes 01 cor de gravação",
+   "prazo": "30 dias",
+   "pagamento": "50% no fechamento do pedido e 50% no envio",
+   "minimo": 20,
+   "id": "p242"
+  }
+ ]
+}
