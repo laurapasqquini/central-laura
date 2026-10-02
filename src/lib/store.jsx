@@ -12,7 +12,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 3,
+    version: 4,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -62,6 +62,17 @@ function migrate(s) {
         ...(s.tasks.some((t) => t.title === MAPEAMENTO) ? [] : [tarefa(MAPEAMENTO, null, 'lolis')]),
         ...s.tasks.map((t) => (t.title.startsWith('Escrever as mensagens padrão da Lolis (Pix, ') ? { ...t, title: t.title.replace('(Pix, ', '(') } : t)),
       ],
+    };
+  }
+  // v4: boas-vindas é automática (número da RANKEN na Meta); a Lolis só confere o cadastro
+  if (s.version < 4) {
+    s = {
+      ...s,
+      version: 4,
+      routines: s.routines.map((r) =>
+        r.title === 'Conferir novas inscrições e mandar boas-vindas' ? { ...r, title: 'Conferir se o cadastro dos novos inscritos está completo (foto, Instagram)', who: 'lolis' } : r
+      ),
+      tasks: s.tasks.map((t) => (t.title.startsWith('Escrever as mensagens padrão da Lolis (boas-vindas, ') ? { ...t, title: t.title.replace('(boas-vindas, ', '(') } : t)),
     };
   }
   return s;
