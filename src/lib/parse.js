@@ -20,7 +20,7 @@ const AREAS = { ranken: 'ranken', gralha: 'gralha', pessoal: 'pessoal', eu: 'pes
 export function parseQuick(text, defaults = {}) {
   const ref = today();
   let rest = ` ${text.trim()} `;
-  const out = { due: null, who: 'laura', area: defaults.area || 'ranken', urgent: false };
+  const out = { due: null, who: 'laura', area: defaults.area || 'ranken', urgent: false, hub: false };
 
   const take = (re, fn) => {
     rest = rest.replace(re, (...m) => {
@@ -34,8 +34,12 @@ export function parseQuick(text, defaults = {}) {
     const n = norm(nome);
     out.who = n === 'eu' || n === 'laura' ? 'laura' : n === 'lolis' || n === 'isabela' ? 'lolis' : n;
   });
-  take(/\s#(\p{L}+)(?=\s)/iu, (_, a) => {
-    if (AREAS[norm(a)]) out.area = AREAS[norm(a)];
+  // #hub = tarefa que se faz lá no RANKEN Hub (vira RANKEN e ganha o botão de abrir o Hub)
+  take(/\s#(\p{L}+)(?=\s)/giu, (_, a) => {
+    if (norm(a) === 'hub') {
+      out.hub = true;
+      out.area = 'ranken';
+    } else if (AREAS[norm(a)]) out.area = AREAS[norm(a)];
   });
 
   // Datas: dd/mm(/aaaa)

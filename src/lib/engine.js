@@ -36,6 +36,7 @@ const fromTask = (t, projects) => ({
   project: t.projectId ? projects.find((p) => p.id === t.projectId)?.name : null,
   phase: t.phase,
   notes: t.notes,
+  hub: !!t.hub,
 });
 
 const fromRoutine = (r, date, routineDone) => ({

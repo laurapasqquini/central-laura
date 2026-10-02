@@ -4,6 +4,8 @@ import { AREAS } from '../lib/engine';
 import { parseQuick } from '../lib/parse';
 import { fmtCurto, relativo, today } from '../lib/dates';
 
+export const HUB_URL = 'https://ranken-financeiro.vercel.app/';
+
 export const Pill = ({ className = '', children }) => (
   <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${className}`}>{children}</span>
 );
@@ -63,6 +65,11 @@ export function ItemRow({ item, showDate = false, onEdit }) {
           {item.notes && <span className="text-xs text-slate-400">📝</span>}
         </div>
       </button>
+      {item.hub && !item.done && (
+        <a href={HUB_URL} target="_blank" rel="noreferrer" title="Abrir o RANKEN Hub" className="mt-0.5 shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700">
+          🔗 Hub
+        </a>
+      )}
       {item.kind === 'task' && !item.done && (
         <button
           onClick={() => postpone(item.id, 1)}
@@ -127,11 +134,12 @@ export function QuickAdd({ defaultArea }) {
           <Pill className="bg-slate-50 text-slate-600 ring-slate-200">{preview.due ? fmtCurto(preview.due) : 'sem data'}</Pill>
           {preview.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">🙋 Lolis</Pill>}
           {preview.urgent && <Pill className="bg-red-50 text-red-600 ring-red-200">urgente</Pill>}
+          {preview.hub && <Pill className="bg-emerald-600 text-white ring-transparent">🔗 fazer no Hub</Pill>}
         </div>
       )}
       {!text && (
         <div className="px-2 pb-1 text-[11px] text-slate-400">
-          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>@lolis</b> delega · <b>!urgente</b> · datas: hoje, amanhã, sexta, 15/10, em 3 dias
+          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>@lolis</b> delega · <b>!urgente</b> · datas: hoje, amanhã, sexta, 15/10, em 3 dias
         </div>
       )}
     </form>
@@ -189,7 +197,7 @@ export function TaskModal({ id, onClose }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = () => {
-    updateTask(id, { title: form.title, area: form.area, who: form.who, due: form.due || null, urgent: form.urgent, notes: form.notes });
+    updateTask(id, { title: form.title, area: form.area, who: form.who, due: form.due || null, urgent: form.urgent, hub: !!form.hub, notes: form.notes });
     onClose();
   };
 
@@ -212,6 +220,9 @@ export function TaskModal({ id, onClose }) {
         </div>
         <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <input type="checkbox" checked={!!form.urgent} onChange={(e) => set('urgent')(e.target.checked)} className="h-4 w-4 accent-red-500" /> Urgente
+        </label>
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input type="checkbox" checked={!!form.hub} onChange={(e) => set('hub')(e.target.checked)} className="h-4 w-4 accent-emerald-600" /> Fazer no RANKEN Hub
         </label>
         <Field label="Notas">
           <textarea rows={3} className={inputCls} value={form.notes || ''} onChange={(e) => set('notes')(e.target.value)} placeholder="Detalhes, contato, link…" />

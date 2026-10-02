@@ -12,7 +12,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 4,
+    version: 5,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -73,6 +73,27 @@ function migrate(s) {
         r.title === 'Conferir novas inscrições e mandar boas-vindas' ? { ...r, title: 'Conferir se o cadastro dos novos inscritos está completo (foto, Instagram)', who: 'lolis' } : r
       ),
       tasks: s.tasks.map((t) => (t.title.startsWith('Escrever as mensagens padrão da Lolis (boas-vindas, ') ? { ...t, title: t.title.replace('(boas-vindas, ', '(') } : t)),
+    };
+  }
+  // v5: pendências encontradas no Hub em 02/10 (Cianorte, Cascavel e Maringá)
+  if (s.version < 5) {
+    const t = (title, due, extra = {}) => ({ ...tarefa(title, due), ...extra });
+    const seg = nextWorkday(hoje);
+    s = {
+      ...s,
+      version: 5,
+      tasks: [
+        t('Passar para a Lolis a pesquisa de Cascavel: telefones dos 18 locais, apoiadores e professores', hoje, { hub: true, urgent: true }),
+        t('Passar para a Lolis a pesquisa de Cianorte: apoiadores, local dos kits e professores', hoje, { hub: true, urgent: true }),
+        t('Maringá: mandar no grupo a reta final da rodada 5 (prazo, resultado no app, próximo sorteio)', hoje, { urgent: true }),
+        t('Definir quem cuida dos itens sem responsável em Cianorte e Cascavel (donos, clubes, síndicos, apoiadores)', seg, { hub: true }),
+        t('Colocar o banner da cidade no grupo do WhatsApp: Cianorte (prazo 04/10) e Cascavel (06/10)', seg),
+        t('Maringá: avisar no grupo que saíram os jogos da rodada 6', seg),
+        t('Maringá: marcar na rotina do projeto o que já foi feito nas rodadas 1 a 5', seg, { hub: true }),
+        t('Avisar o Yorran: sorteio da rodada 9 de Maringá está depois do início da rodada (corrigir no app)', seg),
+        t('Planejar as campanhas push de Maringá: data, público e texto de cada aviso por rodada', addDays(seg, 1)),
+        ...s.tasks,
+      ],
     };
   }
   return s;
