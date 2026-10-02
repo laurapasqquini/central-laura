@@ -19,7 +19,6 @@ export const seedRoutines = () => [
   r('Avisar quem tem 2 resultados pendentes (risco de suspensão)', 'lolis', 'weekly', { weekday: 1 }),
   r('Suspensos e sem adversário: tentar encaixes (até a 9ª rodada)', 'laura', 'weekly', { weekday: 1 }),
   r('Conferir WOs e pedidos de substituição', 'laura', 'weekly', { weekday: 2 }),
-  r('Postagem da semana: destaques, ganhadores, ranking', 'lolis', 'weekly', { weekday: 3 }),
   r('Sorteio semanal de brindes (só quem está em dia)', 'laura', 'weekly', { weekday: 4 }),
   r('Avisar ganhadores dos brindes: local e prazo de 7 dias', 'lolis', 'weekly', { weekday: 4 }),
   r('Lembrar no grupo: licenciamento até domingo 19h59', 'lolis', 'weekly', { weekday: 5 }),
