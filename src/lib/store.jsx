@@ -12,7 +12,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 6,
+    version: 7,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -115,6 +115,11 @@ function migrate(s) {
     ].join('\n');
     const unica = { ...tarefa('Cascavel e Cianorte: passar a pesquisa pra Lolis e organizar o que falta', null), hub: true, notes: notas };
     s = { ...s, version: 6, tasks: [unica, ...s.tasks.filter((t) => !juntar.includes(t.title))] };
+  }
+
+  // v7: o app está certo (sorteio da rodada 9 de duplas é 15/11); o alerta era do Hub
+  if (s.version < 7) {
+    s = { ...s, version: 7, tasks: s.tasks.filter((t) => !t.title.startsWith('Avisar o Yorran: sorteio da rodada 9')) };
   }
   return s;
 }
