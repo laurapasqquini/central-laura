@@ -10,6 +10,7 @@ export const CALENDARIOS = [
     cidade: 'Maringá',
     nome: 'Tênis Duplas (masc e fem)',
     curto: 'Duplas tênis',
+    esporte: 'tenis',
     etapa: 'LOEDE',
     retaFinal: 8,
     rodadas: [
@@ -26,6 +27,7 @@ export const CALENDARIOS = [
     cidade: 'Maringá',
     nome: 'Tênis Simples Masculino',
     curto: 'Simples Masc',
+    esporte: 'tenis',
     etapa: 'LOEDE',
     retaFinal: 8,
     rodadas: [
@@ -46,6 +48,7 @@ export const CALENDARIOS = [
     cidade: 'Maringá',
     nome: 'Tênis Simples Feminino (classes 1 a 5)',
     curto: 'Simples Fem',
+    esporte: 'tenis',
     etapa: 'LOEDE',
     retaFinal: null,
     rodadas: [
@@ -62,6 +65,7 @@ export const CALENDARIOS = [
     cidade: 'Maringá',
     nome: 'Beach Tennis',
     curto: 'Beach',
+    esporte: 'beach',
     etapa: 'LOEDE',
     retaFinal: 8,
     rodadas: [
@@ -78,6 +82,7 @@ export const CALENDARIOS = [
     cidade: 'Santa Fé',
     nome: 'Beach Tennis (1ª etapa)',
     curto: 'Beach Santa Fé',
+    esporte: 'beach',
     etapa: '1ª etapa',
     retaFinal: 4,
     rodadas: [
@@ -116,6 +121,27 @@ export function marcosDoDia(date) {
   }
   for (const c of CALENDARIOS) {
     if (fimEtapa(c) === date) out.push({ key: `cal:f:${c.id}`, title: `Fim da etapa ${c.etapa}: ${c.cidade} · ${c.nome}`, area: 'ranken', date });
+  }
+  return out;
+}
+
+// Postagem dos melhores da rodada (Hub > Ranking > Histórico de rodadas):
+// tênis na segunda e beach na terça depois do domingo em que a rodada terminou.
+const POSTAGEM = [
+  { esporte: 'tenis', depois: 1, insta: 'Instagram do tênis' },
+  { esporte: 'beach', depois: 2, insta: 'Instagram do beach' },
+];
+
+export function rotinasDoDia(date, addDays) {
+  const out = [];
+  for (const p of POSTAGEM) {
+    const domingo = addDays(date, -p.depois);
+    const terminaram = CALENDARIOS.filter((c) => c.esporte === p.esporte)
+      .map((c) => ({ c, rd: c.rodadas.find((x) => x.fim === domingo) }))
+      .filter((x) => x.rd);
+    if (!terminaram.length) continue;
+    const quais = terminaram.map(({ c, rd }) => `${c.curto} R${rd.n}`).join(' · ');
+    out.push({ id: `melhores-${p.esporte}`, title: `Postar os melhores da rodada no ${p.insta}: ${quais}`, hubPath: 'ranking' });
   }
   return out;
 }

@@ -1,4 +1,4 @@
-import { marcosDoDia } from '../data/calendarios';
+import { marcosDoDia, rotinasDoDia } from '../data/calendarios';
 import { today, addDays, weekday, fromStr, lastDayOfMonth, diffDays, fmtCurto } from './dates';
 
 export const AREAS = {
@@ -53,6 +53,22 @@ const fromRoutine = (r, date, routineDone) => ({
   freq: r.freq,
 });
 
+const calRoutines = (state, date) =>
+  rotinasDoDia(date, addDays).map((r) => ({
+    key: `r:${r.id}:${date}`,
+    kind: 'routine',
+    id: r.id,
+    title: r.title,
+    area: 'ranken',
+    who: state.melhoresWho || 'laura',
+    urgent: false,
+    date,
+    done: !!state.routineDone[`${r.id}:${date}`],
+    freq: 'calendario',
+    hub: true,
+    hubPath: r.hubPath,
+  }));
+
 const sortItems = (a, b) =>
   Number(a.done) - Number(b.done) ||
   Number(b.urgent) - Number(a.urgent) ||
@@ -63,7 +79,7 @@ const sortItems = (a, b) =>
 export function buildDay(state, date, filter) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
   const tasks = state.tasks.filter((t) => t.due === date).map((t) => fromTask(t, state.projects));
-  const routines = state.routines.filter((r) => occursOn(r, date)).map((r) => fromRoutine(r, date, state.routineDone));
+  const routines = state.routines.filter((r) => occursOn(r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date));
   const marcos = state.marcos
     .filter((m) => m.date === date)
     .map((m) => ({ key: `m:${m.id}`, kind: 'marco', id: m.id, title: m.title, area: m.area, who: 'all', date: m.date }))
@@ -82,6 +98,8 @@ export function buildOverdue(state, filter, ref = today()) {
     for (const r of state.routines) {
       if (r.freq !== 'daily' && occursOn(r, date) && !state.routineDone[`${r.id}:${date}`]) routines.push(fromRoutine(r, date, state.routineDone));
     }
+    // postagens dos melhores da rodada que ficaram pra trás (últimos 7 dias)
+    if (d <= 7) routines.push(...calRoutines(state, date).filter((x) => !x.done));
   }
   return [...tasks, ...routines].filter(ok).sort((a, b) => a.date.localeCompare(b.date) || sortItems(a, b));
 }

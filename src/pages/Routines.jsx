@@ -7,7 +7,7 @@ import { Modal, Segmented, areaOptions, inputCls, Pill } from '../components/ui'
 const when = (r) => (r.freq === 'daily' ? 'seg a sex' : r.freq === 'weekly' ? `toda ${DIAS[r.weekday]}` : `dia ${r.monthday}`);
 
 export default function Routines() {
-  const { state, updateRoutine } = useStore();
+  const { state, updateRoutine, setMelhoresWho } = useStore();
   const [editing, setEditing] = useState(null);
 
   return (
@@ -49,6 +49,24 @@ export default function Routines() {
           </section>
         );
       })}
+
+      <section className="space-y-2">
+        <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">Pelo calendário das etapas</h2>
+        <div className="space-y-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200/70">
+          <div className="text-[15px] font-medium text-slate-800">Postar os melhores da rodada</div>
+          <p className="text-sm text-slate-500">
+            Aparece sozinho quando uma rodada termina: tênis na segunda e beach na terça, com o botão que abre o Ranking no Hub.
+          </p>
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-slate-500">Quem posta:</span>
+            <Segmented
+              value={state.melhoresWho || 'laura'}
+              onChange={setMelhoresWho}
+              options={[['laura', 'Eu'], ['lolis', '🙋 Lolis', 'bg-amber-500 text-white ring-transparent']]}
+            />
+          </div>
+        </div>
+      </section>
 
       {editing && <RoutineModal id={editing} onClose={() => setEditing(null)} />}
     </div>

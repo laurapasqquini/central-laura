@@ -66,7 +66,7 @@ export function ItemRow({ item, showDate = false, onEdit }) {
         </div>
       </button>
       {item.hub && !item.done && (
-        <a href={HUB_URL} target="_blank" rel="noreferrer" title="Abrir o RANKEN Hub" className="mt-0.5 shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700">
+        <a href={HUB_URL + (item.hubPath || '')} target="_blank" rel="noreferrer" title="Abrir o RANKEN Hub" className="mt-0.5 shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700">
           🔗 Hub
         </a>
       )}

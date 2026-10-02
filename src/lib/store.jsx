@@ -331,6 +331,7 @@ export function StoreProvider({ user, children }) {
       deletePedido: (id) =>
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
+      setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
       replaceAll: (next) => setState(next),
     };
   }, []);
