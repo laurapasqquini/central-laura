@@ -34,8 +34,8 @@ export function NotifCard() {
     setBusy(true);
     setMsg('');
     try {
-      await fn();
-      setMsg(ok);
+      const r = await fn();
+      setMsg(typeof ok === 'function' ? ok(r) : ok);
     } catch (e) {
       setMsg(e.message === 'permissao' ? 'Você não permitiu as notificações.' : `Não deu certo: ${e.message}`);
     }
@@ -73,7 +73,13 @@ export function NotifCard() {
 
       {st === 'ligado' && (
         <div className="flex flex-wrap gap-2">
-          <button disabled={busy} onClick={() => run(sendTest, 'Teste enviado. Deve chegar em alguns segundos.')} className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
+          <button disabled={busy} onClick={() =>
+              run(sendTest, (r) =>
+                r?.enviadas > 0
+                  ? `Enviado para ${r.enviadas} ${r.enviadas === 1 ? 'aparelho' : 'aparelhos'}. Deve chegar em alguns segundos.`
+                  : 'O servidor não achou nenhum aparelho ativado. Clique em "Desativar aqui" e ative de novo.'
+              )
+            } className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">
             Enviar teste
           </button>
           <button disabled={busy} onClick={() => run(disablePush, 'Desativadas neste aparelho.')} className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 ring-1 ring-slate-200">
