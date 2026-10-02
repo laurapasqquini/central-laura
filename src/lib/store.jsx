@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from './supabase';
-import { today, addDays } from './dates';
+import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
@@ -12,7 +12,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 1,
+    version: 2,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -22,10 +22,37 @@ function initial() {
   };
 }
 
+// Ajustes que chegam com novas versões da Central e precisam valer para dados já salvos.
+function migrate(s) {
+  if (!s || (s.version || 1) >= 2) return s;
+  const hoje = today();
+  const routines = s.routines.map((r) => {
+    if (r.title === 'Cobrar mensalidades Pix de hoje e as atrasadas') return { ...r, title: 'Cobrar o Pix de quem não pagou após a 1ª mensagem' };
+    if (r.title === 'Conferir novas inscrições e mandar boas-vindas') return { ...r, who: 'lolis' };
+    return r;
+  });
+  const nova = (title, who, freq, extra) => ({ id: uid(), title, area: 'ranken', who, freq, active: true, createdAt: hoje, ...extra });
+  routines.push(
+    nova('Mandar a 1ª mensagem de cobrança Pix (vencimentos do dia)', 'lolis', 'daily'),
+    nova('Conferência da semana com a Lolis (15 min)', 'laura', 'weekly', { weekday: 5 })
+  );
+  const tarefa = (title, due) => ({ id: uid(), title, area: 'ranken', who: 'laura', due, urgent: false, done: false, createdAt: hoje, postponed: 0, notes: '' });
+  return {
+    ...s,
+    version: 2,
+    routines,
+    tasks: [
+      tarefa('Escrever as mensagens padrão da Lolis (Pix, boas-vindas, 6x0, brindes, pendências, licenciamento)', nextWorkday(hoje)),
+      tarefa('Confirmar os acessos da Lolis: Hub, grupos do WhatsApp e Instagram', nextWorkday(hoje)),
+      ...s.tasks,
+    ],
+  };
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return migrate(JSON.parse(raw));
   } catch {
     /* sem armazenamento: começa do zero */
   }
@@ -84,8 +111,10 @@ export function StoreProvider({ user, children }) {
       if (!alive) return;
       if (error) return setSync('offline');
       if (data) {
+        const migrated = migrate(data.data);
+        // se a migração mudou algo, lastJson fica com a versão antiga e o efeito de salvar sobe a nova
         lastJson.current = JSON.stringify(data.data);
-        setState(data.data);
+        setState(migrated);
       } else {
         await supabase.from('central_state').upsert({ user_id: user.id, data: state, updated_at: new Date().toISOString() });
         lastJson.current = JSON.stringify(state);
@@ -102,7 +131,7 @@ export function StoreProvider({ user, children }) {
         const json = JSON.stringify(p.new?.data);
         if (p.new?.data && json !== lastJson.current) {
           lastJson.current = json;
-          setState(p.new.data);
+          setState(migrate(p.new.data));
         }
       })
       .subscribe();

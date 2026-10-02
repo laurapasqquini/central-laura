@@ -50,3 +50,10 @@ export const lastDayOfMonth = (s) => {
   const d = fromStr(s);
   return new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
 };
+
+// Próximo dia útil (pula sábado e domingo).
+export const nextWorkday = (s) => {
+  let d = addDays(s, 1);
+  while (weekday(d) === 0 || weekday(d) === 6) d = addDays(d, 1);
+  return d;
+};

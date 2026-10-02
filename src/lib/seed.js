@@ -11,9 +11,10 @@ export const seedRoutines = () => [
   r('Responder o WhatsApp da RANKEN', 'laura', 'daily'),
   r('Publicar o sorteio diário no grupo do WhatsApp', 'lolis', 'daily'),
   r('Postar o sorteio diário no Instagram', 'lolis', 'daily'),
-  r('Cobrar mensalidades Pix de hoje e as atrasadas', 'laura', 'daily'),
+  r('Mandar a 1ª mensagem de cobrança Pix (vencimentos do dia)', 'lolis', 'daily'),
+  r('Cobrar o Pix de quem não pagou após a 1ª mensagem', 'laura', 'daily'),
   r('Conferir 6x0 6x0 novos e avisar os ganhadores', 'lolis', 'daily'),
-  r('Conferir novas inscrições e mandar boas-vindas', 'laura', 'daily'),
+  r('Conferir novas inscrições e mandar boas-vindas', 'lolis', 'daily'),
   r('Zerar os atrasados do Hub antes de encerrar o dia', 'laura', 'daily'),
   // Semanais
   r('Avisar quem tem 2 resultados pendentes (risco de suspensão)', 'lolis', 'weekly', { weekday: 1 }),
@@ -25,6 +26,7 @@ export const seedRoutines = () => [
   r('Lembrar no grupo: licenciamento até domingo 19h59', 'lolis', 'weekly', { weekday: 5 }),
   r('Revisar inadimplentes e o placar da semana no Hub', 'laura', 'weekly', { weekday: 5 }),
   r('Checar a retirada dos brindes da semana passada', 'lolis', 'weekly', { weekday: 5 }),
+  r('Conferência da semana com a Lolis (15 min)', 'laura', 'weekly', { weekday: 5 }),
   r('Planejar a próxima semana aqui na Central', 'laura', 'weekly', { weekday: 5 }, 'pessoal'),
   // Mensais
   r('Fechar o mês: MRR, pagantes, inscrições, churn, inadimplentes', 'laura', 'monthly', { monthday: 1 }),
