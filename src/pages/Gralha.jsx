@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
-import { brl, priceFor, search, detalhe, totals, mensagem, isMaringa } from '../lib/gralha';
+import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa } from '../lib/gralha';
 import { fmtCurto, relativo, today } from '../lib/dates';
 import { inputCls, Empty, Pill, Segmented } from '../components/ui';
 
@@ -47,21 +47,26 @@ function Novo({ cat, onSaved }) {
   const { addPedido } = useStore();
   const [q, setQ] = useState('');
   const [aba, setAba] = useState('');
+  const [modo, setModo] = useState('qtd'); // qtd | tabela
   const [itens, setItens] = useState([]);
   const [cliente, setCliente] = useState('');
   const [cidade, setCidade] = useState('');
   const [frete, setFrete] = useState('');
   const [copied, setCopied] = useState(false);
   const abas = useMemo(() => [...new Set(cat.produtos.map((p) => p.aba))], [cat]);
-  const results = useMemo(() => (q || aba ? search(cat.produtos, q, aba).slice(0, 30) : []), [cat, q, aba]);
+  const groups = useMemo(() => {
+    if (q.trim()) return searchMany(cat.produtos, q, aba).map((g) => ({ ...g, results: g.results.slice(0, 12) }));
+    return aba ? [{ termo: '', results: search(cat.produtos, '', aba) }] : [];
+  }, [cat, q, aba]);
+  const added = new Set(itens.map((i) => i.prodId));
 
   const freteNum = isMaringa(cidade) ? 0 : parseFloat(String(frete).replace(',', '.')) || 0;
   const { linhas, produtosTotal, total, aVista } = totals(itens, cat.produtos, freteNum);
-  const msg = itens.length ? mensagem({ cliente, cidade, itens, produtos: cat.produtos, frete: freteNum }) : '';
+  const tabela = modo === 'tabela';
+  const msg = !itens.length ? '' : tabela ? mensagemTabela({ cliente, cidade, itens, produtos: cat.produtos }) : mensagem({ cliente, cidade, itens, produtos: cat.produtos, frete: freteNum });
 
   const add = (p) => {
     setItens((xs) => [...xs, { key: crypto.randomUUID().slice(0, 6), prodId: p.id, qtd: Math.max(p.minimo || 1, 1) }]);
-    setQ('');
   };
   const setQtd = (key, qtd) => setItens((xs) => xs.map((x) => (x.key === key ? { ...x, qtd: Math.max(1, qtd || 1) } : x)));
 
@@ -76,20 +81,28 @@ function Novo({ cat, onSaved }) {
   };
 
   const salvar = () => {
-    addPedido({ cliente: cliente.trim() || 'Cliente sem nome', cidade, itens: itens.map(({ prodId, qtd }) => ({ prodId, qtd })), frete: freteNum, total, mensagem: msg });
+    addPedido({ cliente: cliente.trim() || 'Cliente sem nome', cidade, tipo: modo, itens: itens.map(({ prodId, qtd }) => ({ prodId, qtd })), frete: freteNum, total: tabela ? null : total, mensagem: msg });
     onSaved();
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
-      <div className="space-y-5">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
+      <div className="min-w-0 space-y-5">
+        <Segmented
+          value={modo}
+          onChange={setModo}
+          options={[
+            ['qtd', 'Com quantidade', 'bg-ink text-white ring-ink'],
+            ['tabela', 'Só tabela de preços', 'bg-ink text-white ring-ink'],
+          ]}
+        />
         <div className="grid grid-cols-2 gap-3">
           <input className={inputCls} placeholder="Cliente (ex.: Medicina UEM 2027)" value={cliente} onChange={(e) => setCliente(e.target.value)} />
           <input className={inputCls} placeholder="Cidade de entrega" value={cidade} onChange={(e) => setCidade(e.target.value)} />
         </div>
 
         <div className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-          <input autoFocus className={inputCls} placeholder="Buscar produto… ex.: polo piquet bordado, moletom, troféu" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input autoFocus className={inputCls} placeholder="Buscar… vários de uma vez com vírgula: camiseta algodão, samba, body" value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             {abas.map((a) => (
               <button
@@ -101,23 +114,33 @@ function Novo({ cat, onSaved }) {
               </button>
             ))}
           </div>
-          {results.length > 0 && (
-            <div className="max-h-80 space-y-1 overflow-y-auto">
-              {results.map((p) => (
-                <button key={p.id} onClick={() => add(p)} className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left hover:bg-sky-50">
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold text-slate-800">{p.nome}</div>
-                    <div className="truncate text-xs text-slate-500">{detalhe(p) || p.aba}</div>
-                  </div>
-                  <div className="shrink-0 text-right text-xs text-slate-500">
-                    a partir de <b className="text-slate-700">{brl(Math.min(...p.faixas.map((f) => f.preco)))}</b>
-                    <div>mín. {p.minimo}</div>
-                  </div>
-                </button>
+          {groups.length > 0 && (
+            <div className="max-h-96 space-y-3 overflow-y-auto">
+              {groups.map((g) => (
+                <div key={g.termo} className="space-y-1">
+                  {groups.length > 1 && <div className="px-2 text-xs font-bold uppercase tracking-wide text-sky-600">{g.termo}</div>}
+                  {!g.results.length && <p className="px-2 text-sm text-slate-400">Nada encontrado.</p>}
+                  {g.results.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => !added.has(p.id) && add(p)}
+                      className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left ${added.has(p.id) ? 'bg-sky-50' : 'hover:bg-sky-50'}`}
+                    >
+                      <div className="min-w-0">
+                        <div className="line-clamp-2 text-sm font-semibold text-slate-800">{added.has(p.id) && '✓ '}{p.nome}</div>
+                        <div className="truncate text-xs text-slate-500">{detalhe(p) || p.aba}</div>
+                      </div>
+                      <div className="shrink-0 text-right text-xs text-slate-500">
+                        a partir de <b className="text-slate-700">{brl(Math.min(...p.faixas.map((f) => f.preco)))}</b>
+                        <div>mín. {p.minimo}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               ))}
             </div>
           )}
-          {(q || aba) && !results.length && <p className="px-2 py-3 text-sm text-slate-400">Nada encontrado.</p>}
+
         </div>
 
         {linhas.map((l) => {
@@ -131,6 +154,14 @@ function Novo({ cat, onSaved }) {
                 </div>
                 <button onClick={() => setItens((xs) => xs.filter((x) => x.key !== l.key))} className="text-xl leading-none text-slate-300 hover:text-red-500">×</button>
               </div>
+              {tabela ? (
+                <div className="grid gap-x-6 gap-y-0.5 text-sm sm:grid-cols-2">
+                  {faixasLabel(l.p).map((f) => (
+                    <div key={f.label} className="flex justify-between"><span className="text-slate-500">{f.label}</span><b className="text-slate-700">{brl(f.preco)}</b></div>
+                  ))}
+                </div>
+              ) : (
+              <>
               <div className="flex items-center gap-3">
                 <input type="number" min="1" className={`${inputCls} w-24`} value={l.qtd} onChange={(e) => setQtd(l.key, parseInt(e.target.value, 10))} />
                 <span className="text-sm text-slate-500">× {brl(l.unit)}</span>
@@ -142,11 +173,13 @@ function Novo({ cat, onSaved }) {
                   💡 Com <b>{proxima.min - l.qtd}</b> peças a mais ({proxima.min}), cai para <b>{brl(proxima.preco)}</b> cada.
                 </p>
               )}
+              </>
+              )}
             </div>
           );
         })}
 
-        {itens.length > 0 && (
+        {itens.length > 0 && !tabela && (
           <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <div className="flex items-center justify-between gap-3 text-sm">
               <span className="text-slate-500">Frete</span>
@@ -163,7 +196,7 @@ function Novo({ cat, onSaved }) {
         )}
       </div>
 
-      <div className="space-y-3 lg:sticky lg:top-6 lg:self-start">
+      <div className="min-w-0 space-y-3 lg:sticky lg:top-6 lg:self-start">
         <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">Mensagem pro WhatsApp</h2>
         {msg ? (
           <>
@@ -215,7 +248,7 @@ function Pedidos() {
                     <button onClick={() => setOpen(open === p.id ? null : p.id)} className="min-w-0 text-left">
                       <div className="font-bold text-slate-800">{p.cliente}</div>
                       <div className="text-xs text-slate-500">
-                        {brl(p.total)} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}
+                        {p.total == null ? 'tabela de preços' : brl(p.total)} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}
                         {p.cidade && ` · ${p.cidade}`} · nesta etapa desde {since === today() ? 'hoje' : relativo(since)}
                       </div>
                     </button>

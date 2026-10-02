@@ -14,13 +14,53 @@ export function priceFor(prod, qtd) {
   return { atual, proxima, abaixoMinimo: !atual };
 }
 
+// Produtos cujo NOME bate com a busca vêm antes dos que só batem pela aba ou tecido.
 export function search(produtos, q, aba) {
   const terms = norm(q).split(/\s+/).filter(Boolean);
-  return produtos.filter((p) => {
-    if (aba && p.aba !== aba) return false;
-    const hay = norm([p.nome, p.tecido, p.personalizacao, p.tamanho, p.aba].join(' '));
-    return terms.every((t) => hay.includes(t));
+  return produtos
+    .filter((p) => {
+      if (aba && p.aba !== aba) return false;
+      const hay = norm([p.nome, p.tecido, p.personalizacao, p.tamanho, p.aba].join(' '));
+      return terms.every((t) => hay.includes(t));
+    })
+    .map((p) => ({ p, score: terms.filter((t) => norm(p.nome).includes(t)).length }))
+    .sort((a, b) => b.score - a.score)
+    .map((x) => x.p);
+}
+
+// "camiseta algodão, samba, body" -> um grupo de resultados por termo
+export const searchMany = (produtos, q, aba) =>
+  q
+    .split(/[,;\n]/)
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .map((termo) => ({ termo, results: search(produtos, termo, aba) }));
+
+// Nome de cada faixa: "5 a 14 peças", "51 ou mais"
+export function faixasLabel(prod) {
+  const fs = [...prod.faixas].sort((a, b) => a.min - b.min);
+  if (fs.length === 1 && fs[0].min <= 1) return [{ label: 'Unidade', preco: fs[0].preco }];
+  return fs.map((f, i) => {
+    const max = f.max ?? (fs[i + 1] ? fs[i + 1].min - 1 : null);
+    return { label: max == null ? `${f.min} ou mais` : max === f.min ? `${f.min} peças` : `${f.min} a ${max} peças`, preco: f.preco };
   });
+}
+
+// Mensagem só com a tabela de preços (cliente ainda sem quantidade definida).
+export function mensagemTabela({ cliente, cidade, itens, produtos }) {
+  const out = ['*ORÇAMENTO GRALHA AZUL UNIFORMES*', ''];
+  if (cliente) out.push(`Cliente: ${cliente}`, '');
+  itens.forEach((it, i) => {
+    const p = produtos.find((x) => x.id === it.prodId);
+    out.push(`*${i + 1}) ${p.nome}*`);
+    if (detalhe(p)) out.push(detalhe(p));
+    faixasLabel(p).forEach((f) => out.push(`• ${f.label}: ${brl(f.preco)}`));
+    if (p.prazo) out.push(`Prazo: ${p.prazo}`);
+    out.push('');
+  });
+  out.push(`*Frete:* ${isMaringa(cidade) ? 'grátis para Maringá-PR' : 'a calcular conforme o endereço de entrega'}`);
+  out.push('5% de desconto no pagamento à vista', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
+  return out.join('\n');
 }
 
 export const detalhe = (p) => [p.tecido, p.tamanho, p.personalizacao].filter(Boolean).join(' · ');

@@ -57,7 +57,7 @@ function Shell() {
         </div>
       </aside>
 
-      <main className="mx-auto w-full max-w-5xl px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12">
+      <main className="mx-auto w-full min-w-0 max-w-5xl px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12">
         <div className="mb-3 flex justify-end sm:hidden"><SyncDot sync={sync} dark /></div>
         <Page />
       </main>
@@ -101,6 +101,13 @@ export default function App() {
     return () => data.subscription.unsubscribe();
   }, []);
 
+  // Só no computador de desenvolvimento: localhost:5190/#demo abre sem login, para testes.
+  if (import.meta.env.DEV && location.hash === '#demo')
+    return (
+      <StoreProvider user={{ id: '00000000-0000-0000-0000-000000000000', email: 'demo' }}>
+        <Shell />
+      </StoreProvider>
+    );
   if (session === undefined) return <div className="min-h-screen bg-ink" />;
   if (!session) return <Login />;
   return (
