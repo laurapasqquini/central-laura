@@ -12,7 +12,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 5,
+    version: 6,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -95,6 +95,26 @@ function migrate(s) {
         ...s.tasks,
       ],
     };
+  }
+  // v6: Cascavel e Cianorte viram uma tarefa só, sem data (a Laura define quando delegar)
+  if (s.version < 6) {
+    const juntar = [
+      'Passar para a Lolis a pesquisa de Cascavel: telefones dos 18 locais, apoiadores e professores',
+      'Passar para a Lolis a pesquisa de Cianorte: apoiadores, local dos kits e professores',
+      'Definir quem cuida dos itens sem responsável em Cianorte e Cascavel (donos, clubes, síndicos, apoiadores)',
+      'Colocar o banner da cidade no grupo do WhatsApp: Cianorte (prazo 04/10) e Cascavel (06/10)',
+    ];
+    const notas = [
+      'Pesquisa para passar à Lolis (pelo Hub):',
+      '• Cascavel: telefone do responsável de cada local (0 de 18 levantados), possíveis apoiadores e local dos kits, professores com WhatsApp',
+      '• Cianorte: possíveis apoiadores e local dos kits, professores com WhatsApp',
+      '',
+      'Também no Hub:',
+      '• Itens sem responsável nos dois projetos: conversas com donos, clubes, síndicos e apoiadores',
+      '• Banner da cidade no grupo do WhatsApp (Hub marca prazo 04/10 Cianorte e 06/10 Cascavel)',
+    ].join('\n');
+    const unica = { ...tarefa('Cascavel e Cianorte: passar a pesquisa pra Lolis e organizar o que falta', null), hub: true, notes: notas };
+    s = { ...s, version: 6, tasks: [unica, ...s.tasks.filter((t) => !juntar.includes(t.title))] };
   }
   return s;
 }
