@@ -14,7 +14,9 @@ const cors = {
 };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 
-webpush.setVapidDetails('mailto:contato@thbsistemas.com.br', Deno.env.get('VAPID_PUBLIC_KEY')!, Deno.env.get('VAPID_PRIVATE_KEY')!);
+// .trim(): segredos colados no painel às vezes vêm com quebra de linha/espaço no fim
+const env = (k: string) => (Deno.env.get(k) ?? '').trim();
+webpush.setVapidDetails('mailto:contato@thbsistemas.com.br', env('VAPID_PUBLIC_KEY'), env('VAPID_PRIVATE_KEY'));
 const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
 // Data de hoje no horário de Brasília (UTC-3, sem horário de verão)
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
     return json({ enviadas: n });
   }
 
-  if (req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) return json({ erro: 'proibido' }, 403);
+  if ((req.headers.get('x-cron-secret') ?? '').trim() !== env('CRON_SECRET')) return json({ erro: 'proibido' }, 403);
   const slot = String(body.slot ?? '');
   const date = hojeBR();
   const { data: rows } = await admin.from('central_state').select('user_id, agenda');
