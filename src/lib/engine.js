@@ -166,3 +166,51 @@ export function projectProgress(state, pid) {
   const done = ts.filter((t) => t.done).length;
   return { total: ts.length, done, pct: ts.length ? Math.round((done / ts.length) * 100) : 0, next: ts.filter((t) => !t.done).sort((a, b) => a.due.localeCompare(b.due))[0] };
 }
+
+// Textos das notificações dos próximos 14 dias (o Supabase só lê e envia no horário).
+// manha 7h30 · tarde 13h30 (só se houver urgente/atrasado) · noite 18h (o que falta + amanhã)
+export function buildAgenda(state, ref = today()) {
+  const all = { area: 'all', who: 'all' };
+  const cfg = { manha: true, tarde: true, noite: true, ...(state.notif || {}) };
+  const corta = (s, n = 60) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
+  const lista = (xs, n = 3) => xs.slice(0, n).map((x) => `• ${corta(x.title)}`).join('\n');
+  const agenda = {};
+
+  for (let i = 0; i < 14; i++) {
+    const date = addDays(ref, i);
+    const fimDeSemana = [0, 6].includes(weekday(date));
+    const dia = buildDay(state, date, all);
+    const marcos = dia.filter((x) => x.kind === 'marco');
+    const minhas = dia.filter((x) => x.kind !== 'marco' && x.who === 'laura' && !x.done);
+    const atrasadas = buildOverdue(state, all, date).filter((x) => x.who === 'laura');
+    const urgentes = minhas.filter((x) => x.urgent);
+    const slots = {};
+
+    if (cfg.manha && (minhas.length || atrasadas.length || marcos.length)) {
+      const partes = minhas.length ? [`${minhas.length} ${minhas.length === 1 ? 'tarefa' : 'tarefas'} hoje`] : [];
+      if (urgentes.length) partes.push(`${urgentes.length} ${urgentes.length === 1 ? 'urgente' : 'urgentes'}`);
+      if (atrasadas.length) partes.push(`${atrasadas.length} ${atrasadas.length === 1 ? 'atrasada' : 'atrasadas'}`);
+      const destaque = [...atrasadas, ...urgentes, ...minhas.filter((x) => x.kind === 'task')];
+      slots.manha = {
+        title: ['☀️ Bom dia, Laura', ...partes].join(' · '),
+        body: [...marcos.map((m) => `📌 ${corta(m.title, 70)}`), lista([...new Map(destaque.map((x) => [x.key, x])).values()])].filter(Boolean).join('\n'),
+      };
+    }
+
+    const pendentesFortes = [...atrasadas, ...urgentes];
+    if (cfg.tarde && !fimDeSemana && pendentesFortes.length) {
+      slots.tarde = { title: `⏰ Ainda pendente: ${pendentesFortes.length} ${pendentesFortes.length === 1 ? 'item' : 'itens'}`, body: lista(pendentesFortes) };
+    }
+
+    if (cfg.noite && !fimDeSemana && minhas.length) {
+      const amanha = buildDay(state, addDays(date, 1), all).filter((x) => x.kind === 'task' && x.who === 'laura');
+      slots.noite = {
+        title: `🌙 Antes de encerrar: ${minhas.length} de hoje sem marcar`,
+        body: [lista(minhas), amanha.length ? `Amanhã: ${amanha.length} ${amanha.length === 1 ? 'tarefa' : 'tarefas'}` : ''].filter(Boolean).join('\n'),
+      };
+    }
+
+    if (Object.keys(slots).length) agenda[date] = slots;
+  }
+  return agenda;
+}

@@ -3,6 +3,7 @@ import { useStore } from '../lib/store';
 import { AREAS, FREQ_LABEL } from '../lib/engine';
 import { DIAS } from '../lib/dates';
 import { Modal, Segmented, areaOptions, inputCls, Pill } from '../components/ui';
+import { NotifCard } from '../components/Notif';
 
 const when = (r) => (r.freq === 'daily' ? 'seg a sex' : r.freq === 'weekly' ? `toda ${DIAS[r.weekday]}` : `dia ${r.monthday}`);
 
@@ -14,11 +15,15 @@ export default function Routines() {
     <div className="space-y-8">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Rotinas</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Rotinas e avisos</h1>
           <p className="text-sm text-slate-500">Aparecem sozinhas no dia certo. Desligue as que não fizerem sentido.</p>
         </div>
         <button onClick={() => setEditing('new')} className="shrink-0 rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white">+ Rotina</button>
       </header>
+
+      <div id="notificacoes">
+        <NotifCard />
+      </div>
 
       {['daily', 'weekly', 'monthly'].map((f) => {
         const list = state.routines.filter((r) => r.freq === f).sort((a, b) => (a.weekday ?? a.monthday ?? 0) - (b.weekday ?? b.monthday ?? 0));

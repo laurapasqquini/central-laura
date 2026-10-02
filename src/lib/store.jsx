@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
+import { buildAgenda } from './engine';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
 // Tudo é salvo como um único documento por usuária, sincronizado entre PC e iPhone.
@@ -187,6 +188,14 @@ function stageTask(pedidoId, cliente, stage) {
 
 const Ctx = createContext(null);
 
+// Textos das notificações vão numa coluna à parte; se falhar, os dados continuam salvos.
+const saveAgenda = (userId, state) =>
+  supabase
+    .from('central_state')
+    .update({ agenda: buildAgenda(state) })
+    .eq('user_id', userId)
+    .then(() => {}, () => {});
+
 export function StoreProvider({ user, children }) {
   const [state, setState] = useState(load);
   const [sync, setSync] = useState('loading'); // loading | ok | saving | offline
@@ -220,6 +229,7 @@ export function StoreProvider({ user, children }) {
       }
       ready.current = true;
       setSync('ok');
+      saveAgenda(user.id, data ? migrate(data.data) : state);
     };
     pull();
 
@@ -257,6 +267,7 @@ export function StoreProvider({ user, children }) {
       if (error) return setSync('offline');
       lastJson.current = json;
       setSync('ok');
+      saveAgenda(user.id, state);
     }, 700);
     return () => clearTimeout(t);
   }, [state, user.id]);
@@ -350,6 +361,7 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
+      setNotif: (patch) => setState((s) => ({ ...s, notif: { manha: true, tarde: true, noite: true, ...(s.notif || {}), ...patch } })),
       replaceAll: (next) => setState(next),
     };
   }, []);

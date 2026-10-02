@@ -61,7 +61,7 @@ function Shell() {
 
       <main className="mx-auto w-full min-w-0 max-w-5xl px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12">
         <div className="mb-3 flex justify-end sm:hidden"><SyncDot sync={sync} dark /></div>
-        <Page />
+        <Page go={setTab} />
       </main>
 
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">

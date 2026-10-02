@@ -27,7 +27,7 @@ export default defineConfig({
         lang: 'pt-BR',
         icons: [{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
       },
-      workbox: { globPatterns: ['**/*.{js,css,html,svg,png}'] },
+      workbox: { globPatterns: ['**/*.{js,css,html,svg,png}'], importScripts: ['push-sw.js'] },
     }),
   ],
 });

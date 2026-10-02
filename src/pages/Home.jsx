@@ -3,6 +3,7 @@ import { useStore } from '../lib/store';
 import { buildDay, buildOverdue, noDate, suggestions, AREAS } from '../lib/engine';
 import { today, addDays, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 import { ItemRow, Section, Empty, QuickAdd, TaskModal, Segmented } from '../components/ui';
+import { NotifBanner } from '../components/Notif';
 
 const TONES = {
   red: 'bg-red-50 ring-red-100 text-red-800',
@@ -29,7 +30,7 @@ function Ring({ pct }) {
   );
 }
 
-export default function Home() {
+export default function Home({ go }) {
   const { state } = useStore();
   const [filter, setFilter] = useState({ area: 'all', who: 'all' });
   const [editing, setEditing] = useState(null);
@@ -74,6 +75,8 @@ export default function Home() {
           options={[['all', 'Todos'], ['laura', 'Só eu'], ['lolis', '🙋 Lolis', 'bg-amber-500 text-white ring-transparent']]}
         />
       </div>
+
+      <NotifBanner onOpen={() => go?.('routines')} />
 
       <QuickAdd defaultArea={filter.area === 'all' ? 'ranken' : filter.area} />
 
