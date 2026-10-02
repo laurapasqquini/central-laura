@@ -1,9 +1,16 @@
 import { CALENDARIOS, rodadaAtual, proximoSorteio, fimEtapa, marcosDoDia } from '../data/calendarios';
 import { today, fmtCurto, relativo, diffDays, addDays } from '../lib/dates';
-import { Pill } from '../components/ui';
+import { useState } from 'react';
+import { Pill, Segmented } from '../components/ui';
+import Campanhas from './Campanhas';
+import { useStore } from '../lib/store';
+import { campanhasPendentes } from '../lib/engine';
 
 export default function Etapas() {
+  const { state } = useStore();
+  const [aba, setAba] = useState('rodadas');
   const ref = today();
+  const pend = campanhasPendentes(state, ref, 14).length;
   const cidades = [...new Set(CALENDARIOS.map((c) => c.cidade))];
 
   // Próximos domingos com sorteio (todas as cidades)
@@ -17,8 +24,22 @@ export default function Etapas() {
     <div className="space-y-8">
       <header>
         <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">🎾 Etapas</h1>
-        <p className="text-sm text-slate-500">Onde cada categoria está agora. Os sorteios já aparecem sozinhos na sua tela inicial.</p>
+        <p className="text-sm text-slate-500">Onde cada categoria está agora e as campanhas push de cada rodada.</p>
       </header>
+
+      <Segmented
+        value={aba}
+        onChange={setAba}
+        options={[
+          ['rodadas', 'Rodadas'],
+          ['campanhas', `📣 Campanhas${pend ? ` (${pend})` : ''}`],
+        ]}
+      />
+
+      {aba === 'campanhas' ? (
+        <Campanhas />
+      ) : (
+        <>
 
       {cidades.map((cidade) => (
         <section key={cidade} className="space-y-3">
@@ -49,6 +70,8 @@ export default function Etapas() {
           ))}
         </div>
       </section>
+        </>
+      )}
     </div>
   );
 }

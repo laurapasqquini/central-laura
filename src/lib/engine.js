@@ -1,4 +1,5 @@
 import { marcosDoDia, rotinasDoDia } from '../data/calendarios';
+import { gerarCampanhas } from '../data/campanhas';
 import { today, addDays, weekday, fromStr, lastDayOfMonth, diffDays, fmtCurto } from './dates';
 
 export const AREAS = {
@@ -109,12 +110,21 @@ export const noDate = (state, filter) =>
     .filter((t) => !t.done && !t.due && (filter.area === 'all' || t.area === filter.area) && (filter.who === 'all' || t.who === filter.who))
     .map((t) => fromTask(t, state.projects));
 
+// Campanhas push dos próximos dias que ainda não foram agendadas no backoffice
+export function campanhasPendentes(state, ref = today(), dias = 3) {
+  const ov = state.campanhas || {};
+  return gerarCampanhas(ref).filter((c) => c.data <= addDays(ref, dias) && !(ov[c.id]?.status && ov[c.id].status !== 'pendente'));
+}
+
 // Sugestões: regras simples que olham para os seus dados e apontam gargalos.
 export function suggestions(state, ref = today()) {
   const all = { area: 'all', who: 'all' };
   const out = [];
   const overdue = buildOverdue(state, all, ref);
   const hoje = buildDay(state, ref, all).filter((x) => x.kind !== 'marco' && !x.done);
+
+  const camp = campanhasPendentes(state, ref);
+  if (camp.length) out.push({ tone: 'red', icon: '📣', text: `${camp.length} ${camp.length === 1 ? 'campanha push dos próximos 3 dias ainda não foi agendada' : 'campanhas push dos próximos 3 dias ainda não foram agendadas'}. Veja em Etapas → Campanhas.` });
 
   const lolisLate = overdue.filter((x) => x.who === 'lolis');
   if (lolisLate.length) out.push({ tone: 'amber', icon: '🙋', text: `${lolisLate.length} ${lolisLate.length > 1 ? 'tarefas da Lolis passaram' : 'tarefa da Lolis passou'} do prazo. Vale cobrar o retorno dela.` });
@@ -198,7 +208,16 @@ export function buildAgenda(state, ref = today()) {
       const destaque = [...atrasadas, ...urgentes, ...minhas.filter((x) => x.kind === 'task')];
       slots.manha = {
         title: ['☀️ Bom dia, Laura', ...partes].join(' · '),
-        body: [...marcos.map((m) => `📌 ${corta(m.title, 70)}`), lista([...new Map(destaque.map((x) => [x.key, x])).values()])].filter(Boolean).join('\n'),
+        body: [
+          ...marcos.map((m) => `📌 ${corta(m.title, 70)}`),
+          (() => {
+            const n = campanhasPendentes(state, date).length;
+            return n ? `📣 ${n} ${n === 1 ? 'campanha' : 'campanhas'} para agendar` : '';
+          })(),
+          lista([...new Map(destaque.map((x) => [x.key, x])).values()]),
+        ]
+          .filter(Boolean)
+          .join('\n'),
       };
     }
 

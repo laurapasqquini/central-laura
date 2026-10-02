@@ -361,6 +361,7 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
+      setCampanha: (id, patch) => setState((s) => ({ ...s, campanhas: { ...(s.campanhas || {}), [id]: { ...((s.campanhas || {})[id] || {}), ...patch } } })),
       setNotif: (patch) =>
         setState((s) => {
           const atual = { manha: true, tarde: true, noite: true, ...(s.notif || {}) };
