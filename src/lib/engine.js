@@ -1,3 +1,4 @@
+import { marcosDoDia } from '../data/calendarios';
 import { today, addDays, weekday, fromStr, lastDayOfMonth, diffDays, fmtCurto } from './dates';
 
 export const AREAS = {
@@ -65,7 +66,8 @@ export function buildDay(state, date, filter) {
   const routines = state.routines.filter((r) => occursOn(r, date)).map((r) => fromRoutine(r, date, state.routineDone));
   const marcos = state.marcos
     .filter((m) => m.date === date)
-    .map((m) => ({ key: `m:${m.id}`, kind: 'marco', id: m.id, title: m.title, area: m.area, who: 'all', date: m.date }));
+    .map((m) => ({ key: `m:${m.id}`, kind: 'marco', id: m.id, title: m.title, area: m.area, who: 'all', date: m.date }))
+    .concat(marcosDoDia(date).map((m) => ({ ...m, kind: 'marco', who: 'all' })));
   return [...marcos, ...tasks, ...routines].filter((x) => x.kind === 'marco' ? filter.area === 'all' || x.area === filter.area : ok(x)).sort(sortItems);
 }
 

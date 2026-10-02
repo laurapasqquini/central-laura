@@ -147,12 +147,8 @@ export const seedTasks = (hoje) => [
 
 // Datas que não são tarefa, mas precisam aparecer (marcos).
 export const seedMarcos = () => [
-  { id: id('m'), title: 'Sorteio Maringá Masc (5ª) e Fem (2ª) às 20h', date: '2026-10-04', area: 'ranken' },
   { id: id('m'), title: 'Sorteio Londrina (7ª) às 20h', date: '2026-10-11', area: 'ranken' },
   { id: id('m'), title: 'Prazo para anunciar a confraternização', date: '2026-11-04', area: 'ranken' },
   { id: id('m'), title: 'Último dia de encaixes em Londrina', date: '2026-11-22', area: 'ranken' },
-  { id: id('m'), title: 'Último dia de encaixes em Maringá Masc', date: '2026-11-29', area: 'ranken' },
   { id: id('m'), title: 'Fim do ciclo 02 em Londrina', date: '2026-12-04', area: 'ranken' },
-  { id: id('m'), title: 'Fim do ciclo 02 em Maringá Masc', date: '2026-12-11', area: 'ranken' },
-  { id: id('m'), title: 'Fim do ciclo 02 em Maringá Fem', date: '2026-12-13', area: 'ranken' },
 ];

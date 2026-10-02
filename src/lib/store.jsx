@@ -12,7 +12,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 7,
+    version: 8,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -120,6 +120,12 @@ function migrate(s) {
   // v7: o app está certo (sorteio da rodada 9 de duplas é 15/11); o alerta era do Hub
   if (s.version < 7) {
     s = { ...s, version: 7, tasks: s.tasks.filter((t) => !t.title.startsWith('Avisar o Yorran: sorteio da rodada 9')) };
+  }
+
+  // v8: lembretes de Maringá agora vêm dos calendários oficiais (src/data/calendarios.js)
+  if (s.version < 8) {
+    const velhos = ['Sorteio Maringá Masc (5ª) e Fem (2ª) às 20h', 'Último dia de encaixes em Maringá Masc', 'Fim do ciclo 02 em Maringá Masc', 'Fim do ciclo 02 em Maringá Fem'];
+    s = { ...s, version: 8, marcos: s.marcos.filter((m) => !velhos.includes(m.title)) };
   }
   return s;
 }
