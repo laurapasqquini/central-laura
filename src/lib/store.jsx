@@ -13,7 +13,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 10,
+    version: 11,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -144,6 +144,17 @@ function migrate(s) {
       tasks: s.tasks.map((x) =>
         x.title === 'Decidir data e local da confraternização (anúncio até 04/11)' ? { ...x, title: 'Decidir data e local da confraternização (anunciar 30 dias antes, com valores)' } : x
       ),
+    };
+  }
+  // v11: começo de semana em 05/10 — rotinas de 02 a 04/10 ficam resolvidas e a reta final da R5 (já encerrada) sai
+  if (s.version < 11) {
+    const routineDone = { ...s.routineDone };
+    for (const d of ['2026-10-02', '2026-10-03', '2026-10-04']) for (const r of s.routines) routineDone[`${r.id}:${d}`] = true;
+    s = {
+      ...s,
+      version: 11,
+      routineDone,
+      tasks: s.tasks.filter((t) => !t.title.startsWith('Maringá: mandar no grupo a reta final da rodada 5')),
     };
   }
   return s;

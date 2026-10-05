@@ -102,6 +102,10 @@ function Card({ c, st, ov, aberta, onToggle, set }) {
   const titulo = ov.titulo ?? c.titulo;
   const mensagem = ov.mensagem ?? c.mensagem;
   const etapa = ov.etapa ?? c.etapa;
+  const hora = ov.hora ?? c.hora;
+  const agora = new Date();
+  const hhmm = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
+  const passou = c.data === today() && hora <= hhmm && st === 'pendente';
   const feito = st !== 'pendente';
 
   return (
@@ -114,9 +118,10 @@ function Card({ c, st, ov, aberta, onToggle, set }) {
             <Pill className="bg-slate-50 text-slate-500 ring-slate-200">R{c.rodada} · {TIPOS[c.tipo].nome}</Pill>
             {st === 'agendada' && <Pill className="bg-emerald-50 text-emerald-700 ring-emerald-200">✓ agendada</Pill>}
             {st === 'pulada' && <Pill className="bg-slate-50 text-slate-400 ring-slate-200">pulada</Pill>}
+            {passou && <Pill className="bg-red-50 text-red-600 ring-red-200">horário já passou</Pill>}
           </div>
           <div className="mt-0.5 truncate text-sm text-slate-500">
-            {c.hora.replace(':00', 'h')} · {titulo}
+            {hora.replace(':00', 'h')} · {titulo}
           </div>
         </div>
       </button>
@@ -126,7 +131,14 @@ function Card({ c, st, ov, aberta, onToggle, set }) {
           <div className="divide-y divide-slate-100">
             <Campo nome="Etapa (confira no backoffice)" valor={etapa} />
             <Campo nome="Início e fim" valor={brData(c.data)} />
-            <Campo nome="Horário" valor={c.hora} />
+            <div className="flex items-center justify-between gap-3 py-1.5">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Horário</div>
+                <input type="time" step="900" value={hora} onChange={(e) => set({ hora: e.target.value })} className="rounded-lg border border-slate-200 px-2 py-1 text-sm" />
+                {passou && <div className="mt-1 text-xs font-semibold text-red-600">Esse horário já passou hoje: escolha um mais tarde.</div>}
+              </div>
+              <Copiar texto={hora} rotulo="copiar" />
+            </div>
           </div>
           <label className="block space-y-1">
             <span className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-400">
