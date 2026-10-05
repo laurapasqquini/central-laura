@@ -266,6 +266,17 @@ function Pedidos() {
                       </button>
                     </div>
                   )}
+                  {['contrato', 'perdido'].includes(p.stage) && (
+                    <div className="mt-3">
+                      {/* volta para a etapa anterior (ex.: clicou em "Perdido" sem querer) */}
+                      <button
+                        onClick={() => moveStage(p.id, [...(p.history || [])].reverse().find((h) => h.stage !== p.stage)?.stage || 'enviado')}
+                        className="rounded-xl px-3 py-1.5 text-xs font-semibold text-sky-600 ring-1 ring-sky-200"
+                      >
+                        ↩ Reabrir
+                      </button>
+                    </div>
+                  )}
                   {open === p.id && (
                     <div className="mt-3 space-y-2">
                       <pre className="whitespace-pre-wrap rounded-xl bg-slate-50 p-3 font-sans text-xs text-slate-700">{p.mensagem}</pre>
