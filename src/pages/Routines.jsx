@@ -63,7 +63,7 @@ export default function Routines() {
         <div className="space-y-3 rounded-xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200/70">
           <div className="text-[15px] font-medium text-slate-800">Postar os melhores da rodada</div>
           <p className="text-sm text-slate-500">
-            Aparece sozinho quando uma rodada termina: tênis na segunda e beach na terça, com o botão que abre o Ranking no Hub.
+            Aparece sozinho na segunda depois do sorteio (tênis e beach, cada um no seu Instagram), com o botão que abre o Ranking no Hub.
           </p>
           <div className="flex items-center gap-3 text-sm">
             <span className="text-slate-500">Quem posta:</span>

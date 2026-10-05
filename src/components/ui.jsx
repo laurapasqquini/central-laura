@@ -55,7 +55,7 @@ export function ItemRow({ item, showDate = false, onEdit }) {
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           {item.urgent && !item.done && <Pill className="bg-red-50 text-red-600 ring-red-200">urgente</Pill>}
           {item.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">🙋 Lolis</Pill>}
-          {item.kind === 'routine' && <Pill className="bg-slate-50 text-slate-500 ring-slate-200">↻ rotina</Pill>}
+          {item.kind === 'routine' && item.freq !== 'calendario' && <Pill className="bg-slate-50 text-slate-500 ring-slate-200">↻ rotina</Pill>}
           {item.project && <Pill className="bg-indigo-50 text-indigo-600 ring-indigo-200">{item.project}</Pill>}
           {(showDate || late) && item.date && (
             <span className={`text-xs font-medium ${late ? 'text-red-500' : 'text-slate-400'}`}>
@@ -139,7 +139,7 @@ export function QuickAdd({ defaultArea }) {
         </div>
       )}
       {!text && (
-        <div className="px-2 pb-1 text-[11px] text-slate-400">
+        <div className="hidden px-2 pb-1 text-[11px] text-slate-400 sm:block">
           <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>@lolis</b> delega · <b>!urgente</b> · datas: hoje, amanhã, sexta, 15/10, em 3 dias
         </div>
       )}

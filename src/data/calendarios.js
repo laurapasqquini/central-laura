@@ -99,7 +99,7 @@ export const CALENDARIOS = [
     id: 'sfe-beach',
     cidade: 'Santa Fé',
     nome: 'Beach Tennis (1ª etapa)',
-    curto: 'Beach Santa Fé',
+    curto: 'Beach',
     esporte: 'beach',
     etapa: '1ª etapa',
     retaFinal: 4,
@@ -148,10 +148,10 @@ export function marcosDoDia(date) {
 }
 
 // Postagem dos melhores da rodada (Hub > Ranking > Histórico de rodadas):
-// tênis na segunda e beach na terça depois do domingo em que a rodada terminou.
+// tênis e beach na segunda depois do domingo de sorteio (cada um no seu Instagram).
 const POSTAGEM = [
   { esporte: 'tenis', depois: 1, insta: 'Instagram do tênis' },
-  { esporte: 'beach', depois: 2, insta: 'Instagram do beach' },
+  { esporte: 'beach', depois: 1, insta: 'Instagram do beach' },
 ];
 
 export function rotinasDoDia(date, addDays) {
@@ -162,7 +162,7 @@ export function rotinasDoDia(date, addDays) {
       .map((c) => ({ c, rd: c.rodadas.find((x) => x.fim === domingo) }))
       .filter((x) => x.rd);
     if (!terminaram.length) continue;
-    const quais = terminaram.map(({ c, rd }) => `${c.curto} R${rd.n}`).join(' · ');
+    const quais = terminaram.map(({ c, rd }) => `${c.cidade === 'Maringá' ? '' : `${c.cidade} `}${c.curto} R${rd.n}`).join(' · ');
     out.push({ id: `melhores-${p.esporte}`, title: `Postar os melhores da rodada no ${p.insta}: ${quais}`, hubPath: 'ranking' });
   }
   return out;
