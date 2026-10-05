@@ -161,9 +161,10 @@ export function rotinasDoDia(date, addDays) {
     const terminaram = CALENDARIOS.filter((c) => c.esporte === p.esporte)
       .map((c) => ({ c, rd: c.rodadas.find((x) => x.fim === domingo) }))
       .filter((x) => x.rd);
-    if (!terminaram.length) continue;
-    const quais = terminaram.map(({ c, rd }) => `${c.cidade === 'Maringá' ? '' : `${c.cidade} `}${c.curto} R${rd.n}`).join(' · ');
-    out.push({ id: `melhores-${p.esporte}`, title: `Postar os melhores da rodada no ${p.insta}: ${quais}`, hubPath: 'ranking' });
+    // uma tarefa por categoria, para marcar cada post separado
+    for (const { c, rd } of terminaram) {
+      out.push({ id: `melhores-${c.id}`, title: `Melhores da rodada · ${c.curto} ${c.cidade} · R${rd.n} (${p.insta})`, hubPath: 'ranking' });
+    }
   }
   return out;
 }
