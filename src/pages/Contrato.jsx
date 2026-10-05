@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
 import { priceFor } from '../lib/gralha';
 import { gerarContrato, totaisContrato, brl, PAGAMENTOS } from '../lib/contrato';
+import { gerarContratoPdf } from '../lib/contratoPdf';
 import { arquivoParaImagem, imagensDoEvento, salvarImagens, carregarImagens } from '../lib/imagens';
 import { today } from '../lib/dates';
 import { inputCls, Segmented } from '../components/ui';
@@ -143,18 +144,19 @@ export default function Contrato({ pedido, cat, onVoltar }) {
     ...t.itens.filter((i) => !i.qtdTotal).map((i) => `tamanhos de ${i.produto || 'um produto'}`),
   ].filter(Boolean);
 
-  const baixar = async () => {
+  const baixar = async (tipo = 'pdf') => {
     setBusy(true);
     setMsg('');
     try {
-      const blob = await gerarContrato({ ...c, itens: c.itens.map((i) => ({ ...i, imagens: fotos[i.key] || [] })) });
+      const dados = { ...c, itens: c.itens.map((i) => ({ ...i, imagens: fotos[i.key] || [] })) };
+      const blob = tipo === 'pdf' ? await gerarContratoPdf(dados) : await gerarContrato(dados);
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `CONTRATO_${(c.pedido || 'GRALHA').toUpperCase().replace(/[^A-Z0-9À-Ú]+/gi, '_')}.docx`;
+      a.download = `CONTRATO_${(c.pedido || 'GRALHA').toUpperCase().replace(/[^A-Z0-9À-Ú]+/gi, '_')}.${tipo === 'pdf' ? 'pdf' : 'docx'}`;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 5000);
       updatePedido(pedido.id, { total: t.total });
-      setMsg('Contrato baixado ✓ Abra no Word, confira e mande para o cliente.');
+      setMsg(tipo === 'pdf' ? 'PDF baixado ✓ Confira e mande para o cliente.' : 'Word baixado ✓ Use quando precisar editar algo à mão.');
     } catch (e) {
       setMsg(`Não deu certo: ${e.message}`);
     }
@@ -256,8 +258,11 @@ export default function Contrato({ pedido, cat, onVoltar }) {
       <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
         {faltando.length > 0 && <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">Falta: {faltando.join(', ')}.</p>}
         <div className="flex flex-wrap gap-2">
-          <button disabled={busy || faltando.length > 0} onClick={baixar} className="rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white disabled:opacity-40">
-            {busy ? 'Gerando…' : '⬇ Baixar contrato (Word)'}
+          <button disabled={busy || faltando.length > 0} onClick={() => baixar('pdf')} className="rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white disabled:opacity-40">
+            {busy ? 'Gerando…' : '⬇ Baixar PDF'}
+          </button>
+          <button disabled={busy || faltando.length > 0} onClick={() => baixar('docx')} className="rounded-xl px-4 py-3 text-sm font-semibold text-slate-600 ring-1 ring-slate-300 disabled:opacity-40">
+            Word (para editar)
           </button>
           {pedido.stage !== 'contrato' && (
             <button onClick={() => moveStage(pedido.id, 'contrato')} className="rounded-xl px-4 py-3 text-sm font-semibold text-sky-700 ring-1 ring-sky-200">
