@@ -1,5 +1,6 @@
 import { marcosDoDia, rotinasDoDia } from '../data/calendarios';
 import { gerarCampanhas } from '../data/campanhas';
+import { FERIADOS } from '../data/feriados';
 import { today, addDays, weekday, fromStr, lastDayOfMonth, diffDays, fmtCurto } from './dates';
 
 export const AREAS = {
@@ -10,21 +11,55 @@ export const AREAS = {
 
 export const FREQ_LABEL = { daily: 'Todo dia útil', weekly: 'Toda semana', monthly: 'Todo mês' };
 
-export function occursOn(r, date) {
-  if (!r.active) return false;
-  if (r.createdAt && date < r.createdAt) return false;
-  const wd = weekday(date);
-  if (r.freq === 'daily') return wd >= 1 && wd <= 5;
-  if (r.freq === 'weekly') return wd === r.weekday;
-  if (r.freq === 'monthly') {
-    const d = fromStr(date).getDate();
-    return d === Math.min(r.monthday, lastDayOfMonth(date));
+// ---- Dias úteis: a Laura não trabalha sábado, domingo, feriados e folgas.
+// O que cairia num dia de folga vai para o próximo dia útil (prazos de projeto vão para o anterior).
+export function folgaDe(state, date) {
+  if ((state.folgas || {})[date]) return state.folgas[date];
+  if (FERIADOS[date] && !(state.feriadosIgnorados || []).includes(date)) return FERIADOS[date];
+  return null;
+}
+export const isWorkday = (state, date) => ![0, 6].includes(weekday(date)) && !folgaDe(state, date);
+export function proximoDiaUtil(state, date, dir = 1) {
+  let d = date;
+  while (!isWorkday(state, d)) d = addDays(d, dir);
+  return d;
+}
+// Data efetiva de uma tarefa: prazos de projeto antecipam, o resto vai para o próximo dia útil
+export const dataEfetiva = (state, t) => (t.due ? proximoDiaUtil(state, t.due, t.projectId ? -1 : 1) : null);
+// Datas "nominais" que caem neste dia útil: ele mesmo + os dias de folga logo antes
+function nominaisDe(state, date) {
+  if (!isWorkday(state, date)) return [];
+  const out = [date];
+  for (let d = addDays(date, -1); !isWorkday(state, d); d = addDays(d, -1)) out.push(d);
+  return out;
+}
+// Limite de "N dias úteis à frente" (para avisos que precisam de antecedência)
+export function limiteDiasUteis(state, ref, n) {
+  let d = ref;
+  for (let c = 0; c < n; ) {
+    d = addDays(d, 1);
+    if (isWorkday(state, d)) c++;
   }
+  return d;
+}
+
+function caiNoDia(r, date) {
+  const wd = weekday(date);
+  if (r.freq === 'daily') return true;
+  if (r.freq === 'weekly') return wd === r.weekday;
+  if (r.freq === 'monthly') return fromStr(date).getDate() === Math.min(r.monthday, lastDayOfMonth(date));
   return false;
 }
 
+export function occursOn(state, r, date) {
+  if (!r.active) return false;
+  if (r.createdAt && date < r.createdAt) return false;
+  if (r.freq === 'daily') return isWorkday(state, date);
+  return nominaisDe(state, date).some((d) => caiNoDia(r, d));
+}
+
 // Uma lista única de "itens" para as telas: tarefas, rotinas do dia e marcos.
-const fromTask = (t, projects) => ({
+const fromTask = (t, projects, state) => ({
   key: `t:${t.id}`,
   kind: 'task',
   id: t.id,
@@ -32,7 +67,8 @@ const fromTask = (t, projects) => ({
   area: t.area,
   who: t.who,
   urgent: t.urgent,
-  date: t.due,
+  date: state ? dataEfetiva(state, t) : t.due,
+  movedFrom: state && t.due && dataEfetiva(state, t) !== t.due ? t.due : null,
   done: t.done,
   postponed: t.postponed || 0,
   project: t.projectId ? projects.find((p) => p.id === t.projectId)?.name : null,
@@ -55,7 +91,7 @@ const fromRoutine = (r, date, routineDone) => ({
 });
 
 const calRoutines = (state, date) =>
-  rotinasDoDia(date, addDays).map((r) => ({
+  nominaisDe(state, date).flatMap((d) => rotinasDoDia(d, addDays)).map((r) => ({
     key: `r:${r.id}:${date}`,
     kind: 'routine',
     id: r.id,
@@ -79,8 +115,8 @@ const sortItems = (a, b) =>
 
 export function buildDay(state, date, filter) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
-  const tasks = state.tasks.filter((t) => t.due === date).map((t) => fromTask(t, state.projects));
-  const routines = state.routines.filter((r) => occursOn(r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date));
+  const tasks = state.tasks.filter((t) => t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state));
+  const routines = state.routines.filter((r) => occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date));
   const marcos = state.marcos
     .filter((m) => m.date === date)
     .map((m) => ({ key: `m:${m.id}`, kind: 'marco', id: m.id, title: m.title, area: m.area, who: 'all', date: m.date }))
@@ -92,12 +128,12 @@ export function buildDay(state, date, filter) {
 // (Rotina diária não acumula: amanhã ela aparece de novo.)
 export function buildOverdue(state, filter, ref = today()) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
-  const tasks = state.tasks.filter((t) => !t.done && t.due && t.due < ref).map((t) => fromTask(t, state.projects));
+  const tasks = state.tasks.filter((t) => !t.done && t.due && dataEfetiva(state, t) < ref).map((t) => fromTask(t, state.projects, state));
   const routines = [];
   for (let d = 1; d <= 14; d++) {
     const date = addDays(ref, -d);
     for (const r of state.routines) {
-      if (r.freq !== 'daily' && occursOn(r, date) && !state.routineDone[`${r.id}:${date}`]) routines.push(fromRoutine(r, date, state.routineDone));
+      if (r.freq !== 'daily' && occursOn(state, r, date) && !state.routineDone[`${r.id}:${date}`]) routines.push(fromRoutine(r, date, state.routineDone));
     }
     // postagens dos melhores da rodada que ficaram pra trás (últimos 7 dias)
     if (d <= 7) routines.push(...calRoutines(state, date).filter((x) => !x.done));
@@ -108,12 +144,13 @@ export function buildOverdue(state, filter, ref = today()) {
 export const noDate = (state, filter) =>
   state.tasks
     .filter((t) => !t.done && !t.due && (filter.area === 'all' || t.area === filter.area) && (filter.who === 'all' || t.who === filter.who))
-    .map((t) => fromTask(t, state.projects));
+    .map((t) => fromTask(t, state.projects, state));
 
 // Campanhas push dos próximos dias que ainda não foram agendadas no backoffice
 export function campanhasPendentes(state, ref = today(), dias = 3) {
   const ov = state.campanhas || {};
-  return gerarCampanhas(ref).filter((c) => c.data <= addDays(ref, dias) && !(ov[c.id]?.status && ov[c.id].status !== 'pendente'));
+  const limite = limiteDiasUteis(state, ref, dias);
+  return gerarCampanhas(ref).filter((c) => c.data <= limite && !(ov[c.id]?.status && ov[c.id].status !== 'pendente'));
 }
 
 // Sugestões: regras simples que olham para os seus dados e apontam gargalos.
@@ -124,7 +161,7 @@ export function suggestions(state, ref = today()) {
   const hoje = buildDay(state, ref, all).filter((x) => x.kind !== 'marco' && !x.done);
 
   const camp = campanhasPendentes(state, ref);
-  if (camp.length) out.push({ tone: 'red', icon: '📣', text: `${camp.length} ${camp.length === 1 ? 'campanha push dos próximos 3 dias ainda não foi agendada' : 'campanhas push dos próximos 3 dias ainda não foram agendadas'}. Veja em Etapas → Campanhas.` });
+  if (camp.length) out.push({ tone: 'red', icon: '📣', text: `${camp.length} ${camp.length === 1 ? 'campanha push dos próximos 3 dias úteis ainda não foi agendada' : 'campanhas push dos próximos 3 dias úteis ainda não foram agendadas'}. Veja em Etapas → Campanhas.` });
 
   const lolisLate = overdue.filter((x) => x.who === 'lolis');
   if (lolisLate.length) out.push({ tone: 'amber', icon: '🙋', text: `${lolisLate.length} ${lolisLate.length > 1 ? 'tarefas da Lolis passaram' : 'tarefa da Lolis passou'} do prazo. Vale cobrar o retorno dela.` });
@@ -193,9 +230,16 @@ export function buildAgenda(state, ref = today()) {
 
   for (let i = 0; i < 14; i++) {
     const date = addDays(ref, i);
-    const fimDeSemana = [0, 6].includes(weekday(date));
+    if (!isWorkday(state, date)) continue; // sábado, domingo, feriado e folga: sem notificação
+    const fimDeSemana = false;
     const dia = buildDay(state, date, all);
-    const marcos = dia.filter((x) => x.kind === 'marco');
+    const proxUtil = proximoDiaUtil(state, addDays(date, 1));
+    // 📌 dos dias de folga até o próximo dia útil (ex.: sorteio de domingo aparece na sexta)
+    const marcosFolga = [];
+    for (let d = addDays(date, 1); d < proxUtil; d = addDays(d, 1)) {
+      for (const m of buildDay(state, d, all).filter((x) => x.kind === 'marco')) marcosFolga.push({ ...m, title: `${fmtCurto(d).slice(0, 3)}: ${m.title}` });
+    }
+    const marcos = [...dia.filter((x) => x.kind === 'marco'), ...marcosFolga];
     const minhas = dia.filter((x) => x.kind !== 'marco' && x.who === 'laura' && !x.done);
     const atrasadas = buildOverdue(state, all, date).filter((x) => x.who === 'laura');
     const urgentes = minhas.filter((x) => x.urgent);
@@ -227,10 +271,11 @@ export function buildAgenda(state, ref = today()) {
     }
 
     if (cfg.noite && !fimDeSemana && minhas.length) {
-      const amanha = buildDay(state, addDays(date, 1), all).filter((x) => x.kind === 'task' && x.who === 'laura');
+      const amanha = buildDay(state, proxUtil, all).filter((x) => x.kind === 'task' && x.who === 'laura');
+      const quando = proxUtil === addDays(date, 1) ? 'Amanhã' : `Próximo dia útil (${fmtCurto(proxUtil)})`;
       slots.noite = {
         title: `🌙 Antes de encerrar: ${minhas.length} de hoje sem marcar`,
-        body: [lista(minhas), amanha.length ? `Amanhã: ${amanha.length} ${amanha.length === 1 ? 'tarefa' : 'tarefas'}` : ''].filter(Boolean).join('\n'),
+        body: [lista(minhas), amanha.length ? `${quando}: ${amanha.length} ${amanha.length === 1 ? 'tarefa' : 'tarefas'}` : ''].filter(Boolean).join('\n'),
       };
     }
 

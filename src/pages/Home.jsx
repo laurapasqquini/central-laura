@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, suggestions, AREAS } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, suggestions, AREAS, folgaDe, isWorkday } from '../lib/engine';
 import { today, addDays, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 import { ItemRow, Section, Empty, QuickAdd, TaskModal, Segmented } from '../components/ui';
 import { NotifBanner } from '../components/Notif';
@@ -115,12 +115,16 @@ export default function Home({ go }) {
                   <div className="flex items-baseline gap-2 px-1">
                     <span className="text-sm font-bold capitalize text-slate-700">{relativo(d, ref)}</span>
                     <span className="text-xs text-slate-400">{fmtCurto(d)}</span>
-                    {items.length > 0 && <span className="text-xs text-slate-400">· {items.filter((x) => x.kind !== 'marco').length} itens</span>}
+                    {!isWorkday(state, d) ? (
+                      <span className="rounded-full bg-violet-50 px-2 text-[11px] font-semibold text-violet-600">{folgaDe(state, d) || 'folga'}</span>
+                    ) : (
+                      items.length > 0 && <span className="text-xs text-slate-400">· {items.filter((x) => x.kind !== 'marco').length} itens</span>
+                    )}
                   </div>
                   {items.length ? (
                     <Collapsible items={items} onEdit={setEditing} />
                   ) : (
-                    <div className="px-1 text-xs text-slate-300">livre</div>
+                    <div className="px-1 text-xs text-slate-300">{isWorkday(state, d) ? 'livre' : ''}</div>
                   )}
                 </div>
               ))}

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useStore } from '../lib/store';
 import { gerarCampanhas, TIPOS } from '../data/campanhas';
 import { today, addDays, fmtCurto, relativo } from '../lib/dates';
+import { limiteDiasUteis } from '../lib/engine';
 import { Empty, Pill, Segmented, inputCls } from '../components/ui';
 
 const brData = (s) => s.split('-').reverse().join('/');
@@ -21,7 +22,7 @@ export default function Campanhas() {
   const lista = todas
     .filter((c) => cidade === 'all' || c.cidade === cidade)
     .filter((c) => (ver === 'pendentes' ? status(c) === 'pendente' && c.data <= addDays(ref, 14) : true));
-  const urgentes = todas.filter((c) => status(c) === 'pendente' && c.data <= addDays(ref, 3)).length;
+  const urgentes = todas.filter((c) => status(c) === 'pendente' && c.data <= limiteDiasUteis(state, ref, 3)).length;
 
   const porDia = lista.reduce((acc, c) => ((acc[c.data] ||= []).push(c), acc), {});
 
@@ -41,7 +42,7 @@ export default function Campanhas() {
 
       {urgentes > 0 && (
         <div className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm font-medium text-red-800 ring-1 ring-red-100">
-          📣 {urgentes} {urgentes === 1 ? 'campanha dos próximos 3 dias ainda não foi agendada' : 'campanhas dos próximos 3 dias ainda não foram agendadas'}.
+          📣 {urgentes} {urgentes === 1 ? 'campanha dos próximos 3 dias úteis ainda não foi agendada' : 'campanhas dos próximos 3 dias úteis ainda não foram agendadas'}.
         </div>
       )}
 

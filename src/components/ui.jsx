@@ -62,6 +62,7 @@ export function ItemRow({ item, showDate = false, onEdit }) {
               {late ? `venceu ${relativo(item.date)}` : fmtCurto(item.date)}
             </span>
           )}
+          {item.movedFrom && <span className="text-xs font-medium text-slate-400">↪ era {fmtCurto(item.movedFrom)}</span>}
           {item.notes && <span className="text-xs text-slate-400">📝</span>}
         </div>
       </button>

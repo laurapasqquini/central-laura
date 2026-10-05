@@ -4,6 +4,7 @@ import { AREAS, FREQ_LABEL } from '../lib/engine';
 import { DIAS } from '../lib/dates';
 import { Modal, Segmented, areaOptions, inputCls, Pill } from '../components/ui';
 import { NotifCard } from '../components/Notif';
+import { FolgasCard } from '../components/Folgas';
 
 const when = (r) => (r.freq === 'daily' ? 'seg a sex' : r.freq === 'weekly' ? `toda ${DIAS[r.weekday]}` : `dia ${r.monthday}`);
 
@@ -24,6 +25,8 @@ export default function Routines() {
       <div id="notificacoes">
         <NotifCard />
       </div>
+
+      <FolgasCard />
 
       {['daily', 'weekly', 'monthly'].map((f) => {
         const list = state.routines.filter((r) => r.freq === f).sort((a, b) => (a.weekday ?? a.monthday ?? 0) - (b.weekday ?? b.monthday ?? 0));

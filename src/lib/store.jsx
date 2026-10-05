@@ -372,6 +372,18 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
+      addFolga: (date, nome) => setState((s) => ({ ...s, folgas: { ...(s.folgas || {}), [date]: nome || 'Folga' } })),
+      removeFolga: (date) =>
+        setState((s) => {
+          const folgas = { ...(s.folgas || {}) };
+          delete folgas[date];
+          return { ...s, folgas };
+        }),
+      toggleFeriado: (date) =>
+        setState((s) => {
+          const ig = s.feriadosIgnorados || [];
+          return { ...s, feriadosIgnorados: ig.includes(date) ? ig.filter((d) => d !== date) : [...ig, date] };
+        }),
       setCampanha: (id, patch) => setState((s) => ({ ...s, campanhas: { ...(s.campanhas || {}), [id]: { ...((s.campanhas || {})[id] || {}), ...patch } } })),
       setNotif: (patch) =>
         setState((s) => {
