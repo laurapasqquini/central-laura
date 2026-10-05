@@ -372,6 +372,7 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
+      setGralhaCfg: (patch) => setState((s) => ({ ...s, gralhaCfg: { comissao: 8, base: 'total', ...(s.gralhaCfg || {}), ...patch } })),
       addFolga: (date, nome) => setState((s) => ({ ...s, folgas: { ...(s.folgas || {}), [date]: nome || 'Folga' } })),
       removeFolga: (date) =>
         setState((s) => {

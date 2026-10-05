@@ -92,3 +92,26 @@ export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto }
   out.push('', `*Total: ${brl(total)}*`, `À vista (5% de desconto nos produtos): *${brl(aVista)}*`, '', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
   return out.join('\n');
 }
+
+// ---- Comissão da Laura (padrão: 8% sobre o total do pedido) ----
+export const cfgComissao = (state) => ({ comissao: 8, base: 'total', ...(state.gralhaCfg || {}) });
+
+// Valor do pedido: o do contrato (se já foi montado) ou o do orçamento
+export function valoresPedido(p) {
+  if (p.contrato) {
+    const produtos = p.contrato.itens.reduce((s, i) => s + i.tamanhos.reduce((a, t) => a + (Number(t.qtd) || 0), 0) * (Number(i.preco) || 0), 0);
+    const frete = Number(p.contrato.frete) || 0;
+    if (produtos > 0) return { produtos, frete, total: produtos + frete };
+  }
+  const frete = Number(p.frete) || 0;
+  const total = Number(p.total) || 0;
+  return { produtos: Math.max(0, total - frete), frete, total };
+}
+
+export const comissaoDe = (p, cfg) => {
+  const v = valoresPedido(p);
+  return ((cfg.base === 'produtos' ? v.produtos : v.total) * (Number(cfg.comissao) || 0)) / 100;
+};
+
+// Data em que o pedido fechou (1ª vez que foi para "fechado" ou "contrato")
+export const dataFechamento = (p) => (p.history || []).find((h) => ['fechado', 'contrato'].includes(h.stage))?.date || null;

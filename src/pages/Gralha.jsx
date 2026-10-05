@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
+import { cfgComissao, comissaoDe, dataFechamento, valoresPedido } from '../lib/gralha';
 import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa } from '../lib/gralha';
 import { fmtCurto, relativo, today } from '../lib/dates';
 import { inputCls, Empty, Pill, Segmented } from '../components/ui';
+import Contrato from './Contrato';
 
 // O catálogo (242 produtos) só carrega quando a aba é aberta.
 function useCatalogo() {
@@ -38,7 +40,15 @@ export default function Gralha() {
           ]}
         />
       </header>
-      {!cat ? <Empty>Carregando catálogo…</Empty> : view === 'novo' ? <Novo cat={cat} onSaved={() => setView('pedidos')} /> : <Pedidos cat={cat} />}
+      {!cat ? (
+        <Empty>Carregando catálogo…</Empty>
+      ) : view.startsWith('contrato:') && (state.pedidos || []).some((p) => p.id === view.slice(9)) ? (
+        <Contrato key={view} pedido={state.pedidos.find((p) => p.id === view.slice(9))} cat={cat} onVoltar={() => setView('pedidos')} />
+      ) : view === 'novo' ? (
+        <Novo cat={cat} onSaved={() => setView('pedidos')} />
+      ) : (
+        <Pedidos cat={cat} onContrato={(id) => setView(`contrato:${id}`)} />
+      )}
     </div>
   );
 }
@@ -222,14 +232,47 @@ const Row = ({ label, value, strong }) => (
   </div>
 );
 
-function Pedidos() {
-  const { state, moveStage, deletePedido } = useStore();
+function Pedidos({ onContrato }) {
+  const { state, moveStage, deletePedido, setGralhaCfg } = useStore();
   const [open, setOpen] = useState(null);
   const pedidos = state.pedidos || [];
   if (!pedidos.length) return <Empty>Nenhum pedido ainda. Faça um orçamento e clique em "Salvar e acompanhar".</Empty>;
 
+  const cfg = cfgComissao(state);
+  const mes = today().slice(0, 7);
+  const fechadosMes = pedidos.filter((p) => p.stage !== 'perdido' && (dataFechamento(p) || '').startsWith(mes));
+  const comissaoMes = fechadosMes.reduce((s, p) => s + comissaoDe(p, cfg), 0);
+  const abertos = pedidos.filter((p) => ['enviado', 'arte', 'aprovacao'].includes(p.stage) && p.total != null);
+  const possivel = abertos.reduce((s, p) => s + comissaoDe(p, cfg), 0);
+  const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
   return (
     <div className="space-y-6">
+      <section className="space-y-3 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 p-4 text-white shadow-sm">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-sky-100">💰 Sua comissão em {MESES[Number(mes.slice(5)) - 1]}</div>
+            <div className="text-3xl font-extrabold">{brl(comissaoMes)}</div>
+            <div className="text-xs text-sky-100">
+              {fechadosMes.length} {fechadosMes.length === 1 ? 'pedido fechado' : 'pedidos fechados'} no mês
+              {possivel > 0 && ` · + ${brl(possivel)} se os ${abertos.length} em aberto fecharem`}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-sky-100">
+            <input
+              inputMode="decimal"
+              value={cfg.comissao}
+              onChange={(e) => setGralhaCfg({ comissao: e.target.value.replace(',', '.').replace(/[^\d.]/g, '') })}
+              className="w-12 rounded-lg bg-white/20 px-2 py-1 text-center text-sm font-bold text-white outline-none"
+            />
+            % sobre
+            <select value={cfg.base} onChange={(e) => setGralhaCfg({ base: e.target.value })} className="rounded-lg bg-white/20 px-2 py-1 text-sm font-semibold text-white outline-none">
+              <option value="total" className="text-slate-800">o total (com frete)</option>
+              <option value="produtos" className="text-slate-800">só os produtos</option>
+            </select>
+          </div>
+        </div>
+      </section>
       {STAGES.map((st) => {
         const list = pedidos.filter((p) => p.stage === st.id);
         if (!list.length) return null;
@@ -248,7 +291,8 @@ function Pedidos() {
                     <button onClick={() => setOpen(open === p.id ? null : p.id)} className="min-w-0 text-left">
                       <div className="font-bold text-slate-800">{p.cliente}</div>
                       <div className="text-xs text-slate-500">
-                        {p.total == null ? 'tabela de preços' : brl(p.total)} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}
+                        {p.total == null && !p.contrato ? 'tabela de preços' : brl(valoresPedido(p).total)}
+                        {['fechado', 'contrato'].includes(p.stage) && <b className="text-emerald-600"> · comissão {brl(comissaoDe(p, cfg))}</b>} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}
                         {p.cidade && ` · ${p.cidade}`} · nesta etapa desde {since === today() ? 'hoje' : relativo(since)}
                       </div>
                     </button>
@@ -276,6 +320,11 @@ function Pedidos() {
                         ↩ Reabrir
                       </button>
                     </div>
+                  )}
+                  {p.stage !== 'perdido' && (
+                    <button onClick={() => onContrato(p.id)} className="mt-2 rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
+                      📄 {p.contrato ? 'Continuar contrato' : 'Contrato'}
+                    </button>
                   )}
                   {open === p.id && (
                     <div className="mt-3 space-y-2">
