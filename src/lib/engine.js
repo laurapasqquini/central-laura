@@ -1,7 +1,7 @@
 import { marcosDoDia, rotinasDoDia } from '../data/calendarios';
 import { gerarCampanhas } from '../data/campanhas';
 import { FERIADOS } from '../data/feriados';
-import { today, addDays, weekday, fromStr, lastDayOfMonth, diffDays, fmtCurto } from './dates';
+import { today, addDays, weekday, fromStr, lastDayOfMonth, diffDays, fmtCurto, relativo } from './dates';
 
 export const AREAS = {
   ranken: { label: 'RANKEN', dot: 'bg-emerald-500', soft: 'bg-emerald-50 text-emerald-700 ring-emerald-200', bar: 'bg-emerald-500', text: 'text-emerald-600' },
@@ -120,6 +120,8 @@ export function buildDay(state, date, filter) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
   const tasks = state.tasks.filter((t) => t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state));
   const routines = state.routines.filter((r) => occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date));
+  // "mandar a lista pra Lolis" já leva a mensagem do dia
+  if (filter.who !== 'lolis') for (const x of routines) if (state.routines.find((r) => r.id === x.id)?.tipo === 'lolis-lista') x.mensagem = mensagemLolis(state, date);
   const marcos = state.marcos
     .filter((m) => m.date === date)
     .map((m) => ({ key: `m:${m.id}`, kind: 'marco', id: m.id, title: m.title, area: m.area, who: 'all', date: m.date }))
@@ -285,4 +287,35 @@ export function buildAgenda(state, ref = today()) {
     if (Object.keys(slots).length) agenda[date] = slots;
   }
   return agenda;
+}
+
+// Texto do dia para mandar no WhatsApp da Lolis (ela não acessa a central)
+export function mensagemLolis(state, ref = today()) {
+  const f = { area: 'all', who: 'lolis' };
+  const late = buildOverdue(state, f, ref);
+  const hoje = buildDay(state, ref, f).filter((x) => x.kind !== 'marco' && !x.done);
+  const semData = noDate(state, f);
+  const semana = Array.from({ length: 6 }, (_, i) => addDays(ref, i + 1)).flatMap((d) => buildDay(state, d, f).filter((x) => x.kind === 'task'));
+  // sugestões: rotinas semanais/mensais dela dos próximos 3 dias úteis, que dá pra adiantar
+  const adiantar = [];
+  for (let d = ref, n = 0; n < 3; ) {
+    d = addDays(d, 1);
+    if (!isWorkday(state, d)) continue;
+    n++;
+    for (const x of buildDay(state, d, f)) if (x.kind === 'routine' && x.freq !== 'daily' && !x.done && !adiantar.includes(x.title)) adiantar.push(x.title);
+  }
+  return [
+    `Oi Lolis! Lista de hoje (${fmtCurto(ref)}):`,
+    late.length ? '\n*Atrasadas (prioridade):*' : '',
+    ...late.map((x) => `⚠️ ${x.title} (era ${relativo(x.date, ref)})`),
+    '\n*Hoje:*',
+    ...(hoje.length ? hoje.map((x) => `• ${x.title}`) : ['• Nada fixo hoje']),
+    semana.length ? '\n*Próximos dias:*' : '',
+    ...semana.map((x) => `• ${fmtCurto(x.date)}: ${x.title}`),
+    semData.length ? '\n*Em andamento:*' : '',
+    ...semData.map((x) => `• ${x.title}`),
+    adiantar.length ? '\n*Se sobrar tempo, já pode adiantar:*' : '',
+    ...adiantar.map((t) => `• ${t}`),
+    '\nO que for financeiro ou que você não conseguir resolver, me manda 💚',
+  ].filter(Boolean).join('\n');
 }

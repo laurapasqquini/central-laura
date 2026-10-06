@@ -33,7 +33,7 @@ export default function Home({ go }) {
   const hoje = buildDay(state, ref, filter);
   const marcos = hoje.filter((x) => x.kind === 'marco');
   // "melhores da rodada" e afins (vêm do calendário) contam como tarefa, não como rotina
-  const ehTarefa = (x) => x.kind === 'task' || x.freq === 'calendario' || !!x.hora; // compromissos com horário também
+  const ehTarefa = (x) => x.kind === 'task' || x.freq === 'calendario' || !!x.hora || !!x.mensagem; // compromissos com horário também
   const prioridades = [...overdue, ...hoje.filter((x) => ehTarefa(x) && x.urgent && !x.done)];
   const idsPrioridade = new Set(prioridades.map((x) => x.key));
   const tarefas = hoje.filter((x) => ehTarefa(x) && !idsPrioridade.has(x.key));

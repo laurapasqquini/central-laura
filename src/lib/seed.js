@@ -8,6 +8,7 @@ const r = (title, who, freq, extra = {}, area = 'ranken') => ({ id: id('r'), tit
 
 export const seedRoutines = () => [
   // Diárias
+  r('Mandar pra Lolis a lista de hoje e as sugestões', 'laura', 'daily', { tipo: 'lolis-lista' }),
   r('Atendimento pessoal no WhatsApp da RANKEN', 'laura', 'daily'),
   r('Publicar o sorteio diário no grupo do WhatsApp', 'lolis', 'daily'),
   r('Postar o sorteio diário no Instagram', 'lolis', 'daily'),
@@ -17,8 +18,8 @@ export const seedRoutines = () => [
   r('Zerar os atrasados do Hub antes de encerrar o dia', 'laura', 'daily'),
   // Semanais
   r('Avisar quem tem 2 resultados pendentes (risco de suspensão)', 'lolis', 'weekly', { weekday: 1 }),
-  r('Suspensos e sem adversário: tentar encaixes (até a 9ª rodada)', 'laura', 'weekly', { weekday: 1 }),
-  r('Conferir WOs e pedidos de substituição', 'laura', 'weekly', { weekday: 2 }),
+  r('Suspensos e sem adversário: tentar encaixes (até a 9ª rodada)', 'lolis', 'weekly', { weekday: 1 }),
+  r('Conferir WOs e pedidos de substituição', 'lolis', 'weekly', { weekday: 2 }),
   r('Sorteio semanal de brindes (só quem está em dia)', 'laura', 'weekly', { weekday: 4 }),
   r('Avisar ganhadores dos brindes: local e prazo de 7 dias', 'lolis', 'weekly', { weekday: 4 }),
   r('Lembrar no grupo: licenciamento até domingo 19h59', 'lolis', 'weekly', { weekday: 5 }),

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate } from '../lib/engine';
-import { today, addDays, fmtCurto, relativo } from '../lib/dates';
+import { buildDay, buildOverdue, noDate, mensagemLolis } from '../lib/engine';
+import { today, addDays } from '../lib/dates';
 import { ItemRow, Section, Empty, TaskModal } from '../components/ui';
 
 export default function Lolis() {
@@ -14,20 +14,7 @@ export default function Lolis() {
   const hoje = buildDay(state, ref, f).filter((x) => x.kind !== 'marco');
   const semData = noDate(state, f);
   const semana = Array.from({ length: 6 }, (_, i) => addDays(ref, i + 1)).flatMap((d) => buildDay(state, d, f).filter((x) => x.kind === 'task'));
-
-  // Texto pronto para mandar no WhatsApp da Lolis
-  const msg = [
-    `Oi Lolis! Lista de hoje (${fmtCurto(ref)}):`,
-    ...late.map((x) => `⚠️ ${x.title} (era ${relativo(x.date, ref)})`),
-    ...hoje.filter((x) => !x.done).map((x) => `• ${x.title}`),
-    semana.length ? `\nPróximos dias:` : '',
-    ...semana.map((x) => `• ${fmtCurto(x.date)}: ${x.title}`),
-    semData.length ? `\nEm andamento:` : '',
-    ...semData.map((x) => `• ${x.title}`),
-    `\nQualquer dúvida me chama 💚`,
-  ]
-    .filter(Boolean)
-    .join('\n');
+  const msg = mensagemLolis(state, ref);
 
   const copy = async () => {
     try {

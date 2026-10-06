@@ -13,7 +13,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 13,
+    version: 14,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -165,6 +165,18 @@ function migrate(s) {
   // v13: aviso de rodada aberta agora sai do calendário, com mensagem pronta
   if (s.version < 13) {
     s = { ...s, version: 13, tasks: s.tasks.filter((t) => t.title !== 'Maringá: avisar no grupo que saíram os jogos da rodada 6') };
+  }
+  // v14: WOs/substituições e encaixes passam pra Lolis; lista diária pra mandar pra ela
+  if (s.version < 14) {
+    const praLolis = ['Conferir WOs e pedidos de substituição', 'Suspensos e sem adversário: tentar encaixes (até a 9ª rodada)'];
+    s = {
+      ...s,
+      version: 14,
+      routines: [
+        { id: uid(), title: 'Mandar pra Lolis a lista de hoje e as sugestões', area: 'ranken', who: 'laura', freq: 'daily', tipo: 'lolis-lista', active: true, createdAt: hoje },
+        ...s.routines.map((r) => (praLolis.includes(r.title) ? { ...r, who: 'lolis' } : r)),
+      ],
+    };
   }
   return s;
 }
