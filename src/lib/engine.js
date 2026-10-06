@@ -72,7 +72,7 @@ const fromTask = (t, projects, state) => ({
   movedFrom: state && t.due && dataEfetiva(state, t) !== t.due ? t.due : null,
   done: t.done,
   postponed: t.postponed || 0,
-  project: t.projectId ? projects.find((p) => p.id === t.projectId)?.name : null,
+  project: t.projectId ? projects.find((p) => p.id === t.projectId)?.name : t.iniciativaId ? `🎯 ${state?.plano?.iniciativas?.find((i) => i.id === t.iniciativaId)?.titulo || 'Plano'}` : null,
   phase: t.phase,
   notes: t.notes,
   hub: !!t.hub,

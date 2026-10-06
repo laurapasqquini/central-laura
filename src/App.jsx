@@ -9,10 +9,12 @@ import Lolis from './pages/Lolis';
 import Gralha from './pages/Gralha';
 import Etapas from './pages/Etapas';
 import Relatorios from './pages/Relatorios';
+import Plano from './pages/Plano';
 import { Revisao } from './components/Revisao';
 
 const TABS = [
   { id: 'home', label: 'Início', icon: '☀️', C: Home },
+  { id: 'plano', label: 'Plano', icon: '🎯', C: Plano },
   { id: 'etapas', label: 'Etapas', icon: '🎾', C: Etapas },
   { id: 'gralha', label: 'Gralha', icon: '🐦', C: Gralha },
   { id: 'lolis', label: 'Lolis', icon: '🙋', C: Lolis },
@@ -79,7 +81,7 @@ function Shell() {
         {revisao && <Revisao item={revisao.id ? revisao : null} go={setTab} onClose={() => setRevisao(null)} />}
       </main>
 
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`relative flex min-w-0 flex-col items-center gap-0.5 py-1 text-[10px] font-semibold ${tab === t.id ? 'text-ink' : 'text-slate-400'}`}>
             <span className="text-xl leading-none">{t.icon}</span>

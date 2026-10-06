@@ -446,6 +446,8 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
+      // Plano: iniciativas, radar descartado, metas do mês e números da semana
+      setPlano: (fn) => setState((s) => ({ ...s, plano: fn({ iniciativas: [], ocultos: [], metas: {}, numeros: {}, ...(s.plano || {}) }) })),
       // contas fixas pessoais (nome, valor, dia do vencimento)
       addConta: (c) => setState((s) => ({ ...s, contas: [...(s.contas || []), { id: uid(), ativo: true, ...c }] })),
       updateConta: (id, patch) => setState((s) => ({ ...s, contas: (s.contas || []).map((c) => (c.id === id ? { ...c, ...patch } : c)) })),

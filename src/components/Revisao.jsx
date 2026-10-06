@@ -4,6 +4,7 @@ import { buildDay, buildOverdue, campanhasPendentes, pedidosParados, contasDoDia
 import { today, addDays, weekday, fmtCurto } from '../lib/dates';
 import { periodo, montarRelatorio, textoRelatorio } from '../lib/relatorio';
 import { Modal } from './ui';
+import { RelatorioChefes } from '../pages/Plano';
 
 // Revisão de sexta: 5 minutos para fechar a semana e preparar a próxima.
 export function Revisao({ item, go, onClose }) {
@@ -114,12 +115,22 @@ export function Revisao({ item, go, onClose }) {
           </ul>
         </Bloco>
 
-        <Bloco n="4" titulo="Relatório da semana (RANKEN)">
-          <p className="text-xs text-slate-500">O que você e a Lolis fizeram, pronto para mandar ao chefe.</p>
-          <Btn onClick={copiar} cls="text-emerald-700 ring-emerald-200 hover:bg-emerald-50">
-            {copiado ? 'Copiado ✓' : '📋 Copiar relatório'}
-          </Btn>
+        <Bloco n="4" titulo="Plano e números">
+          <ul className="space-y-1.5 text-sm text-slate-700">
+            <li className="flex items-center justify-between gap-2">
+              <span>🎯 Atualize o status das iniciativas e os números do Beach da semana</span>
+              <Btn onClick={() => ir('plano')}>Abrir</Btn>
+            </li>
+            <li className="flex items-center justify-between gap-2">
+              <span>📋 Relatório detalhado (você + Lolis)</span>
+              <Btn onClick={copiar} cls="text-emerald-700 ring-emerald-200 hover:bg-emerald-50">
+                {copiado ? 'Copiado ✓' : 'Copiar'}
+              </Btn>
+            </li>
+          </ul>
         </Bloco>
+
+        <RelatorioChefes compacto />
 
         <button onClick={concluir} className="w-full rounded-xl bg-ink py-3 text-sm font-bold text-white">
           Concluir revisão ✓
