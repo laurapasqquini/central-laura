@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { today, fmtCurto, relativo } from '../lib/dates';
 import { periodo, montarRelatorio, textoRelatorio, baixarPdf, tituloRelatorio } from '../lib/relatorio';
-import { Section, Empty, Segmented, inputCls } from '../components/ui';
+import { Section, Empty, Segmented, inputCls, inputBase } from '../components/ui';
 import { sugerirBaixas } from '../lib/engine';
 
 const PERIODOS = [
@@ -48,7 +48,7 @@ export default function Relatorios() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">📊 Relatórios</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Relatórios</h1>
         <p className="text-sm text-slate-500">O que você fez sai sozinho do que marcou como feito. O da Lolis é o que você cola.</p>
       </header>
 
@@ -62,8 +62,8 @@ export default function Relatorios() {
           <Segmented value={tipo} onChange={setTipo} options={PERIODOS} />
           {tipo === 'livre' && (
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-              de <input type="date" className={`${inputCls} w-40`} value={livre[0]} onChange={(e) => e.target.value && setLivre([e.target.value, livre[1] < e.target.value ? e.target.value : livre[1]])} />
-              até <input type="date" className={`${inputCls} w-40`} value={livre[1]} onChange={(e) => e.target.value && setLivre([livre[0] > e.target.value ? e.target.value : livre[0], e.target.value])} />
+              de <input type="date" className={`${inputBase} w-40`} value={livre[0]} onChange={(e) => e.target.value && setLivre([e.target.value, livre[1] < e.target.value ? e.target.value : livre[1]])} />
+              até <input type="date" className={`${inputBase} w-40`} value={livre[1]} onChange={(e) => e.target.value && setLivre([livre[0] > e.target.value ? e.target.value : livre[0], e.target.value])} />
             </div>
           )}
           <Segmented value={area} onChange={setArea} options={[['ranken', 'RANKEN'], ['gralha', 'Gralha Azul'], ['pessoal', 'Pessoal'], ['all', 'Tudo']]} />
@@ -154,7 +154,7 @@ function Colar({ chave, titulo, placeholder, cor }) {
       <div className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
         <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
           Dia
-          <input type="date" className={`${inputCls} w-40`} value={data} onChange={(e) => trocarData(e.target.value || ref)} />
+          <input type="date" className={`${inputBase} w-40`} value={data} onChange={(e) => trocarData(e.target.value || ref)} />
           {relatos[data] && <span className="text-xs font-semibold text-emerald-600">✓ já tem neste dia (editando)</span>}
         </div>
         <textarea rows={4} className={inputCls} placeholder={placeholder} value={texto} onChange={(e) => setTexto(e.target.value)} />

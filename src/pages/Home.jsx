@@ -56,7 +56,7 @@ export default function Home({ go }) {
     <div className="space-y-5">
       <header>
         <p className="text-sm font-medium text-slate-500 first-letter:uppercase">{fmtLongo(ref)}</p>
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">{saud}, Laura</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{saud}, Laura</h1>
       </header>
 
       <NotifBanner onOpen={() => go?.('routines')} />
@@ -67,7 +67,7 @@ export default function Home({ go }) {
         <section className="space-y-5 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
           <div className="space-y-3">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 className="text-xl font-extrabold text-ink">Hoje</h2>
+              <h2 className="text-xl font-bold text-ink">Hoje</h2>
               <p className="text-sm font-medium text-slate-500">{folgaHoje ? `Folga: ${folgaDe(state, ref) || 'fim de semana'} 🌴` : `${feitos} de ${doable.length} feitos`}</p>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-100">

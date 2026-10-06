@@ -33,7 +33,7 @@ export default function Login() {
         <div className="flex items-center gap-3">
           <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-11 w-11" />
           <div>
-            <h1 className="text-xl font-extrabold text-ink">Central da Laura</h1>
+            <h1 className="text-xl font-bold text-ink">Central da Laura</h1>
             <p className="text-xs text-slate-500">RANKEN · Gralha Azul · Pessoal</p>
           </div>
         </div>

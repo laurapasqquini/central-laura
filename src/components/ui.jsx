@@ -185,7 +185,8 @@ const Field = ({ label, children }) => (
     {children}
   </label>
 );
-export const inputCls = 'w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100';
+export const inputBase = 'rounded-xl border border-slate-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100';
+export const inputCls = `w-full ${inputBase}`;
 
 export function Segmented({ value, onChange, options }) {
   return (
@@ -213,7 +214,7 @@ export function Modal({ title, onClose, children }) {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
       <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-paper p-5 shadow-2xl sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-extrabold text-ink">{title}</h3>
+          <h3 className="text-lg font-bold text-ink">{title}</h3>
           <button onClick={onClose} className="rounded-full px-2 text-2xl leading-none text-slate-400 hover:text-slate-700">×</button>
         </div>
         {children}

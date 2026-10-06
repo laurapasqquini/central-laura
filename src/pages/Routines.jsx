@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { AREAS, FREQ_LABEL } from '../lib/engine';
 import { DIAS } from '../lib/dates';
-import { Modal, Segmented, areaOptions, inputCls, Pill } from '../components/ui';
+import { Modal, Segmented, areaOptions, inputCls, inputBase, Pill } from '../components/ui';
 import { NotifCard } from '../components/Notif';
 import { FolgasCard } from '../components/Folgas';
 import { ContasCard } from '../components/Contas';
@@ -17,7 +17,7 @@ export default function Routines() {
     <div className="space-y-8">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Rotinas e avisos</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Rotinas e avisos</h1>
           <p className="text-sm text-slate-500">Aparecem sozinhas no dia certo. Desligue as que não fizerem sentido.</p>
         </div>
         <button onClick={() => setEditing('new')} className="shrink-0 rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white">+ Rotina</button>
@@ -108,7 +108,7 @@ function RoutineModal({ id, onClose }) {
         <Segmented value={f.freq} onChange={set('freq')} options={[['daily', 'Todo dia útil'], ['weekly', 'Semanal'], ['monthly', 'Mensal']]} />
         <label className="flex items-center gap-2 text-sm text-slate-600">
           Horário (opcional, para compromissos)
-          <input type="time" className={`${inputCls} w-32`} value={f.hora || ''} onChange={(e) => set('hora')(e.target.value)} />
+          <input type="time" className={`${inputBase} w-32`} value={f.hora || ''} onChange={(e) => set('hora')(e.target.value)} />
         </label>
         {f.freq === 'weekly' && (
           <select className={inputCls} value={f.weekday} onChange={(e) => set('weekday')(e.target.value)}>
@@ -118,7 +118,7 @@ function RoutineModal({ id, onClose }) {
         {f.freq === 'monthly' && (
           <label className="flex items-center gap-2 text-sm text-slate-600">
             Todo dia
-            <input type="number" min="1" max="31" className={`${inputCls} w-20`} value={f.monthday} onChange={(e) => set('monthday')(e.target.value)} />
+            <input type="number" min="1" max="31" className={`${inputBase} w-20`} value={f.monthday} onChange={(e) => set('monthday')(e.target.value)} />
             do mês
           </label>
         )}

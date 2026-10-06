@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { vencimentoConta } from '../lib/engine';
 import { today, fmtCurto } from '../lib/dates';
-import { inputCls } from './ui';
+import { inputCls, inputBase } from './ui';
 
 const brl = (n) => Number(n || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const numero = (s) => Number(String(s).replace(/[^\d,.-]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.')) || 0;
@@ -67,9 +67,9 @@ export function ContasCard() {
       </div>
 
       <form onSubmit={adicionar} className="flex flex-wrap gap-2">
-        <input className={`${inputCls} min-w-0 flex-1`} placeholder="Conta (ex.: Aula de tênis)" value={nova.nome} onChange={(e) => setNova({ ...nova, nome: e.target.value })} />
-        <input className={`${inputCls} w-28`} placeholder="Valor" inputMode="decimal" value={nova.valor} onChange={(e) => setNova({ ...nova, valor: e.target.value })} />
-        <input className={`${inputCls} w-24`} placeholder="Dia" type="number" min="1" max="31" value={nova.dia} onChange={(e) => setNova({ ...nova, dia: e.target.value })} />
+        <input className={`${inputBase} min-w-0 flex-1`} placeholder="Conta (ex.: Aula de tênis)" value={nova.nome} onChange={(e) => setNova({ ...nova, nome: e.target.value })} />
+        <input className={`${inputBase} w-28`} placeholder="Valor" inputMode="decimal" value={nova.valor} onChange={(e) => setNova({ ...nova, valor: e.target.value })} />
+        <input className={`${inputBase} w-24`} placeholder="Dia" type="number" min="1" max="31" value={nova.dia} onChange={(e) => setNova({ ...nova, dia: e.target.value })} />
         <button className="rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white">+ Conta</button>
       </form>
     </section>

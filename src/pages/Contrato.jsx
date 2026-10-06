@@ -171,7 +171,7 @@ export default function Contrato({ pedido, cat, onVoltar }) {
         </button>
         <span className="text-xs text-slate-400">O rascunho é salvo sozinho. As fotos ficam neste aparelho.</span>
       </div>
-      <h1 className="text-2xl font-extrabold tracking-tight text-ink">📄 Contrato · {c.pedido || pedido.cliente}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-ink">📄 Contrato · {c.pedido || pedido.cliente}</h1>
 
       {/* 1. Cliente */}
       <Bloco n="1" titulo="Cliente">
@@ -246,7 +246,7 @@ export default function Contrato({ pedido, cat, onVoltar }) {
             <span>Frete</span>
             <span>{t.frete ? brl(t.frete) : 'grátis'}</span>
           </div>
-          <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-extrabold text-ink">
+          <div className="flex justify-between border-t border-slate-200 pt-1 text-base font-bold text-ink">
             <span>Total</span>
             <span>{brl(t.total)}</span>
           </div>

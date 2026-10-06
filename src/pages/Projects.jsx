@@ -14,7 +14,7 @@ export default function Projects() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">Projetos</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Projetos</h1>
         <p className="text-sm text-slate-500">Escolha um roteiro, informe a data e a Central monta todas as etapas com prazo.</p>
       </header>
 
@@ -70,7 +70,7 @@ function ProjectCard({ p, open, onToggle, onEdit }) {
             </p>
           </div>
           <div className="text-right">
-            <div className="text-lg font-extrabold text-ink">{prog.pct}%</div>
+            <div className="text-lg font-bold text-ink">{prog.pct}%</div>
             {late > 0 && <div className="text-xs font-bold text-red-500">{late} atrasadas</div>}
           </div>
         </div>

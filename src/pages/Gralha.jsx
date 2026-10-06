@@ -3,7 +3,7 @@ import { useStore, STAGES } from '../lib/store';
 import { cfgComissao, comissaoDe, dataFechamento, valoresPedido } from '../lib/gralha';
 import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa } from '../lib/gralha';
 import { fmtCurto, relativo, today } from '../lib/dates';
-import { inputCls, Empty, Pill, Segmented } from '../components/ui';
+import { inputCls, inputBase, Empty, Pill, Segmented } from '../components/ui';
 import Contrato from './Contrato';
 import { pedidosParados } from '../lib/engine';
 
@@ -26,7 +26,7 @@ export default function Gralha() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">🐦 Gralha Azul</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Gralha Azul</h1>
           <p className="text-sm text-slate-500">
             Orçamento em segundos e cada pedido acompanhado até o contrato.
             {cat && <span className="text-slate-400"> · {cat.produtos.length} produtos da planilha</span>}
@@ -174,9 +174,9 @@ function Novo({ cat, onSaved }) {
               ) : (
               <>
               <div className="flex items-center gap-3">
-                <input type="number" min="1" className={`${inputCls} w-24`} value={l.qtd} onChange={(e) => setQtd(l.key, parseInt(e.target.value, 10))} />
+                <input type="number" min="1" className={`${inputBase} w-24`} value={l.qtd} onChange={(e) => setQtd(l.key, parseInt(e.target.value, 10))} />
                 <span className="text-sm text-slate-500">× {brl(l.unit)}</span>
-                <span className="ml-auto font-extrabold text-ink">{brl(l.subtotal)}</span>
+                <span className="ml-auto font-bold text-ink">{brl(l.subtotal)}</span>
               </div>
               {abaixoMinimo && <p className="rounded-lg bg-red-50 px-2 py-1 text-xs font-semibold text-red-600">Abaixo do pedido mínimo ({l.p.minimo} peças).</p>}
               {proxima && !abaixoMinimo && (
@@ -197,7 +197,7 @@ function Novo({ cat, onSaved }) {
               {isMaringa(cidade) ? (
                 <Pill className="bg-emerald-50 text-emerald-700 ring-emerald-200">grátis (Maringá)</Pill>
               ) : (
-                <input className={`${inputCls} w-36 text-right`} placeholder="R$ (opcional)" value={frete} onChange={(e) => setFrete(e.target.value)} />
+                <input className={`${inputBase} w-36 text-right`} placeholder="R$ (opcional)" value={frete} onChange={(e) => setFrete(e.target.value)} />
               )}
             </div>
             <Row label="Produtos" value={brl(produtosTotal)} />
@@ -227,7 +227,7 @@ function Novo({ cat, onSaved }) {
 }
 
 const Row = ({ label, value, strong }) => (
-  <div className={`flex justify-between text-sm ${strong ? 'text-base font-extrabold text-ink' : 'text-slate-600'}`}>
+  <div className={`flex justify-between text-sm ${strong ? 'text-base font-bold text-ink' : 'text-slate-600'}`}>
     <span>{label}</span>
     <span>{value}</span>
   </div>
@@ -254,7 +254,7 @@ function Pedidos({ onContrato }) {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wide text-sky-100">💰 Sua comissão em {MESES[Number(mes.slice(5)) - 1]}</div>
-            <div className="text-3xl font-extrabold">{brl(comissaoMes)}</div>
+            <div className="text-3xl font-bold">{brl(comissaoMes)}</div>
             <div className="text-xs text-sky-100">
               {fechadosMes.length} {fechadosMes.length === 1 ? 'pedido fechado' : 'pedidos fechados'} no mês
               {possivel > 0 && ` · + ${brl(possivel)} se os ${abertos.length} em aberto fecharem`}

@@ -5,7 +5,7 @@ import { plano, STATUS, progresso, montarChefes, textoChefes, pdfChefes, numeros
 import { periodo } from '../lib/relatorio';
 import { parseQuick } from '../lib/parse';
 import { today, fmtCurto, relativo, diffDays } from '../lib/dates';
-import { Section, Empty, Segmented, inputCls, Check } from '../components/ui';
+import { Section, Empty, Segmented, inputCls, inputBase, Check } from '../components/ui';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const frente = (id) => FRENTES.find((f) => f.id === id) || { nome: 'Geral', icone: '•' };
@@ -32,7 +32,7 @@ export default function Plano() {
   return (
     <div className="space-y-7">
       <header>
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">🎯 Plano</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Plano</h1>
         <p className="text-sm text-slate-500">O que você está fazendo acontecer, por frente. Ideias viram propostas, propostas viram passos na sua lista.</p>
       </header>
 
@@ -145,14 +145,14 @@ function Iniciativa({ i, aberta, onToggle }) {
         <div className="space-y-2 border-t border-slate-100 p-3">
           <input className={inputCls} value={i.titulo} onChange={(e) => set({ titulo: e.target.value })} />
           <div className="flex flex-wrap gap-2">
-            <select className={`${inputCls} w-auto`} value={i.frente} onChange={(e) => set({ frente: e.target.value })}>
+            <select className={`${inputBase} w-auto`} value={i.frente} onChange={(e) => set({ frente: e.target.value })}>
               {FRENTES.map((f) => (
                 <option key={f.id} value={f.id}>
                   {f.icone} {f.nome}
                 </option>
               ))}
             </select>
-            <input type="date" className={`${inputCls} w-40`} value={i.prazo || ''} onChange={(e) => set({ prazo: e.target.value || null })} title="Prazo" />
+            <input type="date" className={`${inputBase} w-40`} value={i.prazo || ''} onChange={(e) => set({ prazo: e.target.value || null })} title="Prazo" />
           </div>
           <textarea rows={3} className={inputCls} placeholder="Notas: objetivo, ideia, o que os chefes disseram…" value={i.notas || ''} onChange={(e) => set({ notas: e.target.value })} />
           <div className="flex flex-wrap gap-1.5">
@@ -235,7 +235,7 @@ function Numeros() {
             {atual.map((n) => (
               <div key={n.nome} className="rounded-xl bg-slate-50 p-2.5">
                 <div className="text-[11px] font-semibold text-slate-500">{n.nome}</div>
-                <div className="text-lg font-extrabold text-ink">
+                <div className="text-lg font-bold text-ink">
                   {n.valor.toLocaleString('pt-BR')}
                   {n.dif ? <span className={`ml-1.5 text-xs font-bold ${n.dif > 0 ? 'text-emerald-600' : 'text-red-500'}`}>{n.dif > 0 ? '+' : ''}{n.dif.toLocaleString('pt-BR')}</span> : null}
                 </div>
@@ -244,17 +244,29 @@ function Numeros() {
           </div>
         )}
         <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-          Registrar em <input type="date" className={`${inputCls} w-40`} value={data} onChange={(e) => e.target.value && setData(e.target.value)} />
+          Registrar em
+          <input type="date" className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-indigo-400" value={data} onChange={(e) => e.target.value && setData(e.target.value)} />
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           {p.indicadores.map((nome) => (
-            <label key={nome} className="flex items-center gap-2 text-sm text-slate-700">
-              <span className="min-w-0 flex-1">{nome}</span>
-              <input className={`${inputCls} w-32`} inputMode="decimal" value={p.numeros[data]?.[nome] ?? ''} onChange={(e) => setValor(nome, e.target.value)} />
-              <button type="button" title="Tirar este indicador" onClick={() => confirm(`Tirar "${nome}"?`) && setPlano((pl) => ({ ...pl, indicadores: plano({ plano: pl }).indicadores.filter((x) => x !== nome) }))} className="text-slate-300 hover:text-red-500">
+            <div key={nome} className="group relative flex flex-col rounded-xl bg-slate-50 p-2.5 ring-1 ring-slate-200/70">
+              <div className="mb-1.5 flex-1 pr-5 text-xs font-medium text-slate-500">{nome}</div>
+              <input
+                className="w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-[15px] font-semibold text-slate-800 tabular-nums outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                inputMode="decimal"
+                placeholder="—"
+                value={p.numeros[data]?.[nome] ?? ''}
+                onChange={(e) => setValor(nome, e.target.value)}
+              />
+              <button
+                type="button"
+                title="Tirar este indicador"
+                onClick={() => confirm(`Tirar "${nome}"?`) && setPlano((pl) => ({ ...pl, indicadores: plano({ plano: pl }).indicadores.filter((x) => x !== nome) }))}
+                className="absolute top-1.5 right-2 text-xs text-slate-300 opacity-0 transition group-hover:opacity-100 hover:text-red-500"
+              >
                 ✕
               </button>
-            </label>
+            </div>
           ))}
         </div>
         <form

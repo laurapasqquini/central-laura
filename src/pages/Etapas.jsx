@@ -23,7 +23,7 @@ export default function Etapas() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">🎾 Etapas</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Etapas</h1>
         <p className="text-sm text-slate-500">Onde cada categoria está agora e as campanhas push de cada rodada.</p>
       </header>
 
@@ -104,7 +104,7 @@ function Card({ c, ref0 }) {
       {atual && (
         <div className="space-y-1.5">
           <div className="flex items-baseline justify-between">
-            <span className="text-2xl font-extrabold text-ink">
+            <span className="text-2xl font-bold text-ink">
               Rodada {atual.n}
               <span className="text-sm font-semibold text-slate-400"> de {total}</span>
             </span>

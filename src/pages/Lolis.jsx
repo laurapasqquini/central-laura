@@ -30,7 +30,7 @@ export default function Lolis() {
     <div className="space-y-6">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">🙋 Lolis</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Lolis</h1>
           <p className="text-sm text-slate-500">Tudo o que está delegado. Para delegar, escreva <b>@lolis</b> na anotação rápida. O que ela fez vai em <b>📊 Relatórios</b>.</p>
         </div>
         <button onClick={copy} className="shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white shadow-sm">
