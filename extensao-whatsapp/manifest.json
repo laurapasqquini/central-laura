@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Central da Laura · WhatsApp",
+  "version": "1.0",
+  "description": "Botão ➕ Central nas mensagens do WhatsApp Web: a mensagem vira tarefa na Central da Laura.",
+  "permissions": ["storage", "contextMenus"],
+  "host_permissions": ["https://qkjqngddavxoqhnhbame.supabase.co/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Central da Laura" },
+  "content_scripts": [
+    { "matches": ["https://web.whatsapp.com/*"], "js": ["content.js"], "css": ["content.css"] }
+  ]
+}

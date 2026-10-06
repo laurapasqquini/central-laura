@@ -1,0 +1,14 @@
+.central-balao { position: relative; }
+.central-btn {
+  position: absolute; top: 2px; right: 2px; z-index: 5;
+  padding: 2px 8px; border: 0; border-radius: 999px; cursor: pointer;
+  font: 600 11px system-ui, sans-serif; color: #fff; background: #4f46e5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .25); opacity: 0; transition: opacity .15s;
+}
+.central-balao:hover .central-btn, .central-btn.ok { opacity: 1; }
+.central-btn.ok { background: #059669; }
+.central-aviso {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 9999;
+  padding: 10px 16px; border-radius: 12px; background: #1e1b4b; color: #fff;
+  font: 600 14px system-ui, sans-serif; box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+  body { width: 280px; margin: 0; padding: 16px; font: 14px system-ui, sans-serif; color: #1e1b4b; background: #fff; }
+  h1 { font-size: 16px; margin: 0 0 4px; }
+  p { margin: 0 0 12px; color: #64748b; font-size: 12px; }
+  label { display: block; font-size: 12px; font-weight: 600; margin: 10px 0 4px; color: #475569; }
+  input, select { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; font: inherit; }
+  button { width: 100%; margin-top: 12px; padding: 10px; border: 0; border-radius: 10px; font: 700 14px system-ui; color: #fff; background: #4f46e5; cursor: pointer; }
+  button.sec { background: #f1f5f9; color: #475569; }
+  .erro { color: #dc2626; font-size: 12px; margin-top: 8px; }
+  .ok { color: #059669; font-weight: 600; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+  <h1>Central da Laura</h1>
+  <p>Mensagens do WhatsApp Web viram tarefa com o botão <b>➕ Central</b>.</p>
+
+  <form id="login" hidden>
+    <label for="email">E-mail da central</label>
+    <input id="email" type="email" autocomplete="username" required>
+    <label for="senha">Senha da central</label>
+    <input id="senha" type="password" autocomplete="current-password" required>
+    <button type="submit">Entrar</button>
+    <div id="erro" class="erro"></div>
+  </form>
+
+  <div id="logada" hidden>
+    <div class="ok">✓ Conectada: <span id="quem"></span></div>
+    <label for="conta">Este Chrome é o WhatsApp da</label>
+    <select id="conta">
+      <option value="ranken">RANKEN</option>
+      <option value="gralha">Gralha Azul</option>
+    </select>
+    <button id="sair" class="sec" type="button">Sair</button>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

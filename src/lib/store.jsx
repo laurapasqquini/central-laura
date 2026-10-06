@@ -262,6 +262,37 @@ export function StoreProvider({ user, children }) {
       ready.current = true;
       setSync('ok');
       saveAgenda(user.id, data ? migrate(data.data) : state);
+      puxarEntrada();
+    };
+
+    // Mensagens que a extensão do WhatsApp mandou: viram tarefa de hoje e saem da caixa de entrada.
+    const puxarEntrada = async () => {
+      const { data: rows } = await supabase.from('entrada').select('*').order('created_at');
+      if (!alive || !rows?.length) return;
+      setState((s) => {
+        const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
+        const novas = rows
+          .filter((r) => !ja.has(r.id))
+          .map((r) => {
+            const curto = r.texto.replace(/\s+/g, ' ').trim();
+            return {
+              id: uid(),
+              entradaId: r.id,
+              title: `💬 ${r.contato ? `${r.contato}: ` : ''}${curto.length > 90 ? `${curto.slice(0, 90)}…` : curto}`,
+              notes: `${r.texto}\n\n— ${r.contato || 'WhatsApp'}${r.hora ? `, ${r.hora}` : ''} (WhatsApp ${r.conta === 'gralha' ? 'Gralha' : 'RANKEN'})`,
+              area: r.conta === 'gralha' ? 'gralha' : 'ranken',
+              who: 'laura',
+              urgent: false,
+              due: today(),
+              done: false,
+              createdAt: today(),
+              postponed: 0,
+            };
+          });
+        return novas.length ? { ...s, tasks: [...novas, ...s.tasks] } : s;
+      });
+      // apaga depois de salvar a central (se apagar antes e a aba fechar, a mensagem se perderia)
+      setTimeout(() => supabase.from('entrada').delete().in('id', rows.map((r) => r.id)).then(() => {}, () => {}), 3000);
     };
     pull();
 
@@ -276,6 +307,11 @@ export function StoreProvider({ user, children }) {
         }
       })
       .subscribe();
+    // canal separado: se a tabela da extensão ainda não existir, não atrapalha a sincronização
+    const chEntrada = supabase
+      .channel('entrada')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entrada', filter: `user_id=eq.${user.id}` }, () => ready.current && puxarEntrada())
+      .subscribe();
 
     // iPhone: ao voltar para o app, confere se tem novidade.
     const onVis = () => document.visibilityState === 'visible' && ready.current && pull();
@@ -283,6 +319,7 @@ export function StoreProvider({ user, children }) {
     return () => {
       alive = false;
       supabase.removeChannel(ch);
+      supabase.removeChannel(chEntrada);
       document.removeEventListener('visibilitychange', onVis);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
