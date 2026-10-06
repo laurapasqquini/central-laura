@@ -23,7 +23,11 @@ self.addEventListener('notificationclick', (event) => {
   const url = (event.notification.data && event.notification.data.url) || self.registration.scope;
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
-      for (const w of wins) if (w.url.startsWith(self.registration.scope) && 'focus' in w) return w.focus();
+      for (const w of wins)
+        if (w.url.startsWith(self.registration.scope) && 'focus' in w) {
+          w.postMessage({ tipo: 'abrir-inicio' }); // app já aberto: volta para o Início
+          return w.focus();
+        }
       return self.clients.openWindow(url);
     })
   );

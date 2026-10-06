@@ -4,18 +4,17 @@ import Login from './pages/Login';
 import { StoreProvider, useStore } from './lib/store';
 import { buildOverdue } from './lib/engine';
 import Home from './pages/Home';
-import Projects from './pages/Projects';
 import Routines from './pages/Routines';
 import Lolis from './pages/Lolis';
 import Gralha from './pages/Gralha';
 import Etapas from './pages/Etapas';
 import Relatorios from './pages/Relatorios';
+import { Revisao } from './components/Revisao';
 
 const TABS = [
   { id: 'home', label: 'Início', icon: '☀️', C: Home },
   { id: 'etapas', label: 'Etapas', icon: '🎾', C: Etapas },
   { id: 'gralha', label: 'Gralha', icon: '🐦', C: Gralha },
-  { id: 'projects', label: 'Projetos', icon: '🗺️', C: Projects },
   { id: 'lolis', label: 'Lolis', icon: '🙋', C: Lolis },
   { id: 'relatorios', label: 'Relatórios', icon: '📊', C: Relatorios },
   { id: 'routines', label: 'Rotinas', icon: '↻', C: Routines },
@@ -24,6 +23,19 @@ const TABS = [
 function Shell() {
   const { state, sync, user } = useStore();
   const [tab, setTab] = useState('home');
+  const [revisao, setRevisao] = useState(null);
+
+  // revisão de sexta (aberta pelo botão da rotina) e clique na notificação (volta para o Início)
+  useEffect(() => {
+    const abrir = (e) => setRevisao(e.detail || {});
+    const sw = (e) => e.data?.tipo === 'abrir-inicio' && setTab('home');
+    window.addEventListener('abrir-revisao', abrir);
+    navigator.serviceWorker?.addEventListener('message', sw);
+    return () => {
+      window.removeEventListener('abrir-revisao', abrir);
+      navigator.serviceWorker?.removeEventListener('message', sw);
+    };
+  }, []);
   const Page = TABS.find((t) => t.id === tab).C;
   const late = buildOverdue(state, { area: 'all', who: 'all' }).length;
 
@@ -64,9 +76,10 @@ function Shell() {
       <main className="mx-auto w-full min-w-0 max-w-5xl px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12">
         <div className="mb-3 flex justify-end sm:hidden"><SyncDot sync={sync} dark /></div>
         <Page go={setTab} />
+        {revisao && <Revisao item={revisao.id ? revisao : null} go={setTab} onClose={() => setRevisao(null)} />}
       </main>
 
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`relative flex min-w-0 flex-col items-center gap-0.5 py-1 text-[10px] font-semibold ${tab === t.id ? 'text-ink' : 'text-slate-400'}`}>
             <span className="text-xl leading-none">{t.icon}</span>

@@ -5,6 +5,7 @@ import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemT
 import { fmtCurto, relativo, today } from '../lib/dates';
 import { inputCls, Empty, Pill, Segmented } from '../components/ui';
 import Contrato from './Contrato';
+import { pedidosParados } from '../lib/engine';
 
 // O catálogo (242 produtos) só carrega quando a aba é aberta.
 function useCatalogo() {
@@ -239,6 +240,7 @@ function Pedidos({ onContrato }) {
   if (!pedidos.length) return <Empty>Nenhum pedido ainda. Faça um orçamento e clique em "Salvar e acompanhar".</Empty>;
 
   const cfg = cfgComissao(state);
+  const parados = Object.fromEntries(pedidosParados(state).map((p) => [p.id, p.dias]));
   const mes = today().slice(0, 7);
   const fechadosMes = pedidos.filter((p) => p.stage !== 'perdido' && (dataFechamento(p) || '').startsWith(mes));
   const comissaoMes = fechadosMes.reduce((s, p) => s + comissaoDe(p, cfg), 0);
@@ -289,7 +291,10 @@ function Pedidos({ onContrato }) {
                 <div key={p.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
                   <div className="flex items-start justify-between gap-3">
                     <button onClick={() => setOpen(open === p.id ? null : p.id)} className="min-w-0 text-left">
-                      <div className="font-bold text-slate-800">{p.cliente}</div>
+                      <div className="font-bold text-slate-800">
+                        {p.cliente}
+                        {parados[p.id] && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">⏳ parado há {parados[p.id]} dias</span>}
+                      </div>
                       <div className="text-xs text-slate-500">
                         {p.total == null && !p.contrato ? 'tabela de preços' : brl(valoresPedido(p).total)}
                         {['fechado', 'contrato'].includes(p.stage) && <b className="text-emerald-600"> · comissão {brl(comissaoDe(p, cfg))}</b>} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}

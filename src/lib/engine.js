@@ -125,6 +125,8 @@ export function buildDay(state, date, filter) {
     const it = itemLolis(state, date);
     if (it) routines.push(it);
   }
+  routines.push(...contasDoDia(state, date));
+  for (const x of routines) if (/^Planejar a próxima semana/.test(x.title)) x.acao = 'revisao';
   const marcos = state.marcos
     .filter((m) => m.date === date)
     .map((m) => ({ key: `m:${m.id}`, kind: 'marco', id: m.id, title: m.title, area: m.area, who: 'all', date: m.date }))
@@ -141,10 +143,12 @@ export function buildOverdue(state, filter, ref = today()) {
   for (let d = 1; d <= 14; d++) {
     const date = addDays(ref, -d);
     for (const r of state.routines) {
+      if (r.who === 'lolis' || r.tipo === 'lolis-lista') continue; // rotina da Lolis se repete: não vira atraso
       if (r.freq !== 'daily' && occursOn(state, r, date) && !state.routineDone[`${r.id}:${date}`]) routines.push(fromRoutine(r, date, state.routineDone));
     }
     // postagens dos melhores da rodada que ficaram pra trás (últimos 7 dias)
     if (d <= 7) routines.push(...calRoutines(state, date).filter((x) => !x.done));
+    routines.push(...contasDoDia(state, date).filter((x) => !x.done).map((x) => ({ ...x, urgent: true })));
   }
   return [...tasks, ...routines].filter(ok).sort((a, b) => a.date.localeCompare(b.date) || sortItems(a, b));
 }
@@ -198,9 +202,17 @@ export function suggestions(state, ref = today()) {
   }
 
   // Confraternização: o regulamento exige anunciar 30 dias antes, com os valores
-  if (!state.projects.some((p) => p.templateId === 'confra')) {
-    out.push({ tone: 'amber', icon: '🎉', text: 'A confraternização ainda não tem data. As etapas terminam em 13/12 e 20/12, e o anúncio precisa sair 30 dias antes da festa. Crie o projeto em Projetos → Confraternização.' });
+  const temConfra = state.projects.some((p) => p.templateId === 'confra') || [...state.tasks, ...state.marcos].some((t) => /confra.*(festa|dia da)|dia da confra/i.test(t.title) && (t.due || t.date));
+  if (!temConfra) {
+    out.push({ tone: 'amber', icon: '🎉', text: 'A confraternização ainda não tem data. As etapas terminam em 13/12 e 20/12, e o anúncio precisa sair 30 dias antes da festa. Quando decidir, anote "Dia da confra" com a data.' });
   }
+
+  for (let d = 1; d <= 3; d++) {
+    const date = addDays(ref, d);
+    for (const c of contasDoDia(state, date).filter((x) => !x.done)) out.push({ tone: 'violet', icon: '💸', text: `${c.title.replace('💸 Pagar ', '')} vence ${relativo(date, ref)} (${fmtCurto(date)}).` });
+  }
+
+  for (const p of pedidosParados(state, ref)) out.push({ tone: 'sky', icon: '🐦', text: `${p.cliente}: parado há ${p.dias} dias em "${p.etapa}". Cobrar ou marcar como perdido?` });
 
   for (const p of state.projects) {
     const pts = state.tasks.filter((t) => t.projectId === p.id);
@@ -208,12 +220,12 @@ export function suggestions(state, ref = today()) {
     if (late >= 2) out.push({ tone: 'red', icon: '🚧', text: `O projeto "${p.name}" tem ${late} etapas atrasadas. O prazo final continua o mesmo?` });
   }
 
-  const weekPersonal = state.tasks.some((t) => t.area === 'pessoal' && !t.done && t.due && diffDays(t.due, ref) >= 0 && diffDays(t.due, ref) <= 7);
+  const weekPersonal = state.tasks.some((t) => t.area === 'pessoal' && !t.done && t.due && diffDays(t.due, ref) >= 0 && diffDays(t.due, ref) <= 7) || Array.from({ length: 8 }, (_, i) => addDays(ref, i)).some((d) => contasDoDia(state, d).length);
   if (!weekPersonal) out.push({ tone: 'violet', icon: '💜', text: 'Nada pessoal agendado nesta semana. Contas, saúde, treino, família: tem algo pra colocar aqui?' });
 
   if (!state.tasks.some((t) => t.area === 'gralha' && !t.done)) out.push({ tone: 'sky', icon: '🐦', text: 'Nenhum pedido da Gralha em aberto. Algum orçamento esperando resposta no WhatsApp?' });
 
-  return out.slice(0, 5);
+  return out.slice(0, 6);
 }
 
 export function projectProgress(state, pid) {
@@ -265,6 +277,10 @@ export function buildAgenda(state, ref = today()) {
           (() => {
             const n = campanhasPendentes(state, date).length;
             return n ? `📣 ${n} ${n === 1 ? 'campanha' : 'campanhas'} para agendar` : '';
+          })(),
+          (() => {
+            const n = dia.filter((x) => x.mensagem && !x.done).length;
+            return n ? `💬 ${n} ${n === 1 ? 'mensagem pronta' : 'mensagens prontas'} para copiar` : '';
           })(),
           lista([...new Map(destaque.map((x) => [x.key, x])).values()]),
         ]
@@ -400,4 +416,69 @@ export function itemLolis(state, date) {
     mensagem: done ? undefined : novos.length ? mensagemNovosLolis(novos) : semana ? mensagemSemanaLolis(state, date, late) : mensagemDiaLolis(date, late, hoje),
     doneValue: done ? null : [...new Set([...enviados, ...keys])],
   };
+}
+
+// ── Contas fixas pessoais: aparecem no dia do vencimento (fim de semana/feriado: no dia útil anterior) ──
+const brlConta = (n) => Number(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+export function vencimentoConta(state, c, mes) {
+  const [y, m] = mes.split('-').map(Number);
+  const ultimo = new Date(y, m, 0).getDate();
+  const nominal = `${mes}-${String(Math.min(c.dia, ultimo)).padStart(2, '0')}`;
+  return proximoDiaUtil(state, nominal, -1);
+}
+export function contasDoDia(state, date) {
+  const out = [];
+  const [y, m] = date.split('-').map(Number);
+  const meses = [date.slice(0, 7), `${m === 12 ? y + 1 : y}-${String(m === 12 ? 1 : m + 1).padStart(2, '0')}`];
+  for (const c of state.contas || []) {
+    if (c.ativo === false) continue;
+    for (const mes of meses) {
+      if (vencimentoConta(state, c, mes) !== date) continue;
+      out.push({
+        key: `r:conta:${c.id}:${date}`,
+        kind: 'routine',
+        id: `conta:${c.id}`,
+        title: `💸 Pagar ${c.nome}${c.valor ? ` · ${brlConta(c.valor)}` : ''}`,
+        area: 'pessoal',
+        who: 'laura',
+        urgent: false,
+        date,
+        done: !!state.routineDone[`conta:${c.id}:${date}`],
+        freq: 'calendario',
+      });
+    }
+  }
+  return out;
+}
+
+// ── Gralha: pedidos sem andar há muitos dias ──
+const PARADO = { enviado: ['Orçamento enviado', 5], arte: ['Arte com o marketing', 4], aprovacao: ['Arte em aprovação', 4], fechado: ['Fechado (falta contrato)', 2] };
+export function pedidosParados(state, ref = today()) {
+  return (state.pedidos || [])
+    .filter((p) => PARADO[p.stage])
+    .map((p) => {
+      const desde = (p.history || []).at(-1)?.date || p.createdAt;
+      return { id: p.id, cliente: p.cliente, etapa: PARADO[p.stage][0], dias: diffDays(ref, desde), limite: PARADO[p.stage][1] };
+    })
+    .filter((p) => p.dias >= p.limite)
+    .sort((a, b) => b.dias - a.dias);
+}
+
+// ── Baixa pelo relatório da Lolis: quais itens dela parecem citados no texto ──
+const PARADAS = new Set('para pela pelo com sem dos das nos nas uma uns umas que como mais todo toda novo novos nova novas hoje até sobre quem tem fazer feito diario diaria semana'.split(' '));
+const normal = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9\s]/g, ' ');
+const palavras = (s) => normal(s).split(/\s+/).filter((w) => (w.length >= 4 || /\d/.test(w)) && !PARADAS.has(w));
+export function sugerirBaixas(state, date, texto) {
+  const rel = new Set(palavras(texto).map((w) => w.slice(0, 5)));
+  if (!rel.size) return [];
+  const f = { area: 'all', who: 'lolis' };
+  const itens = [...buildDay(state, date, f), ...buildOverdue(state, f, date).filter((x) => x.kind === 'task')].filter((x) => x.kind !== 'marco' && !x.done);
+  const out = [];
+  for (const x of itens) {
+    const ws = [...new Set(palavras(x.title).map((w) => w.slice(0, 5)))];
+    if (!ws.length) continue;
+    const acertos = ws.filter((w) => rel.has(w)).length;
+    if (acertos >= Math.max(1, Math.ceil(ws.length * 0.34)) && (acertos >= 2 || ws.length <= 2)) out.push({ ...x, score: acertos / ws.length });
+  }
+  return [...new Map(out.map((x) => [x.key, x])).values()].sort((a, b) => b.score - a.score);
 }

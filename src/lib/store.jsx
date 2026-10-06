@@ -446,6 +446,18 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
+      // contas fixas pessoais (nome, valor, dia do vencimento)
+      addConta: (c) => setState((s) => ({ ...s, contas: [...(s.contas || []), { id: uid(), ativo: true, ...c }] })),
+      updateConta: (id, patch) => setState((s) => ({ ...s, contas: (s.contas || []).map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
+      deleteConta: (id) => setState((s) => ({ ...s, contas: (s.contas || []).filter((c) => c.id !== id) })),
+      // dá baixa de vários itens de uma vez (tarefas e rotinas)
+      darBaixa: (itens) =>
+        setState((s) => {
+          const ids = new Set(itens.filter((x) => x.kind === 'task').map((x) => x.id));
+          const routineDone = { ...s.routineDone };
+          for (const x of itens) if (x.kind === 'routine') routineDone[`${x.id}:${x.date}`] = true;
+          return { ...s, routineDone, tasks: s.tasks.map((t) => (ids.has(t.id) ? { ...t, done: true, doneAt: today() } : t)) };
+        }),
       // relatórios do dia: chave 'relatosLolis' (texto que ela manda) ou 'relatosLaura' (anotações suas)
       setRelato: (chave, date, texto) =>
         setState((s) => {

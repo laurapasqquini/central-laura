@@ -84,6 +84,11 @@ export function ItemRow({ item, showDate = false, onEdit }) {
           🔗 Hub
         </a>
       )}
+      {item.acao === 'revisao' && !item.done && (
+        <button onClick={() => window.dispatchEvent(new CustomEvent('abrir-revisao', { detail: item }))} className="mt-0.5 shrink-0 rounded-full bg-ink px-2.5 py-1 text-[11px] font-bold text-white hover:opacity-90">
+          🧭 Abrir revisão
+        </button>
+      )}
       {item.mensagem && !item.done && (
         <button onClick={() => setVerMsg((v) => !v)} title="Ver a mensagem pronta" className="mt-0.5 shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700">
           💬 Mensagem

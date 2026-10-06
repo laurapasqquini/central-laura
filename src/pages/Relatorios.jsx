@@ -3,6 +3,7 @@ import { useStore } from '../lib/store';
 import { today, fmtCurto, relativo } from '../lib/dates';
 import { periodo, montarRelatorio, textoRelatorio, baixarPdf, tituloRelatorio } from '../lib/relatorio';
 import { Section, Empty, Segmented, inputCls } from '../components/ui';
+import { sugerirBaixas } from '../lib/engine';
 
 const PERIODOS = [
   ['hoje', 'Hoje'],
@@ -119,7 +120,7 @@ function Bloco({ nome, itens, texto, cor }) {
 
 // Caixa de colar/anotar por dia (fica salvo na central)
 function Colar({ chave, titulo, placeholder, cor }) {
-  const { state, setRelato } = useStore();
+  const { state, setRelato, darBaixa } = useStore();
   const ref = today();
   const relatos = state[chave] || {};
   const [data, setData] = useState(ref);
@@ -134,6 +135,18 @@ function Colar({ chave, titulo, placeholder, cor }) {
     setRelato(chave, data, texto);
     setSalvo(true);
     setTimeout(() => setSalvo(false), 1500);
+    // relatório da Lolis: procura o que ela fez entre as atividades dela para dar baixa
+    if (chave === 'relatosLolis') {
+      const sug = sugerirBaixas(state, data, texto);
+      setBaixas(sug);
+      setMarcadas(new Set(sug.map((x) => x.key)));
+    }
+  };
+  const [baixas, setBaixas] = useState(null);
+  const [marcadas, setMarcadas] = useState(new Set());
+  const confirmar = () => {
+    darBaixa(baixas.filter((x) => marcadas.has(x.key)));
+    setBaixas([]);
   };
 
   return (
@@ -148,6 +161,33 @@ function Colar({ chave, titulo, placeholder, cor }) {
         <button onClick={salvar} disabled={texto.trim() === (relatos[data] || '')} className={`w-full rounded-xl py-2.5 text-sm font-bold text-white disabled:opacity-40 ${cor}`}>
           {salvo ? 'Salvo ✓' : 'Salvar'}
         </button>
+        {baixas && baixas.length > 0 && (
+          <div className="space-y-2 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-100">
+            <div className="text-sm font-bold text-amber-800">Pelo relatório, parece que ela fez:</div>
+            {baixas.map((x) => (
+              <label key={x.key} className="flex items-start gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={marcadas.has(x.key)}
+                  onChange={() => setMarcadas((m) => {
+                    const n = new Set(m);
+                    n.has(x.key) ? n.delete(x.key) : n.add(x.key);
+                    return n;
+                  })}
+                />
+                <span>{x.title}</span>
+              </label>
+            ))}
+            <div className="flex gap-2">
+              <button onClick={confirmar} disabled={!marcadas.size} className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-bold text-white disabled:opacity-40">
+                ✓ Dar baixa ({marcadas.size})
+              </button>
+              <button onClick={() => setBaixas(null)} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-500">Agora não</button>
+            </div>
+          </div>
+        )}
+        {baixas && baixas.length === 0 && <p className="text-xs text-slate-500">Nada para dar baixa (ou já está tudo marcado).</p>}
       </div>
     </Section>
   );
