@@ -13,7 +13,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 15,
+    version: 16,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -182,6 +182,10 @@ function migrate(s) {
   if (s.version < 15) {
     const nota = 'Bloco 1: as 5 do "Já marcou?" de quinta 08/10 às 18h. Bloco 2: Simples Fem, dom 11/10 (último dia R1) e seg 12/10 (R2 no ar). Tudo em Etapas → Campanhas. Se o sistema continuar travado até quinta, mande o "Já marcou?" nos grupos do WhatsApp.';
     s = { ...s, version: 15, tasks: [{ ...tarefa('Agendar as campanhas da semana (blocos 1 e 2): o sistema travou ontem', '2026-10-07'), urgent: true, notes: nota }, ...s.tasks] };
+  }
+  // v16: os 6x0 são conferidos só na quarta
+  if (s.version < 16) {
+    s = { ...s, version: 16, routines: s.routines.map((r) => (/^Conferir 6x0/.test(r.title) ? { ...r, title: 'Conferir os 6x0 novos e avisar os ganhadores', freq: 'weekly', weekday: 3 } : r)) };
   }
   return s;
 }
