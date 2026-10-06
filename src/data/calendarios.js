@@ -7,6 +7,8 @@ const r = (n, sorteio, inicio, fim, hora = '20:00') => ({ n, sorteio, inicio, fi
 export const CALENDARIOS = [
   {
     id: 'mga-tenis-duplas',
+    grupo: 'tenis-mga',
+    rotulo: 'DUPLAS (MASC E FEM)',
     cidade: 'Maringá',
     nome: 'Tênis Duplas (masc e fem)',
     curto: 'Duplas tênis',
@@ -24,6 +26,8 @@ export const CALENDARIOS = [
   },
   {
     id: 'mga-tenis-simples-masc',
+    grupo: 'tenis-mga',
+    rotulo: 'SIMPLES MASCULINO',
     cidade: 'Maringá',
     nome: 'Tênis Simples Masculino',
     curto: 'Simples Masc',
@@ -45,6 +49,8 @@ export const CALENDARIOS = [
   },
   {
     id: 'mga-tenis-simples-fem',
+    grupo: 'tenis-mga',
+    rotulo: 'SIMPLES FEMININO',
     cidade: 'Maringá',
     nome: 'Tênis Simples Feminino (classes 1 a 5)',
     curto: 'Simples Fem',
@@ -62,6 +68,8 @@ export const CALENDARIOS = [
   },
   {
     id: 'lda-tenis-simples-masc',
+    grupo: 'tenis-lda',
+    rotulo: 'SIMPLES MASCULINO',
     cidade: 'Londrina',
     nome: 'Tênis Simples Masculino',
     curto: 'Simples Masc',
@@ -80,6 +88,8 @@ export const CALENDARIOS = [
   },
   {
     id: 'mga-beach',
+    grupo: 'beach-mga',
+    rotulo: 'BEACH TENNIS',
     cidade: 'Maringá',
     nome: 'Beach Tennis',
     curto: 'Beach',
@@ -97,6 +107,8 @@ export const CALENDARIOS = [
   },
   {
     id: 'sfe-beach',
+    grupo: 'beach-sfe',
+    rotulo: 'BEACH TENNIS',
     cidade: 'Santa Fé',
     nome: 'Beach Tennis (1ª etapa)',
     curto: 'Beach',
@@ -154,8 +166,48 @@ const POSTAGEM = [
   { esporte: 'beach', depois: 1, insta: 'Instagram do beach' },
 ];
 
+// Grupos de WhatsApp: categorias do mesmo grupo saem numa mensagem só.
+const GRUPOS = {
+  'tenis-mga': { nome: 'Tênis Maringá', topo: '🎾 *RANKEN TÊNIS MARINGÁ*' },
+  'tenis-lda': { nome: 'Tênis Londrina', topo: '🎾 *RANKEN TÊNIS LONDRINA*' },
+  'beach-mga': { nome: 'Beach Maringá', topo: '🏖️ *RANKEN BEACH TENNIS MARINGÁ*' },
+  'beach-sfe': { nome: 'Beach Santa Fé', topo: '🏖️ *RANKEN BEACH TENNIS SANTA FÉ*' },
+};
+
+const DIAS_SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+const ddmm = (s) => `${s.slice(8, 10)}/${s.slice(5, 7)}`;
+const diaSemana = (s) => DIAS_SEMANA[new Date(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)).getDay()];
+const dias = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+
+// Mensagem "rodada aberta" de um grupo (formato do WhatsApp: *negrito*).
+export function mensagemRodada(grupo, lista) {
+  const blocos = lista.map(({ c, rd }) => {
+    const ultima = c.rodadas[c.rodadas.length - 1];
+    const linhas = [`*RODADA ${rd.n} ABERTA - ${c.rotulo}*`];
+    if (c.retaFinal && rd.n >= c.retaFinal) linhas.push('⚠️ *RETA FINAL*');
+    linhas.push(`📅 *PRAZO:* ${ddmm(rd.inicio)} a ${ddmm(rd.fim)}${dias(rd.inicio, rd.fim) <= 7 ? ' *(rodada de 1 semana!)*' : ''}`);
+    linhas.push(`⏰ *DATA LIMITE:* ${diaSemana(rd.fim)}, ${ddmm(rd.fim)}`);
+    if (rd.n === 9 && ultima.n === 10) linhas.push('🔁 *Última rodada para encaixar jogos atrasados!*');
+    return linhas.join('\n');
+  });
+  const so = (f) => lista.every(f);
+  const adv = so(({ c }) => c.esporte === 'beach') ? 'sua dupla adversária' : so(({ c }) => c.id.endsWith('-fem')) ? 'sua adversária' : 'seu adversário';
+  return [GRUPOS[grupo].topo, ...blocos, `*Os jogos já estão no app!* Combine com ${adv} e lance o resultado até a *data limite*.`].join('\n\n');
+}
+
 export function rotinasDoDia(date, addDays) {
   const out = [];
+  // Aviso de rodada aberta: segunda depois do sorteio, uma tarefa por grupo
+  const domingo = addDays(date, -1);
+  const porGrupo = {};
+  for (const c of CALENDARIOS) {
+    const rd = c.rodadas.find((x) => x.sorteio === domingo);
+    if (rd) (porGrupo[c.grupo] ||= []).push({ c, rd });
+  }
+  for (const [g, lista] of Object.entries(porGrupo)) {
+    const quais = lista.map(({ c, rd }) => `${c.curto} R${rd.n}`).join(' + ');
+    out.push({ id: `aviso-${g}`, title: `Avisar no grupo · ${GRUPOS[g].nome}: rodada aberta (${quais})`, mensagem: mensagemRodada(g, lista), who: 'laura' });
+  }
   for (const p of POSTAGEM) {
     const domingo = addDays(date, -p.depois);
     const terminaram = CALENDARIOS.filter((c) => c.esporte === p.esporte)

@@ -32,6 +32,8 @@ export function Check({ done, onClick, area }) {
 
 export function ItemRow({ item, showDate = false, onEdit }) {
   const { toggleTask, toggleRoutine, postpone } = useStore();
+  const [verMsg, setVerMsg] = useState(false);
+  const [copiado, setCopiado] = useState(false);
 
   if (item.kind === 'marco') {
     return (
@@ -46,7 +48,18 @@ export function ItemRow({ item, showDate = false, onEdit }) {
   const toggle = () => (item.kind === 'task' ? toggleTask(item.id) : toggleRoutine(item.id, item.date));
   const late = !item.done && item.date && item.date < today();
 
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(item.mensagem);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1500);
+    } catch {
+      prompt('Copie a mensagem:', item.mensagem);
+    }
+  };
+
   return (
+    <div>
     <div className={`group flex items-start gap-3 rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200/70 transition hover:ring-slate-300 ${item.done ? 'opacity-55' : ''}`}>
       <span className={`mt-0.5 h-6 w-1 shrink-0 rounded-full ${AREAS[item.area].bar}`} />
       <Check done={item.done} onClick={toggle} area={item.area} />
@@ -71,6 +84,11 @@ export function ItemRow({ item, showDate = false, onEdit }) {
           🔗 Hub
         </a>
       )}
+      {item.mensagem && !item.done && (
+        <button onClick={() => setVerMsg((v) => !v)} title="Ver a mensagem pronta" className="mt-0.5 shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700">
+          💬 Mensagem
+        </button>
+      )}
       {item.kind === 'task' && !item.done && (
         <button
           onClick={() => postpone(item.id, 1)}
@@ -80,6 +98,15 @@ export function ItemRow({ item, showDate = false, onEdit }) {
           +1d
         </button>
       )}
+    </div>
+    {verMsg && item.mensagem && !item.done && (
+      <div className="mx-1 -mt-1 space-y-2 rounded-b-xl bg-[#e7ffdb] p-3 ring-1 ring-emerald-100">
+        <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800">{item.mensagem}</pre>
+        <button onClick={copiar} className="w-full rounded-lg bg-emerald-600 py-2 text-sm font-bold text-white hover:bg-emerald-700">
+          {copiado ? 'Copiado ✓' : '📋 Copiar mensagem'}
+        </button>
+      </div>
+    )}
     </div>
   );
 }

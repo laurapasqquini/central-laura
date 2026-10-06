@@ -99,13 +99,14 @@ const calRoutines = (state, date) =>
     id: r.id,
     title: r.title,
     area: 'ranken',
-    who: state.melhoresWho || 'laura',
+    who: r.who || state.melhoresWho || 'laura',
     urgent: false,
     date,
     done: !!state.routineDone[`${r.id}:${date}`],
     freq: 'calendario',
-    hub: true,
+    hub: !!r.hubPath,
     hubPath: r.hubPath,
+    mensagem: r.mensagem,
   }));
 
 const sortItems = (a, b) =>
