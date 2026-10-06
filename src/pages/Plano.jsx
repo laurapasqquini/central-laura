@@ -229,7 +229,7 @@ function Numeros() {
   return (
     <Section title="📊 Números da semana">
       <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-        <p className="text-xs text-slate-500">Copie do Hub ou do backoffice uma vez por semana (sexta, na revisão). Eles entram no relatório para os chefes com a variação.</p>
+        <p className="text-xs text-slate-500">Os números do Beach chegam sozinhos quando você abre a tela <b>Beach Tênis</b> do Hub (pela extensão). Os outros você preenche à mão. Entram no relatório para os chefes com a variação.</p>
         {atual.length > 0 && (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {atual.map((n) => (

@@ -4,7 +4,10 @@ import { feitosDoDia } from './relatorio';
 import { addDays, fmtCurto } from './dates';
 import { FRENTES } from '../data/radar';
 
-export const INDICADORES_PADRAO = ['Beach · pagantes', 'Beach · inscritos', 'Beach · inadimplentes', 'Beach · faturamento do mês (R$)'];
+// Números que a extensão lê da tela Beach Tênis do Hub (na ordem da tela)
+export const INDICADORES_PADRAO = ['Beach · atletas', 'Beach · Maringá', 'Beach · Santa Fé', 'Beach · pagantes', 'Beach · receita/mês (R$)', 'Beach · assinatura', 'Beach · Pix', 'Beach · cortesias', 'Beach · desistiram', 'Beach · precisa decidir', 'Beach · aguardando aprovação', 'Beach · kits a retirar'];
+// No relatório dos chefes vão só os principais (mais os que a Laura criar à mão)
+const DESTAQUE = ['Beach · atletas', 'Beach · pagantes', 'Beach · receita/mês (R$)', 'Beach · cortesias', 'Beach · desistiram'];
 export const STATUS = [
   { id: 'ideia', nome: 'Ideia', icone: '💡' },
   { id: 'propus', nome: 'Propus', icone: '📤' },
@@ -85,7 +88,7 @@ export function montarChefes(state, [de, ate]) {
         return `${frente(i.frente).icone} ${i.titulo}${i.prazo ? ` (até ${br(i.prazo)})` : ''}${pr.total ? ` · ${pr.feitas}/${pr.total} passos` : ''}`;
       }),
     propostas: p.iniciativas.filter((i) => i.status === 'propus').map((i) => `${frente(i.frente).icone} ${i.titulo}`),
-    numeros: numerosAte(state, ate).map((n) => `${n.nome}: ${fmtNum(n.valor)}${n.dif ? ` (${n.dif > 0 ? '+' : ''}${fmtNum(n.dif)})` : ''}`),
+    numeros: numerosAte(state, ate).filter((n) => DESTAQUE.includes(n.nome) || !INDICADORES_PADRAO.includes(n.nome)).map((n) => `${n.nome}: ${fmtNum(n.valor)}${n.dif ? ` (${n.dif > 0 ? '+' : ''}${fmtNum(n.dif)})` : ''}`),
     equipe: lolis ? [`Lolis: ${lolis} ${lolis === 1 ? 'atividade registrada' : 'atividades registradas'} na semana`] : [],
     proxima: [...marcos, ...prazos.map((i) => `Prazo ${br(i.prazo)}: ${i.titulo}`), ...proxTarefas.slice(0, 5)],
   };

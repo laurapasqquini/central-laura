@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 import { buildAgenda } from './engine';
+import { INDICADORES_PADRAO } from './chefes';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
 // Tudo é salvo como um único documento por usuária, sincronizado entre PC e iPhone.
@@ -282,10 +283,32 @@ export function StoreProvider({ user, children }) {
     const puxarEntrada = async () => {
       const { data: rows } = await supabase.from('entrada').select('*').order('created_at');
       if (!alive || !rows?.length) return;
-      setState((s) => {
+      setState((s0) => {
+        // números do Hub (Beach Tênis): vão para Plano › Números da semana, no dia em que chegaram
+        let s = s0;
+        for (const r of rows.filter((x) => x.conta === 'numeros')) {
+          let n = null;
+          try {
+            n = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!n) continue;
+          const dia = new Date(r.created_at).toLocaleDateString('sv-SE');
+          const pl = { iniciativas: [], ocultos: [], metas: {}, numeros: {}, ...(s.plano || {}) };
+          const inds = pl.indicadores || INDICADORES_PADRAO;
+          s = {
+            ...s,
+            plano: {
+              ...pl,
+              indicadores: [...inds, ...Object.keys(n).filter((k) => !inds.includes(k))].filter((k) => !/^Beach · (inscritos|faturamento do mês)/.test(k)),
+              numeros: { ...pl.numeros, [dia]: { ...(pl.numeros[dia] || {}), ...Object.fromEntries(Object.entries(n).map(([k, v]) => [k, String(v)])) } },
+            },
+          };
+        }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !ja.has(r.id))
+          .filter((r) => r.conta !== 'numeros' && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {

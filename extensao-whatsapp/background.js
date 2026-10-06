@@ -23,8 +23,9 @@ async function token() {
   return (await auth('refresh_token', { refresh_token: sessao.refresh })).access;
 }
 
-async function enviar(item) {
-  const { conta = 'ranken' } = await chrome.storage.local.get('conta');
+async function enviar(item, contaFixa) {
+  const { conta: contaSalva = 'ranken' } = await chrome.storage.local.get('conta');
+  const conta = contaFixa || contaSalva; // 'numeros' = números do Hub, não vira tarefa
   const r = await fetch(`${URL}/rest/v1/entrada`, {
     method: 'POST',
     headers: { apikey: KEY, Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
@@ -38,6 +39,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, responder) => {
     msg.tipo === 'entrar' ? auth('password', { email: msg.email, password: msg.senha }).then((s) => ({ email: s.email }))
     : msg.tipo === 'sair' ? chrome.storage.local.remove('sessao')
     : msg.tipo === 'enviar' ? enviar(msg.item)
+    : msg.tipo === 'numeros' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Beach Tênis' }, 'numeros')
     : Promise.resolve();
   run.then((r) => responder({ ok: true, ...r }), (e) => responder({ ok: false, erro: e.message }));
   return true; // resposta assíncrona
