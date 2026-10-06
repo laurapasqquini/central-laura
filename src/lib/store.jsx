@@ -13,7 +13,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 11,
+    version: 12,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -156,6 +156,11 @@ function migrate(s) {
       routineDone,
       tasks: s.tasks.filter((t) => !t.title.startsWith('Maringá: mandar no grupo a reta final da rodada 5')),
     };
+  }
+  // v12: compromissos pessoais fixos (com horário, não mudam de dia em feriado)
+  if (s.version < 12) {
+    const comp = (title, weekday, hora) => ({ id: uid(), title, area: 'pessoal', who: 'laura', freq: 'weekly', weekday, hora, active: true, createdAt: hoje });
+    s = { ...s, version: 12, routines: [...s.routines, comp('Terapia', 1, '13:30'), comp('Treino', 3, '17:00')] };
   }
   return s;
 }

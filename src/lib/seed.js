@@ -31,6 +31,8 @@ export const seedRoutines = () => [
   r('Efetivar cancelamentos que completaram 30 dias', 'laura', 'monthly', { monthday: 1 }),
   r('Lançar o desafio mensal dos atletas', 'laura', 'monthly', { monthday: 1 }),
   r('Revisar contas a pagar do mês', 'laura', 'monthly', { monthday: 1 }, 'pessoal'),
+  r('Terapia', 'laura', 'weekly', { weekday: 1, hora: '13:30' }, 'pessoal'),
+  r('Treino', 'laura', 'weekly', { weekday: 3, hora: '17:00' }, 'pessoal'),
   r('Contar o estoque (camisetas, kits, bolinhas, troféus)', 'lolis', 'monthly', { monthday: 5 }),
   r('Pedir orçamentos e repor o que está acabando', 'laura', 'monthly', { monthday: 8 }),
   r('Patrocinadores e apoiadores: brindes e contrapartidas', 'laura', 'monthly', { monthday: 10 }),

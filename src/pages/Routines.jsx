@@ -6,7 +6,7 @@ import { Modal, Segmented, areaOptions, inputCls, Pill } from '../components/ui'
 import { NotifCard } from '../components/Notif';
 import { FolgasCard } from '../components/Folgas';
 
-const when = (r) => (r.freq === 'daily' ? 'seg a sex' : r.freq === 'weekly' ? `toda ${DIAS[r.weekday]}` : `dia ${r.monthday}`);
+const when = (r) => (r.freq === 'daily' ? 'seg a sex' : r.freq === 'weekly' ? `toda ${DIAS[r.weekday]}` : `dia ${r.monthday}`) + (r.hora ? ` às ${r.hora}` : '');
 
 export default function Routines() {
   const { state, updateRoutine, setMelhoresWho } = useStore();
@@ -94,7 +94,7 @@ function RoutineModal({ id, onClose }) {
         onSubmit={(e) => {
           e.preventDefault();
           if (!f.title.trim()) return;
-          const data = { title: f.title.trim(), area: f.area, who: f.who, freq: f.freq, weekday: +f.weekday, monthday: +f.monthday };
+          const data = { title: f.title.trim(), area: f.area, who: f.who, freq: f.freq, weekday: +f.weekday, monthday: +f.monthday, hora: f.hora || null };
           existing ? updateRoutine(id, data) : addRoutine(data);
           onClose();
         }}
@@ -103,6 +103,10 @@ function RoutineModal({ id, onClose }) {
         <Segmented value={f.area} onChange={set('area')} options={areaOptions} />
         <Segmented value={f.who} onChange={set('who')} options={[['laura', 'Eu'], ['lolis', '🙋 Lolis', 'bg-amber-500 text-white ring-transparent']]} />
         <Segmented value={f.freq} onChange={set('freq')} options={[['daily', 'Todo dia útil'], ['weekly', 'Semanal'], ['monthly', 'Mensal']]} />
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          Horário (opcional, para compromissos)
+          <input type="time" className={`${inputCls} w-32`} value={f.hora || ''} onChange={(e) => set('hora')(e.target.value)} />
+        </label>
         {f.freq === 'weekly' && (
           <select className={inputCls} value={f.weekday} onChange={(e) => set('weekday')(e.target.value)}>
             {DIAS.map((d, i) => <option key={i} value={i}>{d}</option>)}

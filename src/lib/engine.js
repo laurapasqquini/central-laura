@@ -54,6 +54,7 @@ function caiNoDia(r, date) {
 export function occursOn(state, r, date) {
   if (!r.active) return false;
   if (r.createdAt && date < r.createdAt) return false;
+  if (r.hora) return caiNoDia(r, date) && (r.freq !== 'daily' || isWorkday(state, date)); // compromisso: não muda de dia
   if (r.freq === 'daily') return isWorkday(state, date);
   return nominaisDe(state, date).some((d) => caiNoDia(r, d));
 }
@@ -81,7 +82,8 @@ const fromRoutine = (r, date, routineDone) => ({
   key: `r:${r.id}:${date}`,
   kind: 'routine',
   id: r.id,
-  title: r.title,
+  title: r.hora ? `${r.hora.replace(':00', 'h').replace(':', 'h')} · ${r.title}` : r.title,
+  hora: r.hora || null,
   area: r.area,
   who: r.who,
   urgent: false,
