@@ -45,7 +45,7 @@ export function ItemRow({ item, showDate = false, onEdit }) {
     );
   }
 
-  const toggle = () => (item.kind === 'task' ? toggleTask(item.id) : toggleRoutine(item.id, item.date));
+  const toggle = () => (item.kind === 'task' ? toggleTask(item.id) : toggleRoutine(item.id, item.date, item.doneValue));
   const late = !item.done && item.date && item.date < today();
 
   const copiar = async () => {

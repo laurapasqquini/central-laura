@@ -13,7 +13,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 16,
+    version: 17,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -186,6 +186,10 @@ function migrate(s) {
   // v16: os 6x0 são conferidos só na quarta
   if (s.version < 16) {
     s = { ...s, version: 16, routines: s.routines.map((r) => (/^Conferir 6x0/.test(r.title) ? { ...r, title: 'Conferir os 6x0 novos e avisar os ganhadores', freq: 'weekly', weekday: 3 } : r)) };
+  }
+  // v17: a lista diária da Lolis virou automática (semana na segunda, só o que muda nos outros dias)
+  if (s.version < 17) {
+    s = { ...s, version: 17, routines: s.routines.filter((r) => r.tipo !== 'lolis-lista') };
   }
   return s;
 }
@@ -367,11 +371,14 @@ export function StoreProvider({ user, children }) {
         patchTask(id, (t) => ({ due: addDays(t.due && t.due > today() ? t.due : today(), days), postponed: (t.postponed || 0) + 1 })),
       deleteTask: (id) => setState((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) })),
 
-      toggleRoutine: (rid, date) =>
+      toggleRoutine: (rid, date, valor) =>
         setState((s) => {
           const k = `${rid}:${date}`;
           const routineDone = { ...s.routineDone };
-          if (routineDone[k]) delete routineDone[k];
+          if (valor !== undefined) {
+            if (valor === null) delete routineDone[k];
+            else routineDone[k] = valor;
+          } else if (routineDone[k]) delete routineDone[k];
           else routineDone[k] = true;
           return { ...s, routineDone };
         }),

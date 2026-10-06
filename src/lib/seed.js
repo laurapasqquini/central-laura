@@ -8,7 +8,6 @@ const r = (title, who, freq, extra = {}, area = 'ranken') => ({ id: id('r'), tit
 
 export const seedRoutines = () => [
   // Diárias
-  r('Mandar pra Lolis a lista de hoje e as sugestões', 'laura', 'daily', { tipo: 'lolis-lista' }),
   r('Atendimento pessoal no WhatsApp da RANKEN', 'laura', 'daily'),
   r('Publicar o sorteio diário no grupo do WhatsApp', 'lolis', 'daily'),
   r('Postar o sorteio diário no Instagram', 'lolis', 'daily'),

@@ -119,9 +119,12 @@ const sortItems = (a, b) =>
 export function buildDay(state, date, filter) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
   const tasks = state.tasks.filter((t) => t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state));
-  const routines = state.routines.filter((r) => occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date));
+  const routines = state.routines.filter((r) => r.tipo !== 'lolis-lista' && occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date));
   // "mandar a lista pra Lolis" já leva a mensagem do dia
-  if (filter.who !== 'lolis') for (const x of routines) if (state.routines.find((r) => r.id === x.id)?.tipo === 'lolis-lista') x.mensagem = mensagemLolis(state, date);
+  if (filter.who !== 'lolis') {
+    const it = itemLolis(state, date);
+    if (it) routines.push(it);
+  }
   const marcos = state.marcos
     .filter((m) => m.date === date)
     .map((m) => ({ key: `m:${m.id}`, kind: 'marco', id: m.id, title: m.title, area: m.area, who: 'all', date: m.date }))
@@ -318,4 +321,83 @@ export function mensagemLolis(state, ref = today()) {
     ...adiantar.map((t) => `• ${t}`),
     '\nO que for financeiro ou que você não conseguir resolver, me manda 💚',
   ].filter(Boolean).join('\n');
+}
+
+// ── Mensagens para a Lolis (ela não acessa a central) ──
+// Segunda (ou 1º dia útil da semana): a semana inteira. Outros dias: só o que foge da rotina.
+// Se aparecer pedido novo depois de mandar, a tarefa volta só com o que é novo.
+const FIM_LOLIS = 'Me manda no fim do dia o que você fez 💚';
+const ddmm = (s) => s.slice(8, 10) + '/' + s.slice(5, 7);
+const DIA_NOME = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+function primeiroDiaUtilDaSemana(state, date) {
+  const seg = addDays(date, -((weekday(date) + 6) % 7));
+  for (let d = seg; d <= addDays(seg, 4); d = addDays(d, 1)) if (isWorkday(state, d)) return d;
+  return null;
+}
+
+const listaAtrasadas = (late, ref) => (late.length ? ['\n*Atrasadas (prioridade):*', ...late.map((x) => `⚠️ ${x.title} (era ${relativo(x.date, ref)})`)] : []);
+
+function mensagemSemanaLolis(state, date, late) {
+  const f = { area: 'all', who: 'lolis' };
+  const sexta = addDays(date, 5 - weekday(date));
+  const diarias = state.routines.filter((r) => r.active !== false && r.who === 'lolis' && r.freq === 'daily' && !r.hora).map((r) => r.title);
+  const dias = [];
+  for (let d = date; d <= sexta; d = addDays(d, 1)) {
+    if (!isWorkday(state, d)) continue;
+    const itens = buildDay(state, d, f).filter((x) => x.kind !== 'marco' && !x.done && x.freq !== 'daily');
+    if (itens.length) dias.push(`*${DIA_NOME[weekday(d)]}:* ${itens.map((x) => x.title).join(' · ')}`);
+  }
+  const andamento = noDate(state, f);
+  return [
+    `Oi Lolis! Sua semana (${ddmm(date)} a ${ddmm(sexta)}):`,
+    ...listaAtrasadas(late, date),
+    diarias.length ? '\n*Todo dia:*' : '',
+    ...diarias.map((t) => `• ${t}`),
+    ...dias.map((x, i) => (i ? x : '\n' + x)),
+    andamento.length ? '\n*Em andamento:* ' + andamento.map((x) => x.title).join(' · ') : '',
+    '\n' + FIM_LOLIS,
+  ].filter((x, i) => x !== '' || i === 0).join('\n');
+}
+
+function mensagemDiaLolis(date, late, hoje) {
+  return [
+    `Oi Lolis! Hoje (${fmtCurto(date)}), além da rotina de sempre:`,
+    ...listaAtrasadas(late, date),
+    ...(hoje.length ? ['\n*Hoje:*', ...hoje.map((x) => `• ${x.title}`)] : []),
+    '\n' + FIM_LOLIS,
+  ].join('\n');
+}
+
+const mensagemNovosLolis = (novos) =>
+  [`Lolis, ${novos.length === 1 ? 'mais uma coisa' : 'mais algumas coisas'} pra hoje:`, ...novos.map((x) => `• ${x.title}`), '\nValeu 💚'].join('\n');
+
+export function itemLolis(state, date) {
+  if (!isWorkday(state, date)) return null;
+  const f = { area: 'all', who: 'lolis' };
+  const semana = primeiroDiaUtilDaSemana(state, date) === date;
+  const late = buildOverdue(state, f, date).filter((x) => x.kind === 'task'); // rotina dela se repete: só pedido avulso acumula
+  const hoje = buildDay(state, date, f).filter((x) => x.kind !== 'marco' && !x.done && x.freq !== 'daily');
+  const pontuais = [...late, ...hoje];
+  const keys = pontuais.map((x) => x.key);
+  const env = state.routineDone['lolis-dia:' + date];
+  if (!env && !semana && !pontuais.length) return null; // nada além da rotina: nem aparece
+  const enviados = Array.isArray(env) ? env : env ? keys : [];
+  const novos = env ? pontuais.filter((x) => !enviados.includes(x.key)) : [];
+  const done = !!env && !novos.length;
+  const base = semana ? 'Mandar a semana pra Lolis' : 'Mandar pra Lolis o que tem hoje';
+  return {
+    key: 'r:lolis-dia:' + date,
+    kind: 'routine',
+    id: 'lolis-dia',
+    title: novos.length ? `Mandar pra Lolis: ${novos.length} ${novos.length === 1 ? 'pedido novo' : 'pedidos novos'}` : base,
+    area: 'ranken',
+    who: 'laura',
+    urgent: false,
+    date,
+    done,
+    freq: 'calendario',
+    mensagem: done ? undefined : novos.length ? mensagemNovosLolis(novos) : semana ? mensagemSemanaLolis(state, date, late) : mensagemDiaLolis(date, late, hoje),
+    doneValue: done ? null : [...new Set([...enviados, ...keys])],
+  };
 }
