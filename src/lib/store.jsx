@@ -13,7 +13,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 14,
+    version: 15,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -177,6 +177,11 @@ function migrate(s) {
         ...s.routines.map((r) => (praLolis.includes(r.title) ? { ...r, who: 'lolis' } : r)),
       ],
     };
+  }
+  // v15: o backoffice travou em 06/10; agendar as campanhas da semana logo cedo
+  if (s.version < 15) {
+    const nota = 'Bloco 1: as 5 do "Já marcou?" de quinta 08/10 às 18h. Bloco 2: Simples Fem, dom 11/10 (último dia R1) e seg 12/10 (R2 no ar). Tudo em Etapas → Campanhas. Se o sistema continuar travado até quinta, mande o "Já marcou?" nos grupos do WhatsApp.';
+    s = { ...s, version: 15, tasks: [{ ...tarefa('Agendar as campanhas da semana (blocos 1 e 2): o sistema travou ontem', '2026-10-07'), urgent: true, notes: nota }, ...s.tasks] };
   }
   return s;
 }
@@ -430,6 +435,14 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
+      // relatório do dia que a Lolis manda no WhatsApp (texto colado)
+      setRelatoLolis: (date, texto) =>
+        setState((s) => {
+          const relatosLolis = { ...(s.relatosLolis || {}) };
+          if (texto.trim()) relatosLolis[date] = texto.trim();
+          else delete relatosLolis[date];
+          return { ...s, relatosLolis };
+        }),
       setGralhaCfg: (patch) => setState((s) => ({ ...s, gralhaCfg: { comissao: 8, base: 'total', ...(s.gralhaCfg || {}), ...patch } })),
       addFolga: (date, nome) => setState((s) => ({ ...s, folgas: { ...(s.folgas || {}), [date]: nome || 'Folga' } })),
       removeFolga: (date) =>
