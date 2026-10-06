@@ -435,13 +435,13 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
-      // relatório do dia que a Lolis manda no WhatsApp (texto colado)
-      setRelatoLolis: (date, texto) =>
+      // relatórios do dia: chave 'relatosLolis' (texto que ela manda) ou 'relatosLaura' (anotações suas)
+      setRelato: (chave, date, texto) =>
         setState((s) => {
-          const relatosLolis = { ...(s.relatosLolis || {}) };
-          if (texto.trim()) relatosLolis[date] = texto.trim();
-          else delete relatosLolis[date];
-          return { ...s, relatosLolis };
+          const r = { ...(s[chave] || {}) };
+          if (texto.trim()) r[date] = texto.trim();
+          else delete r[date];
+          return { ...s, [chave]: r };
         }),
       setGralhaCfg: (patch) => setState((s) => ({ ...s, gralhaCfg: { comissao: 8, base: 'total', ...(s.gralhaCfg || {}), ...patch } })),
       addFolga: (date, nome) => setState((s) => ({ ...s, folgas: { ...(s.folgas || {}), [date]: nome || 'Folga' } })),

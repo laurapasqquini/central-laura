@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { buildDay, buildOverdue, noDate, mensagemLolis } from '../lib/engine';
-import { today, addDays, fmtCurto, relativo } from '../lib/dates';
-import { ItemRow, Section, Empty, TaskModal, inputCls } from '../components/ui';
+import { today, addDays } from '../lib/dates';
+import { ItemRow, Section, Empty, TaskModal } from '../components/ui';
 
 export default function Lolis() {
   const { state } = useStore();
@@ -31,14 +31,12 @@ export default function Lolis() {
       <header className="flex items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">🙋 Lolis</h1>
-          <p className="text-sm text-slate-500">Tudo o que está delegado. Para delegar, escreva <b>@lolis</b> na anotação rápida.</p>
+          <p className="text-sm text-slate-500">Tudo o que está delegado. Para delegar, escreva <b>@lolis</b> na anotação rápida. O que ela fez vai em <b>📊 Relatórios</b>.</p>
         </div>
         <button onClick={copy} className="shrink-0 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white shadow-sm">
           {copied ? 'Copiado ✓' : 'Copiar lista pro WhatsApp'}
         </button>
       </header>
-
-      <Relatos />
 
       {late.length > 0 && (
         <Section title="Atrasadas: cobrar retorno" count={late.length} tone="red">
@@ -60,61 +58,5 @@ export default function Lolis() {
 
       {editing && <TaskModal id={editing} onClose={() => setEditing(null)} />}
     </div>
-  );
-}
-
-// O que a Lolis fez: ela manda no WhatsApp, a Laura cola aqui e fica o histórico por dia.
-function Relatos() {
-  const { state, setRelatoLolis } = useStore();
-  const ref = today();
-  const relatos = state.relatosLolis || {};
-  const [data, setData] = useState(ref);
-  const [texto, setTexto] = useState(relatos[ref] || '');
-  const [salvo, setSalvo] = useState(false);
-  const [verTodos, setVerTodos] = useState(false);
-  const dias = Object.keys(relatos).sort().reverse();
-
-  const trocarData = (d) => {
-    setData(d);
-    setTexto(relatos[d] || '');
-  };
-  const salvar = () => {
-    setRelatoLolis(data, texto);
-    setSalvo(true);
-    setTimeout(() => setSalvo(false), 1500);
-  };
-
-  return (
-    <Section title="📋 O que a Lolis fez" count={dias.length || null}>
-      <div className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
-          Relatório de
-          <input type="date" className={`${inputCls} w-40`} value={data} onChange={(e) => trocarData(e.target.value || ref)} />
-          {relatos[data] && <span className="text-xs font-semibold text-emerald-600">✓ já tem relatório neste dia</span>}
-        </div>
-        <textarea rows={5} className={inputCls} placeholder="Cole aqui o que a Lolis mandou no WhatsApp…" value={texto} onChange={(e) => setTexto(e.target.value)} />
-        <button onClick={salvar} disabled={texto.trim() === (relatos[data] || '')} className="w-full rounded-xl bg-amber-500 py-2.5 text-sm font-bold text-white disabled:opacity-40">
-          {salvo ? 'Salvo ✓' : 'Salvar relatório'}
-        </button>
-      </div>
-      {dias.length > 0 && (
-        <div className="space-y-2">
-          {(verTodos ? dias : dias.slice(0, 3)).map((d) => (
-            <details key={d} className="rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200/70" open={d === dias[0]}>
-              <summary className="cursor-pointer text-sm font-semibold capitalize text-slate-700">
-                {relativo(d, ref)} <span className="font-normal normal-case text-slate-400">· {fmtCurto(d)}</span>
-              </summary>
-              <pre className="mt-2 whitespace-pre-wrap font-sans text-sm text-slate-700">{relatos[d]}</pre>
-              <button onClick={() => trocarData(d)} className="mt-1 text-xs font-semibold text-amber-600">editar</button>
-            </details>
-          ))}
-          {dias.length > 3 && (
-            <button onClick={() => setVerTodos((v) => !v)} className="px-1 text-xs font-semibold text-slate-500">
-              {verTodos ? 'Ver menos' : `Ver todos (${dias.length})`}
-            </button>
-          )}
-        </div>
-      )}
-    </Section>
   );
 }

@@ -9,6 +9,7 @@ import Routines from './pages/Routines';
 import Lolis from './pages/Lolis';
 import Gralha from './pages/Gralha';
 import Etapas from './pages/Etapas';
+import Relatorios from './pages/Relatorios';
 
 const TABS = [
   { id: 'home', label: 'Início', icon: '☀️', C: Home },
@@ -16,6 +17,7 @@ const TABS = [
   { id: 'gralha', label: 'Gralha', icon: '🐦', C: Gralha },
   { id: 'projects', label: 'Projetos', icon: '🗺️', C: Projects },
   { id: 'lolis', label: 'Lolis', icon: '🙋', C: Lolis },
+  { id: 'relatorios', label: 'Relatórios', icon: '📊', C: Relatorios },
   { id: 'routines', label: 'Rotinas', icon: '↻', C: Routines },
 ];
 
@@ -64,9 +66,9 @@ function Shell() {
         <Page go={setTab} />
       </main>
 
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
         {TABS.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`relative flex flex-col items-center gap-0.5 py-1 text-[11px] font-semibold ${tab === t.id ? 'text-ink' : 'text-slate-400'}`}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={`relative flex min-w-0 flex-col items-center gap-0.5 py-1 text-[10px] font-semibold ${tab === t.id ? 'text-ink' : 'text-slate-400'}`}>
             <span className="text-xl leading-none">{t.icon}</span>
             {t.label}
             {badge(t.id) && <span className="absolute top-0 right-1/4 rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">{badge(t.id)}</span>}

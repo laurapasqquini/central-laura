@@ -155,7 +155,7 @@ function Card({ c, st, ov, aberta, onToggle, set }) {
           </label>
           <div className="flex flex-wrap gap-2 pt-1">
             {st !== 'agendada' && (
-              <button onClick={() => set({ status: 'agendada' })} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">
+              <button onClick={() => set({ status: 'agendada', em: today() })} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">
                 ✓ Agendei no backoffice
               </button>
             )}
