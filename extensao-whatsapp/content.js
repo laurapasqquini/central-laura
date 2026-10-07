@@ -37,6 +37,11 @@ function botao(msg) {
     // em grupo, mostra quem escreveu; no privado, o nome da conversa basta
     const contato = autor && conversa && autor !== conversa ? `${autor} (${conversa})` : conversa || autor || null;
     b.textContent = '…';
+    // extensão atualizada com esta aba aberta: ela perde a ligação até dar F5
+    if (!chrome.runtime?.id) {
+      b.textContent = '➕ Central';
+      return aviso('⚠️ A extensão foi atualizada: aperte F5 nesta aba');
+    }
     chrome.runtime.sendMessage({ tipo: 'enviar', item: { texto, contato, hora } }, (r) => {
       if (r?.ok) {
         b.textContent = '✓ na Central';
