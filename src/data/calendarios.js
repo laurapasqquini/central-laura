@@ -110,10 +110,10 @@ export const CALENDARIOS = [
   {
     id: 'sfe-beach',
     grupo: 'beach-sfe',
-    rotulo: 'BEACH TENNIS',
+    rotulo: 'BEACH FEMININO',
     cidade: 'Santa Fé',
-    nome: 'Beach Tennis (1ª etapa)',
-    curto: 'Beach',
+    nome: 'Beach Tennis Feminino (1ª etapa)',
+    curto: 'Beach Fem',
     esporte: 'beach',
     etapa: '1ª etapa',
     retaFinal: 4,

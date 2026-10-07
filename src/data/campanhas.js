@@ -8,7 +8,7 @@ export const ETAPA_BACKOFFICE = {
   'mga-tenis-simples-masc': 'ETAPA LOEDE - TENIS MARINGA',
   'mga-tenis-simples-fem': 'ETAPA LOEDE - TENIS MARINGA',
   'mga-beach': 'BEACH MASCULINO / BEACH FEMININO - ETAPA 01 - BEACH TENIS MARINGA',
-  'sfe-beach': 'ETAPA 01 - BEACH TENNIS SANTA FE',
+  'sfe-beach': 'ETAPA 01 - BEACH TENNIS SANTA FE (FEMININO)',
   'sfe-beach-masc': 'ETAPA 01 - BEACH TENNIS SANTA FE (MASCULINO)',
   'lda-tenis-simples-masc': 'ETAPA GEUM - RANKEN LONDRINA',
 };
