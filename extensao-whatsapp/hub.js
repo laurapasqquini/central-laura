@@ -131,7 +131,7 @@ async function mandar(tipo, dados, chave, texto) {
     // já mandou isso hoje: avisa uma vez por tela, para não ficar a dúvida
     if (!jaAvisado.has(chave)) {
       jaAvisado.add(chave);
-      aviso(`✓ ${texto.replace(/^✓s*/, '').replace(/ na Central$/, '')} já está na Central (nada novo)`, 4000);
+      aviso(`✓ ${texto.replace(/^✓\s*/, '').replace(/ na Central$/, '')} já está na Central (nada novo)`, 4000);
     }
     return;
   }
