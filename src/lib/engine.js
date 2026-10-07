@@ -559,6 +559,7 @@ function blocoPosts(state, date) {
 const REGRAS_PATROCINADOR = [
   [/primor/i, 'Mandar o nome do ganhador no privado do dono da Primor.', true],
   [/bonna/i, 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', true],
+  [/olaia/i, 'Avisar a Olaia Grill no privado quem ganhou.', true],
   [/burgo|jacar[eé]/i, 'Fazer o voucher no Canva e mandar no privado do ganhador.', false],
 ];
 // só esses patrocinadores recebem mensagem (os outros não precisam ser avisados)
