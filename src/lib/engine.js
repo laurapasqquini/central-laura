@@ -290,8 +290,15 @@ export function buildAgenda(state, ref = today()) {
     }
 
     const pendentesFortes = [...atrasadas, ...urgentes];
-    if (cfg.tarde && !fimDeSemana && pendentesFortes.length) {
-      slots.tarde = { title: `⏰ Ainda pendente: ${pendentesFortes.length} ${pendentesFortes.length === 1 ? 'item' : 'itens'}`, body: lista(pendentesFortes) };
+    // tarde (13h30): a Lolis está chegando: lembrete da lista dela + o que segue pendente
+    const lolis = dia.find((x) => x.id === 'lolis-dia' && !x.done);
+    if (cfg.tarde && !fimDeSemana && (lolis || pendentesFortes.length)) {
+      slots.tarde = lolis
+        ? {
+            title: '🙋 A Lolis está chegando: mande a lista dela',
+            body: ['A mensagem já está pronta na central (💬 Mensagem → Copiar).', pendentesFortes.length ? `⏰ Ainda pendente com você: ${pendentesFortes.length}` : ''].filter(Boolean).join('\n'),
+          }
+        : { title: `⏰ Ainda pendente: ${pendentesFortes.length} ${pendentesFortes.length === 1 ? 'item' : 'itens'}`, body: lista(pendentesFortes) };
     }
 
     if (cfg.noite && !fimDeSemana && minhas.length) {
@@ -376,11 +383,17 @@ function mensagemSemanaLolis(state, date, late) {
   ].filter((x, i) => x !== '' || i === 0).join('\n');
 }
 
-function mensagemDiaLolis(date, late, hoje) {
+// Lista completa do dia (a Lolis entra 13h30): pedidos avulsos primeiro, depois as rotinas
+function mensagemDiaLolis(state, date, late) {
+  const f = { area: 'all', who: 'lolis' };
+  const ordem = (x) => (x.kind === 'task' ? 0 : x.freq === 'daily' ? 2 : 1);
+  const hoje = buildDay(state, date, f).filter((x) => x.kind !== 'marco' && !x.done).sort((a, b) => ordem(a) - ordem(b));
+  const andamento = noDate(state, f);
   return [
-    `Oi Lolis! Hoje (${fmtCurto(date)}), além da rotina de sempre:`,
+    `Oi Lolis! Sua lista de hoje (${fmtCurto(date)}):`,
     ...listaAtrasadas(late, date),
     ...(hoje.length ? ['\n*Hoje:*', ...hoje.map((x) => `• ${x.title}`)] : []),
+    ...(andamento.length ? ['\n*Em andamento:*', ...andamento.map((x) => `• ${x.title}`)] : []),
     '\n' + FIM_LOLIS,
   ].join('\n');
 }
@@ -397,11 +410,11 @@ export function itemLolis(state, date) {
   const pontuais = [...late, ...hoje];
   const keys = pontuais.map((x) => x.key);
   const env = state.routineDone['lolis-dia:' + date];
-  if (!env && !semana && !pontuais.length) return null; // nada além da rotina: nem aparece
+  if (!env && !pontuais.length && !buildDay(state, date, f).some((x) => x.kind !== 'marco')) return null; // nada pra ela hoje
   const enviados = Array.isArray(env) ? env : env ? keys : [];
   const novos = env ? pontuais.filter((x) => !enviados.includes(x.key)) : [];
   const done = !!env && !novos.length;
-  const base = semana ? 'Mandar a semana pra Lolis' : 'Mandar pra Lolis o que tem hoje';
+  const base = semana ? '13h30 · Mandar a semana pra Lolis' : '13h30 · Mandar a lista do dia pra Lolis';
   return {
     key: 'r:lolis-dia:' + date,
     kind: 'routine',
@@ -413,7 +426,7 @@ export function itemLolis(state, date) {
     date,
     done,
     freq: 'calendario',
-    mensagem: done ? undefined : novos.length ? mensagemNovosLolis(novos) : semana ? mensagemSemanaLolis(state, date, late) : mensagemDiaLolis(date, late, hoje),
+    mensagem: done ? undefined : novos.length ? mensagemNovosLolis(novos) : semana ? mensagemSemanaLolis(state, date, late) : mensagemDiaLolis(state, date, late),
     doneValue: done ? null : [...new Set([...enviados, ...keys])],
   };
 }
