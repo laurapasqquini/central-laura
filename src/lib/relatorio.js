@@ -1,5 +1,5 @@
 // Relatórios: o que a Laura fez (sai do que foi marcado como feito) e o que a Lolis fez (texto colado).
-import { buildDay } from './engine';
+import { buildDay, dadosPaginaLolis, isWorkday } from './engine';
 import { addDays, weekday, fmtCurto, fromStr, toStr } from './dates';
 import { CALENDARIOS } from '../data/calendarios';
 import { TIPOS } from '../data/campanhas';
@@ -36,13 +36,28 @@ export function feitosDoDia(state, date, who, area) {
 }
 
 // Dias do período (do mais recente para o mais antigo) que têm algo
+// O que a Lolis escreveu ao marcar (e o que ela não conseguiu), com o nome de cada item
+function notasLolis(state, d) {
+  const notas = (state.lolisNotas || {})[d];
+  if (!notas || !isWorkday(state, d)) return [];
+  const dia = dadosPaginaLolis(state, d).dias.find((x) => x.date === d);
+  const nomes = Object.fromEntries([
+    ...(dia?.tarefas || []).map((t) => [t.key, t.titulo]),
+    ...(dia?.posts || []).map((p) => [`sorteio:${p.grupo}`, `Sorteio diário · ${p.grupo}`]),
+    ...(dia?.brindes || []).map((b) => [b.key, b.linha]),
+  ]);
+  return Object.entries(notas)
+    .filter(([, n]) => n.status === 'nao' || n.nota)
+    .map(([k, n]) => `${n.status === 'nao' ? '✕ Não conseguiu' : '📝'} ${nomes[k] || 'tarefa'}${n.nota ? `: ${n.nota}` : ''}`);
+}
+
 export function montarRelatorio(state, [de, ate], area) {
   const dias = [];
   for (let d = ate; d >= de; d = addDays(d, -1)) {
     const eu = feitosDoDia(state, d, 'laura', area);
     const lolisFeitos = feitosDoDia(state, d, 'lolis', area);
     const notaEu = (state.relatosLaura || {})[d] || '';
-    const lolis = (state.relatosLolis || {})[d] || '';
+    const lolis = [(state.relatosLolis || {})[d] || '', ...notasLolis(state, d)].filter(Boolean).join('\n');
     if (eu.length || lolisFeitos.length || notaEu || lolis) dias.push({ date: d, eu, notaEu, lolis, lolisFeitos });
   }
   return dias;

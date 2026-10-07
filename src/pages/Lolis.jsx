@@ -123,6 +123,7 @@ function HojeComLolis() {
   const dia = dadosPaginaLolis(state, ref).dias.find((d) => d.date === ref);
   if (!state.lolisToken || !dia) return null;
   const feitos = new Set((state.lolisFeitos || {})[ref] || []);
+  const notas = (state.lolisNotas || {})[ref] || {};
   const ehSorteio = (t) => /sorteio di[aá]rio/i.test(t.titulo);
   const lembretes = dia.brindes.filter((b) => b.tipo !== 'acao');
   const sorteios = dia.posts.length
@@ -153,7 +154,7 @@ function HojeComLolis() {
       </div>
       <div className="space-y-1">
         {itens.map((x) => (
-          <Linha key={x.key} feito={feitos.has(x.key) || !!x.feito} titulo={x.titulo} />
+          <Linha key={x.key} feito={feitos.has(x.key) || !!x.feito} titulo={x.titulo} marca={notas[x.key]} />
         ))}
       </div>
       {brindes.length > 0 && (
@@ -162,7 +163,7 @@ function HojeComLolis() {
           {brindes.map((b) => (
             <div key={b.key}>
               <button onClick={() => setAberto(aberto === b.key ? null : b.key)} className="w-full text-left">
-                <Linha feito={feitos.has(b.key)} titulo={`${NOME[b.tipo]} · ${b.linha}`} />
+                <Linha feito={feitos.has(b.key)} titulo={`${NOME[b.tipo]} · ${b.linha}`} marca={notas[b.key]} />
               </button>
               {aberto === b.key && <p className="ml-7 rounded-lg bg-[#e7ffdb] p-2 text-xs text-slate-700">{b.texto}</p>}
             </div>
@@ -174,12 +175,24 @@ function HojeComLolis() {
   );
 }
 
-const Linha = ({ feito, titulo }) => (
-  <div className={`flex items-start gap-2 rounded-lg px-1 py-1 text-sm ${feito ? 'text-slate-400' : 'text-slate-700'}`}>
-    <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px] text-white ${feito ? 'bg-emerald-500' : 'border-2 border-slate-300'}`}>{feito && '✓'}</span>
-    <span className={feito ? 'line-through' : ''}>{titulo}</span>
-  </div>
-);
+// item do dia da Lolis: ✓ feito, ✕ não conseguiu, e o que ela escreveu
+const Linha = ({ feito, titulo, marca }) => {
+  const nao = marca?.status === 'nao';
+  return (
+    <div className={`flex items-start gap-2 rounded-lg px-1 py-1 text-sm ${feito ? 'text-slate-400' : 'text-slate-700'}`}>
+      <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px] text-white ${feito ? 'bg-emerald-500' : nao ? 'bg-red-500' : 'border-2 border-slate-300'}`}>{feito ? '✓' : nao ? '✕' : ''}</span>
+      <span className="min-w-0">
+        <span className={feito ? 'line-through' : ''}>{titulo}</span>
+        {(nao || marca?.nota) && (
+          <span className={`block text-xs ${nao ? 'text-red-600' : 'text-slate-500'}`}>
+            {nao ? '✕ Não conseguiu' : '📝'}
+            {marca?.nota ? `${nao ? ': ' : ' '}${marca.nota}` : ''}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+};
 
 // Frases do parabéns do sorteio diário: uma por dia, em cada cidade e esporte
 function FrasesSorteio() {

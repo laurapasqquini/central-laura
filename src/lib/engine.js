@@ -412,6 +412,7 @@ export function brindesDoDia(state, date) {
         tipo: 'lembrete',
         sorteio: g.data,
         prazo,
+        telefone: g.telefone || '',
         title: `Lembrete de brinde: ${g.nome}`,
         linha,
         texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que o brinde que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, pode ser solicitado até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁`,
@@ -422,6 +423,7 @@ export function brindesDoDia(state, date) {
         tipo: 'conferir',
         sorteio: g.data,
         prazo,
+        telefone: g.telefone || '',
         title: `Conferir brinde: ${g.nome}`,
         linha,
         texto: `Oi, ${nome}! E aí, conseguiu retirar o seu brinde do sorteio diário (${premio})? Deu tudo certo? 😊`,
@@ -516,6 +518,7 @@ export function postsSorteio(state, date) {
       anuncio,
       parabens,
       ganhador: ganhador?.nome || null,
+      telefoneGanhador: ganhador?.telefone || '',
       // para as mensagens no privado (ganhador e apoiador), montadas na página da Lolis com o nome do ganhador
       titulo: tituloBonito(d.titulo || dia),
       prazo: addDays(date, PRAZO_BRINDE),
@@ -524,6 +527,7 @@ export function postsSorteio(state, date) {
         premio: premioComNome(x),
         local: x.local || '',
         contato: x.contato || '',
+        telefone: x.telefone || '',
         regra: regraPatrocinador(x.nome),
         canva: canvaPara(state, x.nome),
       })),
@@ -719,7 +723,7 @@ export function dadosPaginaLolis(state, ref = today()) {
       .sort((a, b) => ordem(a) - ordem(b))
       .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title) }));
     const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date })) : [];
-    const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto, sorteio, prazo }) => ({ key, tipo, linha, texto, sorteio, prazo, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
+    const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto, sorteio, prazo, telefone }) => ({ key, tipo, linha, texto, sorteio, prazo, telefone, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
     const posts = postsSorteio(state, d);
     dias.push({ date: d, tarefas, atrasadas, brindes, posts });
   }

@@ -283,7 +283,11 @@ const saveAgenda = (userId, state) =>
 // "sorteio" (as rotinas de sorteio diário do dia) e "g:..." (mensagens de brinde, só registro).
 function aplicarFeitosLolis(s, rows) {
   const porDia = {};
-  for (const r of rows) (porDia[r.dia] ||= []).push(r.chave);
+  const notas = {};
+  for (const r of rows) {
+    (notas[r.dia] ||= {})[r.chave] = { status: r.status || 'feito', nota: r.nota || '' };
+    if ((r.status || 'feito') === 'feito') (porDia[r.dia] ||= []).push(r.chave); // "não consegui" não dá baixa
+  }
   const antes = s.lolisFeitos || {};
   const routineDone = { ...s.routineDone };
   const tarefas = new Set();
@@ -297,10 +301,11 @@ function aplicarFeitosLolis(s, rows) {
         for (const r of s.routines) if (r.who === 'lolis' && /sorteio di[aá]rio/i.test(r.title)) routineDone[`${r.id}:${dia}`] = true;
     }
   }
-  if (JSON.stringify(antes) === JSON.stringify(porDia) && !tarefas.size) return s;
+  if (JSON.stringify(antes) === JSON.stringify(porDia) && JSON.stringify(s.lolisNotas || {}) === JSON.stringify(notas) && !tarefas.size) return s;
   return {
     ...s,
     lolisFeitos: porDia,
+    lolisNotas: notas,
     routineDone,
     tasks: tarefas.size ? s.tasks.map((t) => (tarefas.has(t.id) && !t.done ? { ...t, done: true, doneAt: today() } : t)) : s.tasks,
   };
@@ -359,7 +364,10 @@ export function StoreProvider({ user, children }) {
     const puxarFeitosLolis = async () => {
       const token = stateRef.current.lolisToken;
       if (!token) return;
-      const { data: rows, error } = await supabase.from('lolis_feitos').select('dia, chave').eq('token', token).gte('dia', addDays(today(), -7));
+      const desde = addDays(today(), -7);
+      let { data: rows, error } = await supabase.from('lolis_feitos').select('dia, chave, status, nota').eq('token', token).gte('dia', desde);
+      // banco ainda sem as notas: lê só o que foi feito
+      if (error) ({ data: rows, error } = await supabase.from('lolis_feitos').select('dia, chave').eq('token', token).gte('dia', desde));
       if (!alive || error || !rows) return;
       setState((s) => aplicarFeitosLolis(s, rows));
     };

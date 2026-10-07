@@ -97,7 +97,7 @@ function lerProgramacao() {
     if (!dia || l.startsWith('§') || /^🎨/.test(l) || l === 'Add') return;
     if (!dia.titulo && /^(SEGUNDA|TERÇA|QUARTA|QUINTA|SEXTA|SÁBADO|DOMINGO)\b/i.test(l)) return (dia.titulo = l);
     if (L[k + 1] === '✕') {
-      pat = { nome: l, premio: '', local: '', insta: '', contato: '' };
+      pat = { nome: l, premio: '', local: '', insta: '', contato: '', telefone: '' };
       dia.patrocinadores.push(pat);
       return;
     }
@@ -105,7 +105,8 @@ function lerProgramacao() {
     if (/^🎁/.test(l)) pat.premio ||= l.replace(/^🎁\s*/, '').replace(/\s*·\s*principal$/, '');
     else if (/^📍/.test(l)) pat.local = l.replace(/^📍\s*/, '');
     else if (/^📷/.test(l)) pat.insta = l.replace(/^📷\s*@?/, '');
-    else if (/^👤/.test(l)) pat.contato = l.replace(/^👤\s*/, ''); // só o nome do contato (o telefone não é lido)
+    else if (/^👤/.test(l)) pat.contato = l.replace(/^👤\s*/, '');
+    else if (/^📱/.test(l)) pat.telefone = l.replace(/^📱\s*/, ''); // para o botão "Abrir no WhatsApp" da mensagem ao apoiador
   });
   // o prêmio escolhido numa lista suspensa vem marcado com §🎁
   L.forEach((l, k) => {
@@ -153,6 +154,38 @@ async function agendarAuto() {
   chrome.runtime.sendMessage({ tipo: 'abrir-aba', url: `${location.origin}/sorteio?central=auto` });
 }
 
+// Telefone dos ganhadores DE HOJE: abre a ficha de cada um (clicando no nome), lê o telefone e fecha.
+// Fica guardado na extensão, para não abrir de novo.
+let buscandoTel = false;
+async function telefonesDeHoje(lista) {
+  const hoje = new Date().toLocaleDateString('sv-SE');
+  const { telGanhadores = {} } = await chrome.storage.local.get('telGanhadores');
+  const faltam = lista.filter((g) => g.data === hoje && !telGanhadores[`${g.data}|${g.nome}`]);
+  if (!faltam.length || buscandoTel) return telGanhadores;
+  buscandoTel = true;
+  for (const g of faltam) {
+    const botao = [...document.querySelectorAll('main button')].find((b) => b.textContent.trim() === g.nome);
+    if (!botao) continue;
+    botao.click(); // abre a ficha do atleta (só leitura)
+    await new Promise((r) => setTimeout(r, 900));
+    const linhas = document.body.innerText.split('\n').map((s) => s.trim());
+    const tel = linhas.find((l) => /^\+?[\d\s().-]{10,18}$/.test(l) && l.replace(/\D/g, '').length >= 10 && l.replace(/\D/g, '').length <= 13);
+    telGanhadores[`${g.data}|${g.nome}`] = tel || '-'; // '-' = já tentou e não achou (não abre de novo)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); // fecha a ficha
+    await new Promise((r) => setTimeout(r, 400));
+  }
+  // guarda só os últimos 12 dias
+  const limite = new Date(Date.now() - 12 * 864e5).toLocaleDateString('sv-SE');
+  for (const k of Object.keys(telGanhadores)) if (k.slice(0, 10) < limite) delete telGanhadores[k];
+  await chrome.storage.local.set({ telGanhadores });
+  buscandoTel = false;
+  return telGanhadores;
+}
+const comTelefones = (lista, tels) => lista.map((g) => {
+  const t = tels[`${g.data}|${g.nome}`];
+  return { ...g, telefone: t && t !== '-' ? t : '' };
+});
+
 async function rodarAuto() {
   for (let i = 0; i < 40; i++) {
     const aba = [...document.querySelectorAll('main button, main [role=tab], main a')].find((x) => x.textContent.trim() === 'Ganhadores do dia');
@@ -166,7 +199,8 @@ async function rodarAuto() {
     await new Promise((r) => setTimeout(r, 500));
     const g = lerGanhadores();
     if (g) {
-      chrome.runtime.sendMessage({ tipo: 'ganhadores', dados: g }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
+      const tels = await telefonesDeHoje(g);
+      chrome.runtime.sendMessage({ tipo: 'ganhadores', dados: comTelefones(g, tels) }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
     }
   }
@@ -183,7 +217,15 @@ async function tentar() {
     if (n) mandar('numeros', n, 'ultimoHub', '✓ Números do Beach na Central');
   } else if (/^\/sorteio/.test(location.pathname)) {
     const g = lerGanhadores();
-    if (g) mandar('ganhadores', g, 'ultimoGanhadores', `✓ ${g.length} ganhadores recentes na Central`);
+    if (g) {
+      const { telGanhadores = {} } = await chrome.storage.local.get('telGanhadores');
+      mandar('ganhadores', comTelefones(g, telGanhadores), 'ultimoGanhadores', `✓ ${g.length} ganhadores recentes na Central`);
+      // telefones dos ganhadores de hoje que ainda faltam: busca e manda de novo
+      telefonesDeHoje(g).then((tels) => {
+        const nova = comTelefones(g, tels);
+        if (JSON.stringify(nova) !== JSON.stringify(comTelefones(g, telGanhadores))) setTimeout(() => mandar('ganhadores', nova, 'ultimoGanhadores', '✓ Telefones dos ganhadores de hoje na Central'), 1500);
+      });
+    }
     const p = lerProgramacao();
     if (p) mandar('programacao', p, `ultimoProg-${p.cidade}-${p.esporte}`, `✓ Programação ${p.cidade} · ${p.esporte} na Central`);
     else if (/MARCA DO DIA/.test(document.querySelector('main')?.innerText || '') && !avisouFalha) {

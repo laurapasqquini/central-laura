@@ -24,8 +24,19 @@ async function token() {
 }
 
 async function enviar(item, contaFixa) {
-  const { conta: contaSalva = 'ranken' } = await chrome.storage.local.get('conta');
+  const { conta: contaSalva = 'ranken', sessao, lolisToken } = await chrome.storage.local.get(['conta', 'sessao', 'lolisToken']);
   const conta = contaFixa || contaSalva; // 'numeros' = números do Hub, não vira tarefa
+  // computador da Lolis: sem login, manda só ganhadores e programação pelo link da página dela
+  if (!sessao && lolisToken) {
+    if (!['ganhadores', 'programacao'].includes(conta)) throw new Error('No computador da Lolis a extensão só manda ganhadores e programação do Hub.');
+    const r = await fetch(`${URL}/rest/v1/rpc/lolis_enviar`, {
+      method: 'POST',
+      headers: { apikey: KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_token: lolisToken, p_conta: conta, p_texto: item.texto }),
+    });
+    if (!r.ok) throw new Error(`Não foi para a Central (${r.status})`);
+    return;
+  }
   const r = await fetch(`${URL}/rest/v1/entrada`, {
     method: 'POST',
     headers: { apikey: KEY, Authorization: `Bearer ${await token()}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
