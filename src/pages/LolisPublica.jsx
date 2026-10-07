@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { today, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 
@@ -11,6 +11,28 @@ const lerFeitos = (date) => {
     return [];
   }
 };
+
+const nomeProprio = (s) => {
+  const w = s.trim().split(/\s+/)[0];
+  return w[0].toUpperCase() + w.slice(1).toLowerCase();
+};
+
+// Se algo der errado ao montar a tela, mostra um aviso em vez de tela branca
+class Protecao extends Component {
+  state = { erro: null };
+  static getDerivedStateFromError(erro) {
+    return { erro };
+  }
+  render() {
+    if (this.state.erro)
+      return (
+        <div className="rounded-xl border border-dashed border-red-200 bg-white px-4 py-4 text-center text-sm text-red-600">
+          Não consegui mostrar esta parte. Peça para a Laura abrir a central (ela atualiza a página) e dê F5 aqui.
+        </div>
+      );
+    return this.props.children;
+  }
+}
 
 export default function LolisPublica({ token }) {
   const [dados, setDados] = useState(undefined);
@@ -56,7 +78,7 @@ export default function LolisPublica({ token }) {
           </div>
         )}
 
-        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Dia dia={dia} andamento={dados.andamento || []} token={token} />}
+        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Protecao key={dia.date}><Dia dia={dia} andamento={dados.andamento || []} token={token} /></Protecao>}
       </div>
     </div>
   );
@@ -187,11 +209,13 @@ function Dia({ dia, andamento, token }) {
 }
 
 // Um sorteio do dia: à esquerda as mensagens do grupo; à direita, no privado, ganhador e apoiador
-function Post({ p, feito, onMarcar }) {
+function Post({ p: post, feito, onMarcar }) {
+  // dados publicados por uma versão antiga da central podem não ter patrocinadores/prazo
+  const p = { titulo: post.grupo, patrocinadores: [], ...post };
   const [nome, setNome] = useState(p.ganhador || '');
   const primeiro = nome.trim() ? nome.trim().split(/\s+/)[0] : '[nome]';
   const quem = nome.trim() || '[nome do ganhador]';
-  const prazo = `${fmtLongo(p.prazo).split(',')[0]}, ${fmtCurto(p.prazo).slice(5)}`;
+  const prazo = p.prazo ? `${fmtLongo(p.prazo).split(',')[0]}, ${fmtCurto(p.prazo).slice(5)}` : 'daqui a 7 dias';
   const premios = p.patrocinadores.map((x) => x.premio).join(' + ');
   const voucher = p.patrocinadores.find((x) => x.canva);
   const retirada = p.patrocinadores.map((x) => (x.local ? `${x.nome}: ${x.local}` : '')).filter(Boolean);
@@ -239,7 +263,7 @@ function Post({ p, feito, onMarcar }) {
               {x.regra && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">{x.nome}: {x.regra}</p>}
               <Texto
                 rotulo={`Mensagem para o apoiador · ${x.nome}${x.regra ? '' : ' (se precisar)'}`}
-                texto={`Oi${x.contato ? `, ${x.contato.split(/\s+/)[0][0].toUpperCase() + x.contato.split(/\s+/)[0].slice(1).toLowerCase()}` : ''}! Tudo bem? 😊 Passando pra avisar que o(a) ganhador(a) do sorteio diário da RANKEN de hoje (${p.titulo}) foi ${quem}, que vai retirar ${x.premio}. Obrigado pela parceria! 💚🎾`}
+                texto={`Oi${x.contato?.trim() ? `, ${nomeProprio(x.contato)}` : ''}! Tudo bem? 😊 Passando pra avisar que o(a) ganhador(a) do sorteio diário da RANKEN de hoje (${p.titulo}) foi ${quem}, que vai retirar ${x.premio}. Obrigado pela parceria! 💚🎾`}
               />
             </div>
           ))}
