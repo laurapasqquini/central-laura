@@ -3,6 +3,8 @@
 // retaFinal: a partir de qual rodada é "Reta final".
 
 const r = (n, sorteio, inicio, fim, hora = '20:00') => ({ n, sorteio, inicio, fim, hora });
+// Nome da rodada nos textos: normalmente o número; rodadas sorteadas juntas têm nome próprio (ex.: '1 e 2')
+export const rotuloRodada = (rd) => rd.nome || String(rd.n);
 
 export const CALENDARIOS = [
   {
@@ -124,6 +126,25 @@ export const CALENDARIOS = [
       r(6, '2026-11-29', '2026-11-30', '2026-12-13'),
     ],
   },
+  {
+    // começou atrasado: no domingo 11/10 saem as rodadas 1 e 2 juntas; depois segue o Beach de Santa Fé
+    id: 'sfe-beach-masc',
+    grupo: 'beach-sfe',
+    rotulo: 'BEACH MASCULINO',
+    cidade: 'Santa Fé',
+    nome: 'Beach Tennis Masculino (1ª etapa)',
+    curto: 'Beach Masc',
+    esporte: 'beach',
+    etapa: '1ª etapa',
+    retaFinal: 4,
+    rodadas: [
+      { ...r(2, '2026-10-11', '2026-10-12', '2026-10-18'), nome: '1 e 2' },
+      r(3, '2026-10-18', '2026-10-19', '2026-11-01'),
+      r(4, '2026-11-01', '2026-11-02', '2026-11-15'),
+      r(5, '2026-11-15', '2026-11-16', '2026-11-29'),
+      r(6, '2026-11-29', '2026-11-30', '2026-12-13'),
+    ],
+  },
 ];
 
 const ultima = (c) => c.rodadas[c.rodadas.length - 1];
@@ -146,7 +167,7 @@ export function marcosDoDia(date) {
   }
   for (const [cidade, list] of Object.entries(porCidade)) {
     const hora = [...new Set(list.map((x) => x.rd.hora))].join('/');
-    const quem = list.map(({ c, rd }) => `${c.curto} R${rd.n}${c.retaFinal && rd.n >= c.retaFinal ? ' (reta final)' : ''}`).join(' · ');
+    const quem = list.map(({ c, rd }) => `${c.curto} R${rotuloRodada(rd)}${c.retaFinal && rd.n >= c.retaFinal ? ' (reta final)' : ''}`).join(' · ');
     out.push({ key: `cal:s:${cidade}:${date}`, title: `Sorteio ${cidade} ${hora}: ${quem}`, area: 'ranken', date });
   }
   // Regulamento: encaixes de jogos só até a 9ª rodada (etapas de 10 rodadas)
@@ -183,9 +204,9 @@ const dias = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
 export function mensagemRodada(grupo, lista) {
   const blocos = lista.map(({ c, rd }) => {
     const ultima = c.rodadas[c.rodadas.length - 1];
-    const linhas = [`*RODADA ${rd.n} ABERTA - ${c.rotulo}*`];
+    const linhas = [rd.nome ? `*RODADAS ${rd.nome.toUpperCase()} ABERTAS - ${c.rotulo}*` : `*RODADA ${rd.n} ABERTA - ${c.rotulo}*`];
     if (c.retaFinal && rd.n >= c.retaFinal) linhas.push('⚠️ *RETA FINAL*');
-    linhas.push(`📅 *PRAZO:* ${ddmm(rd.inicio)} a ${ddmm(rd.fim)}${dias(rd.inicio, rd.fim) <= 7 ? ' *(rodada de 1 semana!)*' : ''}`);
+    linhas.push(`📅 *PRAZO:* ${ddmm(rd.inicio)} a ${ddmm(rd.fim)}${dias(rd.inicio, rd.fim) <= 7 ? (rd.nome ? ' *(2 rodadas em 1 semana!)*' : ' *(rodada de 1 semana!)*') : ''}`);
     linhas.push(`⏰ *DATA LIMITE:* ${diaSemana(rd.fim)}, ${ddmm(rd.fim)}`);
     if (rd.n === 9 && ultima.n === 10) linhas.push('🔁 *Última rodada para encaixar jogos atrasados!*');
     return linhas.join('\n');
@@ -205,7 +226,7 @@ export function rotinasDoDia(date, addDays) {
     if (rd) (porGrupo[c.grupo] ||= []).push({ c, rd });
   }
   for (const [g, lista] of Object.entries(porGrupo)) {
-    const quais = lista.map(({ c, rd }) => `${c.curto} R${rd.n}`).join(' + ');
+    const quais = lista.map(({ c, rd }) => `${c.curto} R${rotuloRodada(rd)}`).join(' + ');
     out.push({ id: `aviso-${g}`, title: `Avisar no grupo · ${GRUPOS[g].nome}: rodada aberta (${quais})`, mensagem: mensagemRodada(g, lista), who: 'laura' });
   }
   for (const p of POSTAGEM) {
@@ -215,7 +236,7 @@ export function rotinasDoDia(date, addDays) {
       .filter((x) => x.rd);
     // uma tarefa por categoria, para marcar cada post separado
     for (const { c, rd } of terminaram) {
-      out.push({ id: `melhores-${c.id}`, title: `Melhores da rodada · ${c.curto} ${c.cidade} · R${rd.n} (${p.insta})`, hubPath: 'ranking' });
+      out.push({ id: `melhores-${c.id}`, title: `Melhores da rodada · ${c.curto} ${c.cidade} · R${rotuloRodada(rd)} (${p.insta})`, hubPath: 'ranking' });
     }
   }
   return out;

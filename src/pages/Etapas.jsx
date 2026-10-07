@@ -1,4 +1,4 @@
-import { CALENDARIOS, rodadaAtual, proximoSorteio, fimEtapa, marcosDoDia } from '../data/calendarios';
+import { CALENDARIOS, rodadaAtual, proximoSorteio, fimEtapa, marcosDoDia, rotuloRodada } from '../data/calendarios';
 import { today, fmtCurto, relativo, diffDays, addDays } from '../lib/dates';
 import { useState } from 'react';
 import { Pill, Segmented } from '../components/ui';
@@ -105,7 +105,7 @@ function Card({ c, ref0 }) {
         <div className="space-y-1.5">
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold text-ink">
-              Rodada {atual.n}
+              Rodada {rotuloRodada(atual)}
               <span className="text-sm font-semibold text-slate-400"> de {total}</span>
             </span>
             <span className={`text-sm font-semibold ${faltam <= 2 ? 'text-red-500' : 'text-slate-500'}`}>
@@ -123,7 +123,7 @@ function Card({ c, ref0 }) {
 
       {prox && (
         <div className="rounded-xl bg-indigo-50 px-3 py-2 text-sm text-indigo-900">
-          📌 Próximo sorteio: <b>R{prox.n}</b> · {fmtCurto(prox.sorteio)} às {prox.hora}
+          📌 Próximo sorteio: <b>R{rotuloRodada(prox)}</b> · {fmtCurto(prox.sorteio)} às {prox.hora}
           {['hoje', 'amanhã'].includes(relativo(prox.sorteio, ref0)) || relativo(prox.sorteio, ref0).startsWith('em ') ? ` (${relativo(prox.sorteio, ref0)})` : ''}
         </div>
       )}

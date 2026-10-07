@@ -9,6 +9,7 @@ export const ETAPA_BACKOFFICE = {
   'mga-tenis-simples-fem': 'ETAPA LOEDE - TENIS MARINGA',
   'mga-beach': 'BEACH MASCULINO / BEACH FEMININO - ETAPA 01 - BEACH TENIS MARINGA',
   'sfe-beach': 'ETAPA 01 - BEACH TENNIS SANTA FE',
+  'sfe-beach-masc': 'ETAPA 01 - BEACH TENNIS SANTA FE (MASCULINO)',
   'lda-tenis-simples-masc': 'ETAPA GEUM - RANKEN LONDRINA',
 };
 
@@ -28,27 +29,29 @@ function textos(c, rd, tipo) {
   const ultima = rd.n === c.rodadas[c.rodadas.length - 1].n;
   const entraReta = c.retaFinal && rd.n === c.retaFinal;
   const prox = c.rodadas.find((x) => x.n === rd.n + 1);
+  const rod = rd.nome ? `rodadas ${rd.nome}` : `rodada ${rd.n}`; // rodadas sorteadas juntas (ex.: 1 e 2)
+  const Rod = rod[0].toUpperCase() + rod.slice(1);
 
   if (tipo === 'inicio') {
     if (ultima)
       return {
         titulo: `🏁 Última rodada da etapa!`,
-        mensagem: `Seus jogos da rodada ${rd.n} já estão no app. É a última chance de somar pontos: chame seu adversário em até 48h.`,
+        mensagem: `Seus jogos da ${rod} já estão no app. É a última chance de somar pontos: chame seu adversário em até 48h.`,
       };
     if (entraReta)
       return {
         titulo: `🔥 Começou a reta final!`,
-        mensagem: `Rodada ${rd.n} no app. Daqui até o fim da etapa cada vitória pesa na classificação: chame seu adversário em até 48h.`,
+        mensagem: `${Rod} no app. Daqui até o fim da etapa cada vitória pesa na classificação: chame seu adversário em até 48h.`,
       };
     return {
-      titulo: `🎾 Rodada ${rd.n} no ar!`,
-      mensagem: `Seus jogos da rodada ${rd.n} já estão no app. Chame seu adversário em até 48h e combinem dia e horário.`,
+      titulo: `🎾 ${Rod} no ar!`,
+      mensagem: `Seus jogos da ${rod} já estão no app. Chame seu adversário em até 48h e combinem dia e horário.`,
     };
   }
 
   if (tipo === 'meio')
     return {
-      titulo: `📅 Já marcou o jogo da rodada ${rd.n}?`,
+      titulo: `📅 Já marcou os jogos da ${rod}?`,
       mensagem: `Se ainda não combinou, chame seu adversário hoje. Sem resposta em 24h? Manda o print pra gente que a gente ajuda.`,
     };
 
@@ -59,7 +62,7 @@ function textos(c, rd, tipo) {
       mensagem: `Lance hoje no app os resultados que faltam: depois do prazo, jogo sem resultado não conta na classificação final.`,
     };
   return {
-    titulo: `⏰ Último dia da rodada ${rd.n}`,
+    titulo: `⏰ Último dia da ${rod}`,
     mensagem: `Jogou? Lance o resultado no app. Não vai poder jogar a próxima? Licencie-se até 19h59. Sorteio da rodada ${prox ? prox.n : rd.n + 1} às 20h.${
       rd.n === 9 ? ' Hoje também é o último dia para encaixes.' : ''
     }`,
