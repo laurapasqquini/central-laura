@@ -379,8 +379,73 @@ function mensagemSemanaLolis(state, date, late) {
     ...diarias.map((t) => `• ${t}`),
     ...dias.map((x, i) => (i ? x : '\n' + x)),
     andamento.length ? '\n*Em andamento:* ' + andamento.map((x) => x.title).join(' · ') : '',
+    ...blocoBrindes(brindesDoDia(state, date)),
     '\n' + FIM_LOLIS,
   ].filter((x, i) => x !== '' || i === 0).join('\n');
+}
+
+// ── Brindes do sorteio diário: prazo de 7 dias para solicitar ──
+// 3º dia depois do sorteio: lembrar o prazo · dia útil seguinte: perguntar se deu certo.
+const PRAZO_BRINDE = 7;
+const diaNome = (d) => DIA_NOME[weekday(d)].toLowerCase();
+const capitaliza = (s) => (s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s);
+export function brindesDoDia(state, date) {
+  const out = [];
+  for (const [id, g] of Object.entries(state.ganhadores || {})) {
+    const acao = proximoDiaUtil(state, g.data);
+    const lembrete = proximoDiaUtil(state, addDays(g.data, 3));
+    const conferir = proximoDiaUtil(state, addDays(lembrete, 1));
+    if (date !== lembrete && date !== conferir && date !== acao) continue;
+    const prazo = addDays(g.data, PRAZO_BRINDE);
+    const nome = capitaliza((g.nome || '').trim().split(/\s+/)[0]);
+    const premio = [g.premio, g.patrocinador && `(${g.patrocinador})`].filter(Boolean).join(' ');
+    const linha = [g.nome, g.local, premio].filter(Boolean).join(' · ');
+    // no dia do sorteio: o que cada patrocinador precisa (avisar o dono, voucher no Canva...)
+    if (date === acao) {
+      const regra = regraPatrocinador(g.patrocinador);
+      const extra = g.extra ? 'Tem mais um prêmio (+1): confira no Hub de qual patrocinador é e se ele tem alguma regra.' : '';
+      if (regra || extra) out.push({ key: `g:${id}:a`, tipo: 'acao', title: `Brinde: ${g.patrocinador} · ${g.nome}`, linha, texto: [regra, extra].filter(Boolean).join(' ') });
+    }
+    if (date === lembrete)
+      out.push({
+        key: `g:${id}:l`,
+        tipo: 'lembrete',
+        title: `Lembrete de brinde: ${g.nome}`,
+        linha,
+        texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que o brinde que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, pode ser solicitado até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁`,
+      });
+    else if (date === conferir)
+      out.push({
+        key: `g:${id}:c`,
+        tipo: 'conferir',
+        title: `Conferir brinde: ${g.nome}`,
+        linha,
+        texto: `Oi, ${nome}! E aí, conseguiu retirar o seu brinde do sorteio diário (${premio})? Deu tudo certo? 😊`,
+      });
+  }
+  return out.sort((a, b) => a.linha.localeCompare(b.linha));
+}
+
+// O que fazer com cada patrocinador quando sai o ganhador (combinado pela Laura)
+const REGRAS_PATROCINADOR = [
+  [/primor/i, 'Mandar o nome do ganhador no privado do dono da Primor.'],
+  [/bonna/i, 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.'],
+  [/burgo|jacar[eé]/i, 'Fazer o voucher no Canva e mandar no privado do ganhador.'],
+];
+const regraPatrocinador = (p = '') => REGRAS_PATROCINADOR.find(([re]) => re.test(p))?.[1] || '';
+
+function blocoBrindes(itens) {
+  const acoes = itens.filter((x) => x.tipo === 'acao');
+  const lembrar = itens.filter((x) => x.tipo === 'lembrete');
+  const conferir = itens.filter((x) => x.tipo === 'conferir');
+  if (!itens.length) return [];
+  const secao = (titulo, xs) => (xs.length ? ['\n' + titulo, ...xs.flatMap((x, i) => [`${i + 1}) _${x.linha}_`, x.texto])] : []);
+  return [
+    '\n*Brindes do sorteio diário* (no privado; o telefone está no Hub › Sorteio Diário › Ganhadores do dia, clicando no nome)',
+    ...secao('*🤝 Patrocinador (ganhadores de hoje):*', acoes),
+    ...secao('*🎁 Lembrar o prazo de 7 dias:*', lembrar),
+    ...secao('*✅ Perguntar se deu certo:*', conferir),
+  ];
 }
 
 // Lista completa do dia (a Lolis entra 13h30): pedidos avulsos primeiro, depois as rotinas
@@ -394,12 +459,20 @@ function mensagemDiaLolis(state, date, late) {
     ...listaAtrasadas(late, date),
     ...(hoje.length ? ['\n*Hoje:*', ...hoje.map((x) => `• ${x.title}`)] : []),
     ...(andamento.length ? ['\n*Em andamento:*', ...andamento.map((x) => `• ${x.title}`)] : []),
+    ...blocoBrindes(brindesDoDia(state, date)),
     '\n' + FIM_LOLIS,
   ].join('\n');
 }
 
-const mensagemNovosLolis = (novos) =>
-  [`Lolis, ${novos.length === 1 ? 'mais uma coisa' : 'mais algumas coisas'} pra hoje:`, ...novos.map((x) => `• ${x.title}`), '\nValeu 💚'].join('\n');
+const mensagemNovosLolis = (novos) => {
+  const comuns = novos.filter((x) => !x.tipo);
+  return [
+    `Lolis, ${novos.length === 1 ? 'mais uma coisa' : 'mais algumas coisas'} pra hoje:`,
+    ...comuns.map((x) => `• ${x.title}`),
+    ...blocoBrindes(novos.filter((x) => x.tipo)),
+    '\nValeu 💚',
+  ].join('\n');
+};
 
 export function itemLolis(state, date) {
   if (!isWorkday(state, date)) return null;
@@ -407,14 +480,16 @@ export function itemLolis(state, date) {
   const semana = primeiroDiaUtilDaSemana(state, date) === date;
   const late = buildOverdue(state, f, date).filter((x) => x.kind === 'task'); // rotina dela se repete: só pedido avulso acumula
   const hoje = buildDay(state, date, f).filter((x) => x.kind !== 'marco' && !x.done && x.freq !== 'daily');
-  const pontuais = [...late, ...hoje];
+  const pontuais = [...late, ...hoje, ...brindesDoDia(state, date)];
   const keys = pontuais.map((x) => x.key);
   const env = state.routineDone['lolis-dia:' + date];
   if (!env && !pontuais.length && !buildDay(state, date, f).some((x) => x.kind !== 'marco')) return null; // nada pra ela hoje
   const enviados = Array.isArray(env) ? env : env ? keys : [];
   const novos = env ? pontuais.filter((x) => !enviados.includes(x.key)) : [];
   const done = !!env && !novos.length;
-  const base = semana ? '13h30 · Mandar a semana pra Lolis' : '13h30 · Mandar a lista do dia pra Lolis';
+  // os ganhadores só chegam quando o Hub › Sorteio Diário › Ganhadores do dia é aberto
+  const dica = state.ganhadoresEm === date ? '' : ' (antes, abra Ganhadores do dia no Hub)';
+  const base = (semana ? '13h30 · Mandar a semana pra Lolis' : '13h30 · Mandar a lista do dia pra Lolis') + dica;
   return {
     key: 'r:lolis-dia:' + date,
     kind: 'routine',

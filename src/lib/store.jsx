@@ -310,9 +310,23 @@ export function StoreProvider({ user, children }) {
             },
           };
         }
+        // ganhadores do sorteio diário (Hub): base dos lembretes de brinde da Lolis
+        for (const r of rows.filter((x) => x.conta === 'ganhadores')) {
+          let lista = null;
+          try {
+            lista = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!Array.isArray(lista)) continue;
+          const limite = addDays(today(), -30);
+          const g = Object.fromEntries(Object.entries(s.ganhadores || {}).filter(([, x]) => x.data >= limite));
+          for (const x of lista) if (x.nome && x.data) g[`${x.data}|${x.nome}|${x.patrocinador}`] = x;
+          s = { ...s, ganhadores: g, ganhadoresEm: new Date(r.created_at).toLocaleDateString('sv-SE') };
+        }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => r.conta !== 'numeros' && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {
