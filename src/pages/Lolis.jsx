@@ -81,6 +81,21 @@ function LinkLolis() {
     <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">🔗 Página da Lolis</h2>
       <p className="text-sm text-slate-500">Um link só dela, sem login: as tarefas do dia, os lembretes de brinde e os posts do sorteio, cada mensagem com o seu botão Copiar. Atualiza sozinho quando a central salva.</p>
+      <div className="space-y-1 rounded-xl bg-slate-50 p-3 text-sm">
+        <div className="text-xs font-bold uppercase tracking-wide text-slate-500">O que já chegou do Hub (pela extensão)</div>
+        {Object.values(state.programacao || {}).length ? (
+          Object.values(state.programacao).map((p) => (
+            <div key={`${p.cidade}${p.esporte}`} className="text-emerald-700">✓ Programação {p.cidade} · {p.esporte} <span className="text-slate-400">(em {p.em?.split('-').reverse().slice(0, 2).join('/')})</span></div>
+          ))
+        ) : (
+          <div className="text-red-600">✗ Nenhuma programação ainda: abra o Hub em Sorteio Diário › Programação, em cada cidade e esporte.</div>
+        )}
+        {state.ganhadoresEm ? (
+          <div className="text-emerald-700">✓ Ganhadores atualizados em {state.ganhadoresEm.split('-').reverse().slice(0, 2).join('/')}</div>
+        ) : (
+          <div className="text-red-600">✗ Nenhum ganhador ainda: abra qualquer página do Hub (com a extensão atualizada).</div>
+        )}
+      </div>
       {link ? (
         <div className="flex flex-wrap items-center gap-2">
           <code className="min-w-0 flex-1 truncate rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">{link}</code>
