@@ -243,6 +243,10 @@ function Post({ p: post, feito, marca, onMarcar }) {
   // dados publicados por uma versão antiga da central podem não ter patrocinadores/prazo
   const p = { titulo: post.grupo, patrocinadores: [], ...post };
   const [nome, setNome] = useState(p.ganhador || '');
+  // o ganhador chegou do Hub com a página aberta: preenche sozinho (se ela ainda não digitou)
+  useEffect(() => {
+    if (p.ganhador) setNome((n) => n || p.ganhador);
+  }, [p.ganhador]);
   const primeiro = nome.trim() ? nome.trim().split(/\s+/)[0] : '[nome]';
   const quem = nome.trim() || '[nome do ganhador]';
   const prazo = p.prazo ? `${fmtLongo(p.prazo).split(',')[0]}, ${fmtCurto(p.prazo).slice(5)}` : 'daqui a 7 dias';
