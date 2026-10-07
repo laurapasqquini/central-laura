@@ -14,7 +14,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 20,
+    version: 21,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -222,6 +222,11 @@ function migrate(s) {
     if (!s.routines.some((r) => /^Sorteio diário \(tênis e beach\)/.test(r.title))) novas.push(rot('Sorteio diário (tênis e beach)'));
     if (!s.routines.some((r) => /WhatsApp do Hub/i.test(r.title))) novas.push(rot('Responder o WhatsApp do Hub'));
     s = { ...s, version: 20, routines: [...novas, ...s.routines.filter((r) => !sorteioAntigo.test(r.title))] };
+  }
+  // v21: Beach Masculino em Santa Fé começa domingo 11/10: Lolis confere as duplas de quarta a sexta
+  if (s.version < 21) {
+    const t = (due) => ({ ...tarefa('Conferir as duplas do Beach Masculino de Santa Fé (começa domingo, 11/10)', due, 'lolis'), urgent: true });
+    s = { ...s, version: 21, tasks: [t('2026-10-07'), t('2026-10-08'), t('2026-10-09'), ...s.tasks] };
   }
   return s;
 }
