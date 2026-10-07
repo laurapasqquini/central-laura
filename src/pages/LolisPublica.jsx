@@ -5,6 +5,9 @@ import { today, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 // Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
 // O que ela marca (feito / não consegui + nota) vai para a central da Laura.
 
+// quem recebe mensagem do ganhador (dados antigos não trazem isso: decide pelo nome)
+const avisa = (x) => x.avisar ?? /primor|bonna|olaia/i.test(x.nome);
+
 const nomeProprio = (s) => {
   const w = s.trim().split(/\s+/)[0];
   return w[0].toUpperCase() + w.slice(1).toLowerCase();
@@ -308,10 +311,10 @@ function Post({ p: post, feito, marca, onMarcar }) {
             <BotaoWhats tel={p.telefoneGanhador} texto={msgGanhador} />
             {voucher && <BotaoCanva c={voucher.canva} />}
           </div>
-          {p.patrocinadores.filter((x) => x.regra && !x.avisar).map((x) => (
+          {p.patrocinadores.filter((x) => x.regra && !avisa(x)).map((x) => (
             <p key={`r-${x.nome}`} className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">{x.nome}: {x.regra}</p>
           ))}
-          {p.patrocinadores.filter((x) => x.avisar).map((x) => (
+          {p.patrocinadores.filter(avisa).map((x) => (
             <div key={x.nome} className="space-y-1.5">
               {x.regra && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">{x.nome}: {x.regra}</p>}
               <Texto rotulo={`Mensagem para o apoiador · ${x.nome}`} texto={msgApoiador(x)} />
