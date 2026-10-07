@@ -164,7 +164,7 @@ export function QuickAdd({ defaultArea }) {
           <span>vai criar:</span>
           <b className="text-slate-700">{preview.title}</b>
           <AreaPill area={preview.area} />
-          <Pill className="bg-slate-50 text-slate-600 ring-slate-200">{preview.due ? fmtCurto(preview.due) : 'sem data'}</Pill>
+          <Pill className="bg-slate-50 text-slate-600 ring-slate-200">{preview.due ? (preview.due === today() ? 'hoje' : fmtCurto(preview.due)) : 'sem data'}</Pill>
           {preview.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">🙋 Lolis</Pill>}
           {preview.urgent && <Pill className="bg-red-50 text-red-600 ring-red-200">urgente</Pill>}
           {preview.hub && <Pill className="bg-emerald-600 text-white ring-transparent">🔗 fazer no Hub</Pill>}
@@ -172,7 +172,7 @@ export function QuickAdd({ defaultArea }) {
       )}
       {!text && (
         <div className="hidden px-2 pb-1 text-[11px] text-slate-400 sm:block">
-          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>@lolis</b> delega · <b>!urgente</b> · datas: hoje, amanhã, sexta, 15/10, em 3 dias
+          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>@lolis</b> delega · <b>!urgente</b> · sem data escrita = hoje · amanhã, sexta, 15/10, em 3 dias · <b>sem data</b> = sem dia
         </div>
       )}
     </form>

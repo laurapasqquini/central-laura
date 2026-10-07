@@ -42,6 +42,10 @@ export function parseQuick(text, defaults = {}) {
     } else if (AREAS[norm(a)]) out.area = AREAS[norm(a)];
   });
 
+  // "sem data" deixa a tarefa sem dia (vai para 🗂️ Sem data)
+  let semData = false;
+  take(/\ssem data(?=\s)/i, () => (semData = true));
+
   // Datas: dd/mm(/aaaa)
   take(/\s(?:dia\s)?(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?=\s)/, (_, d, m, y) => {
     const ano = y ? (y.length === 2 ? 2000 + +y : +y) : new Date().getFullYear();
@@ -73,6 +77,9 @@ export function parseQuick(text, defaults = {}) {
       }
     }
   }
+
+  // sem data escrita: vai para hoje (o dia em que foi anotada)
+  if (!out.due && !semData && defaults.hoje !== false) out.due = ref;
 
   out.title = rest.replace(/\s+/g, ' ').trim();
   if (out.title) out.title = out.title[0].toUpperCase() + out.title.slice(1);
