@@ -308,10 +308,13 @@ function Post({ p: post, feito, marca, onMarcar }) {
             <BotaoWhats tel={p.telefoneGanhador} texto={msgGanhador} />
             {voucher && <BotaoCanva c={voucher.canva} />}
           </div>
-          {p.patrocinadores.map((x) => (
+          {p.patrocinadores.filter((x) => x.regra && !x.avisar).map((x) => (
+            <p key={`r-${x.nome}`} className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">{x.nome}: {x.regra}</p>
+          ))}
+          {p.patrocinadores.filter((x) => x.avisar).map((x) => (
             <div key={x.nome} className="space-y-1.5">
               {x.regra && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">{x.nome}: {x.regra}</p>}
-              <Texto rotulo={`Mensagem para o apoiador · ${x.nome}${x.regra ? '' : ' (se precisar)'}`} texto={msgApoiador(x)} />
+              <Texto rotulo={`Mensagem para o apoiador · ${x.nome}`} texto={msgApoiador(x)} />
               <BotaoWhats tel={x.telefone} texto={msgApoiador(x)} />
             </div>
           ))}

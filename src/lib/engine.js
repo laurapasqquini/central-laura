@@ -529,6 +529,7 @@ export function postsSorteio(state, date) {
         contato: x.contato || '',
         telefone: x.telefone || '',
         regra: regraPatrocinador(x.nome),
+        avisar: avisarPatrocinador(x.nome),
         canva: canvaPara(state, x.nome),
       })),
     });
@@ -556,10 +557,12 @@ function blocoPosts(state, date) {
 
 // O que fazer com cada patrocinador quando sai o ganhador (combinado pela Laura)
 const REGRAS_PATROCINADOR = [
-  [/primor/i, 'Mandar o nome do ganhador no privado do dono da Primor.'],
-  [/bonna/i, 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.'],
-  [/burgo|jacar[eé]/i, 'Fazer o voucher no Canva e mandar no privado do ganhador.'],
+  [/primor/i, 'Mandar o nome do ganhador no privado do dono da Primor.', true],
+  [/bonna/i, 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', true],
+  [/burgo|jacar[eé]/i, 'Fazer o voucher no Canva e mandar no privado do ganhador.', false],
 ];
+// só esses patrocinadores recebem mensagem (os outros não precisam ser avisados)
+const avisarPatrocinador = (p = '') => !!REGRAS_PATROCINADOR.find(([re]) => re.test(p))?.[2];
 const regraPatrocinador = (p = '') => REGRAS_PATROCINADOR.find(([re]) => re.test(p))?.[1] || '';
 
 function blocoBrindes(itens) {
