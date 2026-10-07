@@ -492,7 +492,7 @@ export function postsSorteio(state, date) {
       `🎁 *${d.titulo || `${dia.toUpperCase()} RANKEN`}*`,
       `🏆 1 sorteado ganha: ${premios} 🔥`,
       casa ? '📩 Informações sobre entrega e retirada no privado' : '📩 Retirada/consumo em até 7 dias',
-      `🤝 ${pats.length > 1 ? 'Patrocinadores' : 'Patrocinador'}: ${nomes.join(' & ')}`,
+      `🤝 ${pats.length > 1 ? 'Patrocinadores' : 'Patrocinador'}: ${nomes.map((n) => `*${n}*`).join(' & ')}`,
       '',
       '_*sorteio destinado pra atletas ranken que estão com jogos em dia_',
     ].join('\n');
