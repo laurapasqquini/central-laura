@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica } from '../lib/engine';
 import { today, addDays } from '../lib/dates';
-import { ItemRow, Section, Empty, TaskModal } from '../components/ui';
+import { ItemRow, Section, Empty, TaskModal, inputCls } from '../components/ui';
 
 export default function Lolis() {
   const { state } = useStore();
@@ -40,6 +40,7 @@ export default function Lolis() {
 
       <HojeComLolis />
       <LinkLolis />
+      <FrasesSorteio />
 
       {late.length > 0 && (
         <Section title="Atrasadas: cobrar retorno" count={late.length} tone="red">
@@ -173,3 +174,49 @@ const Linha = ({ feito, titulo }) => (
     <span className={feito ? 'line-through' : ''}>{titulo}</span>
   </div>
 );
+
+// Frases do parabéns do sorteio diário: uma por dia, em cada cidade e esporte
+function FrasesSorteio() {
+  const { state, setFraseSorteio } = useStore();
+  const [aberto, setAberto] = useState(false);
+  const progs = Object.values(state.programacao || {});
+  if (!progs.length) return null;
+  const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">✏️ Frases do parabéns do sorteio</h2>
+        <span className="text-xs font-semibold text-slate-500">{aberto ? 'fechar' : 'editar'}</span>
+      </button>
+      {aberto && (
+        <div className="space-y-4">
+          <p className="text-xs text-slate-500">Uma frase por dia. Se deixar em branco, a central usa uma frase automática pelo tipo de prêmio (aparece em cinza).</p>
+          {progs.map((p) => (
+            <div key={`${p.cidade}${p.esporte}`} className="space-y-2">
+              <div className="text-sm font-bold text-ink">
+                {p.esporte} · {p.cidade}
+              </div>
+              {DIAS.filter((d) => p.dias[d]?.patrocinadores?.length).map((d) => {
+                const chave = chaveFrase(p, d);
+                return (
+                  <label key={d} className="block space-y-1">
+                    <span className="text-xs font-semibold text-slate-500">
+                      {d} · {p.dias[d].titulo || ''} <span className="font-normal text-slate-400">({p.dias[d].patrocinadores.map((x) => x.nome).join(' + ')})</span>
+                    </span>
+                    <textarea
+                      rows={2}
+                      className={inputCls}
+                      placeholder={fraseAutomatica(p.dias[d].patrocinadores)}
+                      value={(state.frasesSorteio || {})[chave] || ''}
+                      onChange={(e) => setFraseSorteio(chave, e.target.value)}
+                    />
+                  </label>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}

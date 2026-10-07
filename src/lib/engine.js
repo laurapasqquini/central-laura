@@ -433,9 +433,41 @@ const tituloBonito = (s = '') =>
   s
     .toLowerCase()
     .split(/\s+/)
-    .map((w, i) => (i > 0 && w.length <= 2 ? w : w[0]?.toUpperCase() + w.slice(1)))
+    .map((w, i) => (i > 0 && ['da', 'de', 'do', 'das', 'dos', 'e'].includes(w) ? w : w.length <= 3 && !/[aeiouáéíóú]/.test(w) ? w.toUpperCase() : w[0]?.toUpperCase() + w.slice(1)))
     .join(' ');
 const juntar = (xs) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} e ${xs.at(-1)}`);
+
+// Prêmio com o nome do patrocinador (sem repetir quando o prêmio já traz o nome)
+const premioComNome = (x) => {
+  const nome = tituloBonito(x.nome);
+  const p = (x.premio || '').trim().replace(/(^|\s)(?<!R\$\s)(\d+,\d{2})\b/g, '$1R$ $2'); // 150,00 → R$ 150,00
+  return semAcento(p).includes(semAcento(x.nome).split(' ')[0]) ? p : `${p} ${nome}`;
+};
+const EMOJIS = [
+  [/agua|hidrat/, '💦'],
+  [/chopp|cerveja/, '🍺'],
+  [/cafe/, '☕🥐'],
+  [/hamburg|burg/, '🍔'],
+  [/pizza/, '🍕'],
+  [/granola|natura/, '🥣'],
+  [/joia|peca|look/, '💎✨'],
+  [/fisio|sessao|massag|psico|saude/, '💆'],
+  [/sache|vamo|energ/, '⚡'],
+  [/almoco|prato|parmegian|jantar|consuma|grill/, '🍽️'],
+];
+const emojiPremio = (s) => EMOJIS.find(([re]) => re.test(semAcento(s)))?.[1] || '🎁';
+
+// Frase do parabéns: a que a Laura definiu para o dia, ou uma montada pelo tipo de prêmio
+export const chaveFrase = (p, dia) => `${p.cidade}|${p.esporte}|${dia}`;
+export function fraseAutomatica(pats) {
+  const t = semAcento(pats.map((x) => `${x.premio} ${x.nome}`).join(' '));
+  if (/joia|peca|look/.test(t)) return 'Um mimo especial pra quem está com os jogos em dia ✨';
+  if (/fisio|sessao|massag|psico|saude/.test(t)) return 'Cuidar do corpo também faz parte do jogo: recuperação em dia pra voltar ainda mais forte 💪';
+  if (/almoco|prato|parmegian|hamburg|pizza|cafe|consuma|grill|granola/.test(t)) return 'Depois de dar tudo na quadra, nada melhor que repor as energias com um prêmio desses 🍽️🔥';
+  if (/agua|chopp|sache|bebida/.test(t)) return 'Depois de gastar energia na partida, uma hidratação caprichada cai muito bem 💦';
+  return 'Um prêmio especial pra quem está com os jogos em dia 🎁';
+}
+const fraseSorteio = (state, p, dia) => (state.frasesSorteio || {})[chaveFrase(p, dia)] || fraseAutomatica(p.dias[dia].patrocinadores);
 
 export function postsSorteio(state, date) {
   const dia = DIA_NOME[weekday(date)];
@@ -458,18 +490,22 @@ export function postsSorteio(state, date) {
       '',
       '_*sorteio destinado pra atletas ranken que estão com jogos em dia_',
     ].join('\n');
+    const delas = /delas/i.test(d.titulo || '');
+    const premioLinha = pats.map((x) => `*${premioComNome(x)}* ${emojiPremio(x.premio + ' ' + x.nome)}`).join(' + ');
     const parabens = [
       `🎾🔥 *${pats.length > 1 ? 'APOIADORES' : 'APOIADOR'} RANKEN → ${juntar(nomes)}* 🔥🎾`,
       '',
-      `Parabéns ao(à) ganhador(a) da ${tituloBonito(d.titulo || dia)}! 👏🎉`,
-      `👉 @${ganhador ? ganhador.nome : '[nome do ganhador]'}`,
+      `Parabéns ${delas ? 'à ganhadora' : 'ao(à) ganhador(a)'} da ${tituloBonito(d.titulo || dia)}! 👏🎉`,
+      '👉 @[marque o ganhador]', // a marcação só vale escolhendo a pessoa no grupo (pelo @)
       '',
-      `O prêmio: ${premios} 🔥`,
+      fraseSorteio(state, p, dia),
+      '',
+      pats.length > 1 ? `Hoje o prêmio veio completo: ${premioLinha}` : `O prêmio de hoje: ${premioLinha}`,
       ...(pats.some((x) => x.insta) ? ['', '*Sigam:*', ...pats.filter((x) => x.insta).map((x) => `👉 https://www.instagram.com/${x.insta}/`)] : []),
       '',
       `🤝 Obrigado ${pats.length > 1 ? 'aos' : 'ao'} *${juntar(nomes.map(tituloBonito))}* por ${pats.length > 1 ? 'fortalecerem' : 'fortalecer'} o Ranken e nossos atletas! 💚🎾`,
     ].join('\n');
-    out.push({ grupo: `${p.esporte} ${p.cidade}`, anuncio, parabens, temGanhador: !!ganhador });
+    out.push({ grupo: `${p.esporte} ${p.cidade}`, anuncio, parabens, ganhador: ganhador?.nome || null });
   }
   return out;
 }
@@ -488,7 +524,7 @@ function blocoPosts(state, date) {
   if (!posts.length) return [];
   return [
     '\n*📣 Sorteio diário de hoje* (anúncio antes do sorteio, parabéns depois)',
-    ...posts.flatMap((p) => [`\n— *${p.grupo}* · anúncio:`, p.anuncio, `\n— *${p.grupo}* · parabéns${p.temGanhador ? '' : ' (troque pelo nome do ganhador)'}:`, p.parabens]),
+    ...posts.flatMap((p) => [`\n— *${p.grupo}* · anúncio:`, p.anuncio, `\n— *${p.grupo}* · parabéns (no grupo, troque [marque o ganhador] digitando @ e escolhendo a pessoa${p.ganhador ? `: ${p.ganhador}` : ''}):`, p.parabens]),
   ];
 }
 
@@ -651,7 +687,7 @@ export function dadosPaginaLolis(state, ref = today()) {
       .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done }));
     const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date })) : [];
     const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto }) => ({ key, tipo, linha, texto }));
-    const posts = postsSorteio(state, d).map(({ grupo, anuncio, parabens, temGanhador }) => ({ grupo, anuncio, parabens, temGanhador }));
+    const posts = postsSorteio(state, d).map(({ grupo, anuncio, parabens, ganhador }) => ({ grupo, anuncio, parabens, ganhador }));
     dias.push({ date: d, tarefas, atrasadas, brindes, posts });
   }
   return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title) };

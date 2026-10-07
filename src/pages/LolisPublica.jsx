@@ -155,7 +155,7 @@ function Dia({ dia, andamento, token }) {
       ) : (
         <>
           {dia.posts.length > 0 ? (
-            <Secao titulo="📣 Posts do sorteio" dica="Anúncio antes do sorteio, parabéns depois. Digite o nome do ganhador e copie.">
+            <Secao titulo="📣 Posts do sorteio" dica="Assim que chegar: 1) anúncio no grupo e no Instagram, 2) sorteio no Hub, 3) parabéns marcando o ganhador.">
               {dia.posts.map((p) => (
                 <Post key={p.grupo} p={p} />
               ))}
@@ -191,22 +191,22 @@ function Dia({ dia, andamento, token }) {
   );
 }
 
+// A marcação do ganhador só funciona escolhendo a pessoa no grupo (digitando @), por isso o texto vem com um espaço para isso
 function Post({ p }) {
-  const [nome, setNome] = useState('');
-  const parabens = p.temGanhador || !nome.trim() ? p.parabens : p.parabens.replace('[nome do ganhador]', nome.trim());
   return (
     <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
       <div className="text-sm font-bold text-ink">{p.grupo}</div>
-      <Texto rotulo="Anúncio" texto={p.anuncio} />
-      {!p.temGanhador && (
-        <input
-          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
-          placeholder="Nome do ganhador (como está no grupo)"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-        />
-      )}
-      <Texto rotulo="Parabéns" texto={parabens} />
+      <Texto rotulo="1. Anúncio" texto={p.anuncio} />
+      <Texto rotulo="2. Parabéns (depois do sorteio no Hub)" texto={p.parabens} />
+      <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        No grupo, apague <b>[marque o ganhador]</b>, digite <b>@</b> e escolha a pessoa na lista, para ela ser marcada de verdade.
+        {p.ganhador && (
+          <>
+            {' '}
+            Ganhador no Hub: <b>{p.ganhador}</b>
+          </>
+        )}
+      </p>
     </div>
   );
 }
