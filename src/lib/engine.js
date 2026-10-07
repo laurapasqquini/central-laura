@@ -379,6 +379,7 @@ function mensagemSemanaLolis(state, date, late) {
     ...diarias.map((t) => `• ${t}`),
     ...dias.map((x, i) => (i ? x : '\n' + x)),
     andamento.length ? '\n*Em andamento:* ' + andamento.map((x) => x.title).join(' · ') : '',
+    ...blocoPosts(state, date),
     ...blocoBrindes(brindesDoDia(state, date)),
     '\n' + FIM_LOLIS,
   ].filter((x, i) => x !== '' || i === 0).join('\n');
@@ -426,6 +427,63 @@ export function brindesDoDia(state, date) {
   return out.sort((a, b) => a.linha.localeCompare(b.linha));
 }
 
+// ── Posts do sorteio diário (anúncio e parabéns), no formato que a RANKEN já usa ──
+// Vêm da Programação do Hub (marca do dia + patrocinadores) e do ganhador do dia, se já estiver lá.
+const semAcento = (s = '') => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+const tituloBonito = (s = '') =>
+  s
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w, i) => (i > 0 && w.length <= 2 ? w : w[0]?.toUpperCase() + w.slice(1)))
+    .join(' ');
+const juntar = (xs) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} e ${xs.at(-1)}`);
+
+export function postsSorteio(state, date) {
+  const dia = DIA_NOME[weekday(date)];
+  const out = [];
+  for (const p of Object.values(state.programacao || {})) {
+    const d = p.dias?.[dia];
+    if (!d || !d.patrocinadores?.length) continue;
+    const pats = d.patrocinadores;
+    const nomes = pats.map((x) => x.nome);
+    const premios = pats.map((x) => `${x.premio} (${tituloBonito(x.nome)})`).join(' + ');
+    const casa = pats.some((x) => /casa|contato|endere/i.test(x.local));
+    const ganhador = Object.values(state.ganhadores || {}).find(
+      (g) => g.data === date && semAcento(g.local).includes(semAcento(p.cidade)) && semAcento(g.local).includes(semAcento(p.esporte).split(' ')[0]),
+    );
+    const anuncio = [
+      `🎁 *${d.titulo || `${dia.toUpperCase()} RANKEN`}*`,
+      `🏆 1 sorteado ganha: ${premios} 🔥`,
+      casa ? '📩 Informações sobre entrega e retirada no privado' : '📩 Retirada/consumo em até 7 dias',
+      `🤝 ${pats.length > 1 ? 'Patrocinadores' : 'Patrocinador'}: ${nomes.join(' & ')}`,
+      '',
+      '_*sorteio destinado pra atletas ranken que estão com jogos em dia_',
+    ].join('\n');
+    const parabens = [
+      `🎾🔥 *${pats.length > 1 ? 'APOIADORES' : 'APOIADOR'} RANKEN → ${juntar(nomes)}* 🔥🎾`,
+      '',
+      `Parabéns ao(à) ganhador(a) da ${tituloBonito(d.titulo || dia)}! 👏🎉`,
+      `👉 @${ganhador ? ganhador.nome : '[nome do ganhador]'}`,
+      '',
+      `O prêmio: ${premios} 🔥`,
+      ...(pats.some((x) => x.insta) ? ['', '*Sigam:*', ...pats.filter((x) => x.insta).map((x) => `👉 https://www.instagram.com/${x.insta}/`)] : []),
+      '',
+      `🤝 Obrigado ${pats.length > 1 ? 'aos' : 'ao'} *${juntar(nomes.map(tituloBonito))}* por fortalecerem o Ranken e nossos atletas! 💚🎾`,
+    ].join('\n');
+    out.push({ grupo: `${p.esporte} ${p.cidade}`, anuncio, parabens, temGanhador: !!ganhador });
+  }
+  return out;
+}
+
+function blocoPosts(state, date) {
+  const posts = postsSorteio(state, date);
+  if (!posts.length) return [];
+  return [
+    '\n*📣 Sorteio diário de hoje* (anúncio antes do sorteio, parabéns depois)',
+    ...posts.flatMap((p) => [`\n— *${p.grupo}* · anúncio:`, p.anuncio, `\n— *${p.grupo}* · parabéns${p.temGanhador ? '' : ' (troque pelo nome do ganhador)'}:`, p.parabens]),
+  ];
+}
+
 // O que fazer com cada patrocinador quando sai o ganhador (combinado pela Laura)
 const REGRAS_PATROCINADOR = [
   [/primor/i, 'Mandar o nome do ganhador no privado do dono da Primor.'],
@@ -459,6 +517,7 @@ function mensagemDiaLolis(state, date, late) {
     ...listaAtrasadas(late, date),
     ...(hoje.length ? ['\n*Hoje:*', ...hoje.map((x) => `• ${x.title}`)] : []),
     ...(andamento.length ? ['\n*Em andamento:*', ...andamento.map((x) => `• ${x.title}`)] : []),
+    ...blocoPosts(state, date),
     ...blocoBrindes(brindesDoDia(state, date)),
     '\n' + FIM_LOLIS,
   ].join('\n');

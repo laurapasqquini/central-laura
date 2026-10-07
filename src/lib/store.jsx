@@ -324,9 +324,20 @@ export function StoreProvider({ user, children }) {
           for (const x of lista) if (x.nome && x.data) g[`${x.data}|${x.nome}|${x.patrocinador}`] = x;
           s = { ...s, ganhadores: g, ganhadoresEm: new Date(r.created_at).toLocaleDateString('sv-SE') };
         }
+        // programação do sorteio diário (por cidade e esporte): base dos posts de anúncio e parabéns
+        for (const r of rows.filter((x) => x.conta === 'programacao')) {
+          let p = null;
+          try {
+            p = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!p?.cidade || !p?.esporte || !p.dias) continue;
+          s = { ...s, programacao: { ...(s.programacao || {}), [`${p.cidade}|${p.esporte}`]: { cidade: p.cidade, esporte: p.esporte, dias: p.dias, em: new Date(r.created_at).toLocaleDateString('sv-SE') } } };
+        }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {

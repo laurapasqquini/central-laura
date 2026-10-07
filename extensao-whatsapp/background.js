@@ -41,6 +41,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, responder) => {
     : msg.tipo === 'enviar' ? enviar(msg.item)
     : msg.tipo === 'numeros' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Beach Tênis' }, 'numeros')
     : msg.tipo === 'ganhadores' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Sorteio Diário' }, 'ganhadores')
+    : msg.tipo === 'programacao' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Programação' }, 'programacao')
     : Promise.resolve();
   run.then((r) => responder({ ok: true, ...r }), (e) => responder({ ok: false, erro: e.message }));
   return true; // resposta assíncrona

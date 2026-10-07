@@ -67,6 +67,57 @@ function lerGanhadores() {
   return out.length ? out : null;
 }
 
+// Sorteio Diário › Programação: por dia, a marca do dia e os patrocinadores (prêmio, retirada, Instagram).
+// Lê a cidade/esporte que estiver selecionada na tela. Telefones não são lidos.
+function lerProgramacao() {
+  const main = document.querySelector('main');
+  if (!main || !/MARCA DO DIA/.test(main.innerText)) return null;
+  const sels = [...main.querySelectorAll('select')];
+  const escolhido = sels.map((s) => (s.options[s.selectedIndex]?.text || '').trim());
+  const [cidade, esporte] = escolhido;
+  if (!cidade || !esporte) return null;
+  // copia a tela trocando cada lista suspensa pelo item escolhido (senão aparecem todas as opções)
+  const copia = main.cloneNode(true);
+  [...copia.querySelectorAll('select')].forEach((s, i) => s.replaceWith(document.createTextNode(`\n§${escolhido[i]}\n`)));
+  copia.style.cssText = 'position:absolute;left:-99999px;top:0;width:1200px';
+  document.body.appendChild(copia);
+  const L = copia.innerText.split('\n').map((s) => s.trim()).filter(Boolean);
+  copia.remove();
+
+  const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+  const dias = {};
+  let dia = null;
+  let pat = null;
+  L.forEach((l, k) => {
+    if (DIAS.includes(l)) {
+      dia = dias[l] = { titulo: '', patrocinadores: [] };
+      pat = null;
+      return;
+    }
+    if (!dia || l.startsWith('§') || /^🎨/.test(l) || l === 'Add') return;
+    if (!dia.titulo && /^(SEGUNDA|TERÇA|QUARTA|QUINTA|SEXTA|SÁBADO|DOMINGO)\b/i.test(l)) return (dia.titulo = l);
+    if (L[k + 1] === '✕') {
+      pat = { nome: l, premio: '', local: '', insta: '' };
+      dia.patrocinadores.push(pat);
+      return;
+    }
+    if (!pat) return;
+    if (/^🎁/.test(l)) pat.premio ||= l.replace(/^🎁\s*/, '').replace(/\s*·\s*principal$/, '');
+    else if (/^📍/.test(l)) pat.local = l.replace(/^📍\s*/, '');
+    else if (/^📷/.test(l)) pat.insta = l.replace(/^📷\s*@?/, '');
+  });
+  // o prêmio escolhido numa lista suspensa vem marcado com §🎁
+  L.forEach((l, k) => {
+    if (!/^§🎁/.test(l)) return;
+    for (let j = k; j >= 0; j--)
+      if (L[j + 1] === '✕' && L[j] !== '✕') {
+        for (const d of Object.values(dias)) for (const p of d.patrocinadores) if (p.nome === L[j]) p.premio = l.replace(/^§🎁\s*/, '').replace(/\s*·\s*principal$/, '');
+        break;
+      }
+  });
+  return Object.keys(dias).length ? { cidade, esporte, dias } : null;
+}
+
 let enviando = false;
 async function mandar(tipo, dados, chave, texto) {
   const hoje = new Date().toLocaleDateString('sv-SE'); // AAAA-MM-DD
@@ -91,6 +142,8 @@ async function tentar() {
   } else if (/^\/sorteio/.test(location.pathname)) {
     const g = lerGanhadores();
     if (g) mandar('ganhadores', g, 'ultimoGanhadores', `✓ ${g.length} ganhadores recentes na Central`);
+    const p = lerProgramacao();
+    if (p) mandar('programacao', p, `ultimoProg-${p.cidade}-${p.esporte}`, `✓ Programação ${p.cidade} · ${p.esporte} na Central`);
   }
 }
 
