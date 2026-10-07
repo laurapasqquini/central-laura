@@ -379,8 +379,7 @@ function mensagemSemanaLolis(state, date, late) {
     ...diarias.map((t) => `• ${t}`),
     ...dias.map((x, i) => (i ? x : '\n' + x)),
     andamento.length ? '\n*Em andamento:* ' + andamento.map((x) => x.title).join(' · ') : '',
-    ...blocoPosts(state, date),
-    ...blocoBrindes(brindesDoDia(state, date)),
+    ...sorteioNaMensagem(state, date),
     '\n' + FIM_LOLIS,
   ].filter((x, i) => x !== '' || i === 0).join('\n');
 }
@@ -475,6 +474,15 @@ export function postsSorteio(state, date) {
   return out;
 }
 
+// Na mensagem de WhatsApp: se a Lolis tem a página, vai só o link (os textos ficam na aba Sorteio diário dela)
+function sorteioNaMensagem(state, date) {
+  const tem = postsSorteio(state, date).length || brindesDoDia(state, date).length;
+  if (!tem) return [];
+  if (state.lolisToken && typeof location !== 'undefined')
+    return [`\n🎾 *Sorteio diário* (posts e brindes): aba Sorteio diário da sua página 👉 ${location.origin}${import.meta.env.BASE_URL}#lolis=${state.lolisToken}`];
+  return [...blocoPosts(state, date), ...blocoBrindes(brindesDoDia(state, date))];
+}
+
 function blocoPosts(state, date) {
   const posts = postsSorteio(state, date);
   if (!posts.length) return [];
@@ -517,8 +525,7 @@ function mensagemDiaLolis(state, date, late) {
     ...listaAtrasadas(late, date),
     ...(hoje.length ? ['\n*Hoje:*', ...hoje.map((x) => `• ${x.title}`)] : []),
     ...(andamento.length ? ['\n*Em andamento:*', ...andamento.map((x) => `• ${x.title}`)] : []),
-    ...blocoPosts(state, date),
-    ...blocoBrindes(brindesDoDia(state, date)),
+    ...sorteioNaMensagem(state, date),
     '\n' + FIM_LOLIS,
   ].join('\n');
 }
