@@ -121,12 +121,20 @@ function lerProgramacao() {
 }
 
 let enviando = false;
+const jaAvisado = new Set();
 let avisouFalha = false;
 async function mandar(tipo, dados, chave, texto) {
   const hoje = new Date().toLocaleDateString('sv-SE'); // AAAA-MM-DD
   const assinatura = hoje + JSON.stringify(dados);
   const salvo = (await chrome.storage.local.get(chave))[chave];
-  if (salvo === assinatura) return; // já mandou isso hoje
+  if (salvo === assinatura) {
+    // já mandou isso hoje: avisa uma vez por tela, para não ficar a dúvida
+    if (!jaAvisado.has(chave)) {
+      jaAvisado.add(chave);
+      aviso(`✓ ${texto.replace(/^✓s*/, '').replace(/ na Central$/, '')} já está na Central (nada novo)`, 4000);
+    }
+    return;
+  }
   enviando = true;
   chrome.runtime.sendMessage({ tipo, dados }, async (r) => {
     enviando = false;
@@ -235,9 +243,22 @@ async function tentar() {
   }
 }
 
+// se a extensão foi atualizada com esta aba aberta, ela perde a ligação: avisa para dar F5
+const seguro = async () => {
+  try {
+    if (!chrome.runtime?.id) throw new Error('desconectada');
+    await tentar();
+  } catch (e) {
+    if (!avisouDesconexao) {
+      avisouDesconexao = true;
+      aviso('⚠️ Central: a extensão foi atualizada. Aperte F5 nesta aba.', 10000);
+    }
+  }
+};
+let avisouDesconexao = false;
 let t = null;
 new MutationObserver(() => {
   clearTimeout(t);
-  t = setTimeout(tentar, 1500); // espera a tela terminar de carregar
+  t = setTimeout(seguro, 1500); // espera a tela terminar de carregar
 }).observe(document.body, { childList: true, subtree: true, characterData: true });
-setTimeout(tentar, 2000);
+setTimeout(seguro, 2000);
