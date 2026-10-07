@@ -546,8 +546,8 @@ export function itemLolis(state, date) {
   const enviados = Array.isArray(env) ? env : env ? keys : [];
   const novos = env ? pontuais.filter((x) => !enviados.includes(x.key)) : [];
   const done = !!env && !novos.length;
-  // os ganhadores só chegam quando o Hub › Sorteio Diário › Ganhadores do dia é aberto
-  const dica = state.ganhadoresEm === date ? '' : ' (antes, abra Ganhadores do dia no Hub)';
+  // os ganhadores chegam quando o Hub é aberto no Chrome da Laura (a extensão atualiza uma vez por dia)
+  const dica = state.ganhadoresEm === date ? '' : ' (abra o Hub antes, para atualizar os brindes)';
   const base = (semana ? '13h30 · Mandar a semana pra Lolis' : '13h30 · Mandar a lista do dia pra Lolis') + dica;
   return {
     key: 'r:lolis-dia:' + date,

@@ -34,7 +34,10 @@ async function enviar(item, contaFixa) {
   if (!r.ok) throw new Error(`Não foi para a Central (${r.status})`);
 }
 
-chrome.runtime.onMessage.addListener((msg, _sender, responder) => {
+chrome.runtime.onMessage.addListener((msg, sender, responder) => {
+  // aba do Hub aberta em segundo plano para ler os ganhadores (e fechada logo depois)
+  if (msg.tipo === 'abrir-aba') return void chrome.tabs.create({ url: msg.url, active: false });
+  if (msg.tipo === 'fechar-aba') return void (sender.tab && chrome.tabs.remove(sender.tab.id));
   const run =
     msg.tipo === 'entrar' ? auth('password', { email: msg.email, password: msg.senha }).then((s) => ({ email: s.email }))
     : msg.tipo === 'sair' ? chrome.storage.local.remove('sessao')

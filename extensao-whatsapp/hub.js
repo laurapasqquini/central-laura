@@ -134,8 +134,45 @@ async function mandar(tipo, dados, chave, texto) {
   });
 }
 
+// Atualização automática dos ganhadores, uma vez por dia: ao usar qualquer página do Hub,
+// a extensão abre Sorteio Diário numa aba em segundo plano, lê "Ganhadores do dia" e fecha a aba.
+// (O Hub não deixa abrir páginas dele escondidas dentro de outra, por segurança.)
+const AUTO = new URLSearchParams(location.search).get('central') === 'auto';
+const hojeISO = () => new Date().toLocaleDateString('sv-SE');
+
+async function agendarAuto() {
+  if (AUTO || /^\/sorteio/.test(location.pathname)) return;
+  const { autoGanhadores } = await chrome.storage.local.get('autoGanhadores');
+  if (autoGanhadores === hojeISO()) return;
+  await chrome.storage.local.set({ autoGanhadores: hojeISO() });
+  chrome.runtime.sendMessage({ tipo: 'abrir-aba', url: `${location.origin}/sorteio?central=auto` });
+}
+
+async function rodarAuto() {
+  for (let i = 0; i < 40; i++) {
+    const aba = [...document.querySelectorAll('main button, main [role=tab], main a')].find((x) => x.textContent.trim() === 'Ganhadores do dia');
+    if (aba) {
+      aba.click(); // só troca a aba da tela, não altera nada
+      break;
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  for (let i = 0; i < 40; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    const g = lerGanhadores();
+    if (g) {
+      chrome.runtime.sendMessage({ tipo: 'ganhadores', dados: g }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
+      return;
+    }
+  }
+  chrome.runtime.sendMessage({ tipo: 'fechar-aba' });
+}
+
+if (AUTO) rodarAuto();
+else setTimeout(agendarAuto, 3000);
+
 async function tentar() {
-  if (enviando) return;
+  if (enviando || AUTO) return;
   if (/^\/beach/.test(location.pathname)) {
     const n = lerBeach();
     if (n) mandar('numeros', n, 'ultimoHub', '✓ Números do Beach na Central');
