@@ -9,8 +9,8 @@ const r = (title, who, freq, extra = {}, area = 'ranken') => ({ id: id('r'), tit
 export const seedRoutines = () => [
   // Diárias
   r('Atendimento pessoal no WhatsApp da RANKEN', 'laura', 'daily'),
-  r('Publicar o sorteio diário no grupo do WhatsApp', 'lolis', 'daily'),
-  r('Postar o sorteio diário no Instagram', 'lolis', 'daily'),
+  r('Sorteio diário (tênis e beach)', 'lolis', 'daily'),
+  r('Responder o WhatsApp do Hub', 'lolis', 'daily'),
   r('Cobrar mensalidades Pix de hoje e as atrasadas', 'laura', 'daily'),
   r('Zerar os atrasados do Hub antes de encerrar o dia', 'laura', 'daily'),
   // Semanais

@@ -14,7 +14,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 19,
+    version: 20,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -213,6 +213,15 @@ function migrate(s) {
         ...(s.frasesSorteio || {}),
       },
     };
+  }
+  // v20: rotinas fixas da Lolis todo dia útil: sorteio diário (tênis e beach) e WhatsApp do Hub
+  if (s.version < 20) {
+    const rot = (title) => ({ id: uid(), title, area: 'ranken', who: 'lolis', freq: 'daily', active: true, createdAt: hoje });
+    const sorteioAntigo = /^(Publicar o sorteio diário no grupo|Postar o sorteio diário no Instagram)/;
+    const novas = [];
+    if (!s.routines.some((r) => /^Sorteio diário \(tênis e beach\)/.test(r.title))) novas.push(rot('Sorteio diário (tênis e beach)'));
+    if (!s.routines.some((r) => /WhatsApp do Hub/i.test(r.title))) novas.push(rot('Responder o WhatsApp do Hub'));
+    s = { ...s, version: 20, routines: [...novas, ...s.routines.filter((r) => !sorteioAntigo.test(r.title))] };
   }
   return s;
 }

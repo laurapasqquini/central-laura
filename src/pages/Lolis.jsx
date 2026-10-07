@@ -126,7 +126,7 @@ function HojeComLolis() {
   const temSorteio = dia.posts.length || dia.brindes.length || dia.tarefas.some(ehSorteio);
   const itens = [
     ...dia.atrasadas.map((t) => ({ key: t.key, titulo: `⚠️ ${t.titulo}` })),
-    ...(temSorteio ? [{ key: 'sorteio', titulo: '🎾 Sorteio diário (grupo, Instagram e brindes)' }] : []),
+    ...(temSorteio ? [{ key: 'sorteio', titulo: '🎾 Sorteio diário: tênis e beach (grupo, Instagram e brindes)' }] : []),
     ...dia.tarefas.filter((t) => !ehSorteio(t)).map((t) => ({ key: t.key, titulo: t.titulo, feito: t.feito })),
   ];
   const brindes = dia.brindes;

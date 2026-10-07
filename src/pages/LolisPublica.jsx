@@ -128,7 +128,7 @@ function Dia({ dia, andamento, token }) {
             {temSorteio && (
               <div className={`flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200/70 ${feitos.includes('sorteio') ? 'opacity-50' : ''}`}>
                 <Marca feito={feitos.includes('sorteio')} onClick={() => marcar('sorteio')} />
-                <span className={`flex-1 text-[15px] ${feitos.includes('sorteio') ? 'text-slate-400 line-through' : 'text-slate-800'}`}>🎾 Sorteio diário (grupo, Instagram e brindes)</span>
+                <span className={`flex-1 text-[15px] ${feitos.includes('sorteio') ? 'text-slate-400 line-through' : 'text-slate-800'}`}>🎾 Sorteio diário: tênis e beach (grupo, Instagram e brindes)</span>
                 <button onClick={() => setAba('sorteio')} className="shrink-0 rounded-lg bg-ink px-3 py-1 text-xs font-bold text-white">
                   Abrir →
                 </button>
