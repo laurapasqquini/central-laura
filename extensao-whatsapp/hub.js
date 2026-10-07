@@ -37,12 +37,12 @@ function lerBeach() {
   return Object.keys(n).length >= 4 ? n : null;
 }
 
-function aviso(texto) {
+function aviso(texto, ms = 6000) {
   const d = document.createElement('div');
   d.textContent = texto;
-  d.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;padding:10px 16px;border-radius:12px;background:#1e1b4b;color:#fff;font:600 14px system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.3)';
+  d.style.cssText = 'position:fixed;top:16px;right:16px;z-index:99999;max-width:360px;padding:14px 18px;border-radius:14px;background:#1e1b4b;color:#fff;font:600 15px system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.35)';
   document.body.appendChild(d);
-  setTimeout(() => d.remove(), 2500);
+  setTimeout(() => d.remove(), ms);
 }
 
 // Sorteio Diário › Ganhadores do dia: nome, data, cidade/esporte e prêmio dos últimos 12 dias
@@ -119,6 +119,7 @@ function lerProgramacao() {
 }
 
 let enviando = false;
+let avisouFalha = false;
 async function mandar(tipo, dados, chave, texto) {
   const hoje = new Date().toLocaleDateString('sv-SE'); // AAAA-MM-DD
   const assinatura = hoje + JSON.stringify(dados);
@@ -130,6 +131,9 @@ async function mandar(tipo, dados, chave, texto) {
     if (r?.ok) {
       await chrome.storage.local.set({ [chave]: assinatura });
       aviso(texto);
+    } else {
+      // mostra o motivo (ex.: extensão sem login neste Chrome) em vez de falhar calada
+      aviso(`⚠️ Central: ${r?.erro || chrome.runtime.lastError?.message || 'não consegui enviar'}`, 8000);
     }
   });
 }
@@ -181,6 +185,10 @@ async function tentar() {
     if (g) mandar('ganhadores', g, 'ultimoGanhadores', `✓ ${g.length} ganhadores recentes na Central`);
     const p = lerProgramacao();
     if (p) mandar('programacao', p, `ultimoProg-${p.cidade}-${p.esporte}`, `✓ Programação ${p.cidade} · ${p.esporte} na Central`);
+    else if (/MARCA DO DIA/.test(document.querySelector('main')?.innerText || '') && !avisouFalha) {
+      avisouFalha = true;
+      aviso('⚠️ Central: não consegui ler a Programação desta tela', 8000);
+    }
   }
 }
 
