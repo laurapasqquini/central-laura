@@ -646,9 +646,9 @@ export function dadosPaginaLolis(state, ref = today()) {
     n++;
     const ordem = (x) => (x.kind === 'task' ? 0 : x.freq === 'daily' ? 2 : 1);
     const tarefas = buildDay(state, d, f)
-      .filter((x) => x.kind !== 'marco' && !x.done)
+      .filter((x) => x.kind !== 'marco')
       .sort((a, b) => ordem(a) - ordem(b))
-      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine' }));
+      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done }));
     const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date })) : [];
     const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto }) => ({ key, tipo, linha, texto }));
     const posts = postsSorteio(state, d).map(({ grupo, anuncio, parabens, temGanhador }) => ({ grupo, anuncio, parabens, temGanhador }));

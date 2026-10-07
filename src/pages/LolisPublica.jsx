@@ -56,7 +56,7 @@ export default function LolisPublica({ token }) {
           </div>
         )}
 
-        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Dia dia={dia} andamento={dados.andamento || []} />}
+        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Dia dia={dia} andamento={dados.andamento || []} token={token} />}
       </div>
     </div>
   );
@@ -65,18 +65,27 @@ export default function LolisPublica({ token }) {
 // As rotinas de postar o sorteio viram uma tarefa só ("Sorteio diário"), que abre a aba do sorteio
 const ehSorteio = (t) => /sorteio di[aá]rio/i.test(t.titulo);
 
-function Dia({ dia, andamento }) {
+function Dia({ dia, andamento, token }) {
   const [aba, setAba] = useState('tarefas');
   const [feitos, setFeitos] = useState(() => lerFeitos(dia.date));
-  useEffect(() => setFeitos(lerFeitos(dia.date)), [dia.date]);
+  // o que ela marca vai para a nuvem: a central da Laura vê e dá baixa (a cópia local é só reserva)
+  useEffect(() => {
+    setFeitos(lerFeitos(dia.date));
+    if (import.meta.env.DEV && localStorage.getItem('paginaDemo')) return; // teste com dados de exemplo
+    supabase.rpc('lolis_feitos_do_dia', { p_token: token, p_dia: dia.date }).then(({ data, error }) => {
+      if (!error && Array.isArray(data)) setFeitos(data.map((x) => (typeof x === 'string' ? x : Object.values(x)[0])));
+    });
+  }, [dia.date, token]);
   const marcar = (key) =>
     setFeitos((f) => {
-      const n = f.includes(key) ? f.filter((k) => k !== key) : [...f, key];
+      const feito = !f.includes(key);
+      const n = feito ? [...f, key] : f.filter((k) => k !== key);
       try {
         localStorage.setItem(`lolis-feitos-${dia.date}`, JSON.stringify(n));
       } catch {
         /* ignora */
       }
+      supabase.rpc('lolis_marcar', { p_token: token, p_dia: dia.date, p_chave: key, p_feito: feito }).then(() => {}, () => {});
       return n;
     });
 
@@ -110,7 +119,7 @@ function Dia({ dia, andamento }) {
           {dia.atrasadas.length > 0 && (
             <Secao titulo="⚠️ Atrasadas (prioridade)">
               {dia.atrasadas.map((t) => (
-                <Tarefa key={t.key} t={t} feito={feitos.includes(t.key)} onMarcar={() => marcar(t.key)} />
+                <Tarefa key={t.key} t={t} feito={feitos.includes(t.key) || !!t.feito} onMarcar={() => marcar(t.key)} />
               ))}
             </Secao>
           )}
@@ -126,7 +135,7 @@ function Dia({ dia, andamento }) {
               </div>
             )}
             {tarefas.map((t) => (
-              <Tarefa key={t.key} t={t} feito={feitos.includes(t.key)} onMarcar={() => marcar(t.key)} />
+              <Tarefa key={t.key} t={t} feito={feitos.includes(t.key) || !!t.feito} onMarcar={() => marcar(t.key)} />
             ))}
             {!tarefas.length && !temSorteio && <Caixa>Nenhuma tarefa.</Caixa>}
           </Secao>

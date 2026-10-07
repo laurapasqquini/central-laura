@@ -247,6 +247,32 @@ const saveAgenda = (userId, state) =>
     .then(() => {}, () => {})
     .then(() => salvarPaginaLolis(state));
 
+// Feitos da Lolis → baixa na central. Chaves: "t:ID" (tarefa), "r:ROTINA:DATA" (rotina),
+// "sorteio" (as rotinas de sorteio diário do dia) e "g:..." (mensagens de brinde, só registro).
+function aplicarFeitosLolis(s, rows) {
+  const porDia = {};
+  for (const r of rows) (porDia[r.dia] ||= []).push(r.chave);
+  const antes = s.lolisFeitos || {};
+  const routineDone = { ...s.routineDone };
+  const tarefas = new Set();
+  for (const [dia, chaves] of Object.entries(porDia)) {
+    for (const k of chaves) {
+      if ((antes[dia] || []).includes(k)) continue; // já aplicado
+      if (k.startsWith('t:')) tarefas.add(k.slice(2));
+      else if (k.startsWith('r:')) routineDone[k.slice(2)] = true;
+      else if (k === 'sorteio')
+        for (const r of s.routines) if (r.who === 'lolis' && /sorteio di[aá]rio/i.test(r.title)) routineDone[`${r.id}:${dia}`] = true;
+    }
+  }
+  if (JSON.stringify(antes) === JSON.stringify(porDia) && !tarefas.size) return s;
+  return {
+    ...s,
+    lolisFeitos: porDia,
+    routineDone,
+    tasks: tarefas.size ? s.tasks.map((t) => (tarefas.has(t.id) && !t.done ? { ...t, done: true, doneAt: today() } : t)) : s.tasks,
+  };
+}
+
 // Página da Lolis (link sem login): publica o dia dela sempre que a central salva.
 const salvarPaginaLolis = (state) =>
   state.lolisToken
@@ -261,6 +287,8 @@ export function StoreProvider({ user, children }) {
   const [sync, setSync] = useState('loading'); // loading | ok | saving | offline
   const ready = useRef(false);
   const lastJson = useRef(null); // o que a nuvem tem: evita salvar de volta o que acabou de chegar
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // Cópia local: abre rápido e funciona sem internet.
   useEffect(() => {
@@ -291,6 +319,16 @@ export function StoreProvider({ user, children }) {
       setSync('ok');
       saveAgenda(user.id, data ? migrate(data.data) : state);
       puxarEntrada();
+      puxarFeitosLolis();
+    };
+
+    // O que a Lolis marcou como feito na página dela (últimos 7 dias): a central dá baixa sozinha.
+    const puxarFeitosLolis = async () => {
+      const token = stateRef.current.lolisToken;
+      if (!token) return;
+      const { data: rows, error } = await supabase.from('lolis_feitos').select('dia, chave').eq('token', token).gte('dia', addDays(today(), -7));
+      if (!alive || error || !rows) return;
+      setState((s) => aplicarFeitosLolis(s, rows));
     };
 
     // Mensagens que a extensão do WhatsApp mandou: viram tarefa de hoje e saem da caixa de entrada.
@@ -387,6 +425,11 @@ export function StoreProvider({ user, children }) {
       .channel('entrada')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'entrada', filter: `user_id=eq.${user.id}` }, () => ready.current && puxarEntrada())
       .subscribe();
+    // o que a Lolis marca na página dela chega na hora
+    const chLolis = supabase
+      .channel('lolis-feitos')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lolis_feitos' }, () => ready.current && puxarFeitosLolis())
+      .subscribe();
 
     // iPhone: ao voltar para o app, confere se tem novidade.
     const onVis = () => document.visibilityState === 'visible' && ready.current && pull();
@@ -395,6 +438,7 @@ export function StoreProvider({ user, children }) {
       alive = false;
       supabase.removeChannel(ch);
       supabase.removeChannel(chEntrada);
+      supabase.removeChannel(chLolis);
       document.removeEventListener('visibilitychange', onVis);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

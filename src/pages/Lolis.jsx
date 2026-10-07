@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, mensagemLolis } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis } from '../lib/engine';
 import { today, addDays } from '../lib/dates';
 import { ItemRow, Section, Empty, TaskModal } from '../components/ui';
 
@@ -38,6 +38,7 @@ export default function Lolis() {
         </button>
       </header>
 
+      <HojeComLolis />
       <LinkLolis />
 
       {late.length > 0 && (
@@ -111,3 +112,64 @@ function LinkLolis() {
     </section>
   );
 }
+
+// O mesmo que está na página dela hoje, com o que ela já marcou como feito
+function HojeComLolis() {
+  const { state } = useStore();
+  const [aberto, setAberto] = useState(null);
+  const ref = today();
+  const dia = dadosPaginaLolis(state, ref).dias.find((d) => d.date === ref);
+  if (!state.lolisToken || !dia) return null;
+  const feitos = new Set((state.lolisFeitos || {})[ref] || []);
+  const ehSorteio = (t) => /sorteio di[aá]rio/i.test(t.titulo);
+  const temSorteio = dia.posts.length || dia.brindes.length || dia.tarefas.some(ehSorteio);
+  const itens = [
+    ...dia.atrasadas.map((t) => ({ key: t.key, titulo: `⚠️ ${t.titulo}` })),
+    ...(temSorteio ? [{ key: 'sorteio', titulo: '🎾 Sorteio diário (grupo, Instagram e brindes)' }] : []),
+    ...dia.tarefas.filter((t) => !ehSorteio(t)).map((t) => ({ key: t.key, titulo: t.titulo, feito: t.feito })),
+  ];
+  const brindes = dia.brindes;
+  const total = itens.length + brindes.length;
+  const ok = [...itens, ...brindes].filter((x) => feitos.has(x.key) || x.feito).length;
+  const NOME = { acao: '🤝 Patrocinador', lembrete: '🎁 Lembrete do prazo', conferir: '✅ Conferir se deu certo' };
+
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">Hoje com a Lolis</h2>
+        <span className="text-sm text-slate-500">
+          ela marcou <b className="text-emerald-600">{ok}</b> de <b>{total}</b>
+        </span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+        <div className="h-full rounded-full bg-amber-500 transition-all" style={{ width: `${total ? (ok / total) * 100 : 0}%` }} />
+      </div>
+      <div className="space-y-1">
+        {itens.map((x) => (
+          <Linha key={x.key} feito={feitos.has(x.key) || !!x.feito} titulo={x.titulo} />
+        ))}
+      </div>
+      {brindes.length > 0 && (
+        <div className="space-y-1 border-t border-slate-100 pt-2">
+          <div className="text-xs font-bold uppercase tracking-wide text-slate-500">Brindes do sorteio</div>
+          {brindes.map((b) => (
+            <div key={b.key}>
+              <button onClick={() => setAberto(aberto === b.key ? null : b.key)} className="w-full text-left">
+                <Linha feito={feitos.has(b.key)} titulo={`${NOME[b.tipo]} · ${b.linha}`} />
+              </button>
+              {aberto === b.key && <p className="ml-7 rounded-lg bg-[#e7ffdb] p-2 text-xs text-slate-700">{b.texto}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+      {dia.posts.length > 0 && <p className="text-xs text-slate-500">📣 Posts do sorteio de hoje: {dia.posts.map((p) => p.grupo).join(' · ')} (veja os textos em Abrir, no quadro abaixo)</p>}
+    </section>
+  );
+}
+
+const Linha = ({ feito, titulo }) => (
+  <div className={`flex items-start gap-2 rounded-lg px-1 py-1 text-sm ${feito ? 'text-slate-400' : 'text-slate-700'}`}>
+    <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px] text-white ${feito ? 'bg-emerald-500' : 'border-2 border-slate-300'}`}>{feito && '✓'}</span>
+    <span className={feito ? 'line-through' : ''}>{titulo}</span>
+  </div>
+);
