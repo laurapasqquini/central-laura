@@ -14,7 +14,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 17,
+    version: 18,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -191,6 +191,10 @@ function migrate(s) {
   // v17: a lista diária da Lolis virou automática (semana na segunda, só o que muda nos outros dias)
   if (s.version < 17) {
     s = { ...s, version: 17, routines: s.routines.filter((r) => r.tipo !== 'lolis-lista') };
+  }
+  // v18: conferir foto/Instagram dos inscritos não é algo que a RANKEN faz
+  if (s.version < 18) {
+    s = { ...s, version: 18, routines: s.routines.filter((r) => !/^Conferir se o cadastro dos novos inscritos/.test(r.title)) };
   }
   return s;
 }

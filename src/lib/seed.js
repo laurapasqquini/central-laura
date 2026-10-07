@@ -12,7 +12,6 @@ export const seedRoutines = () => [
   r('Publicar o sorteio diário no grupo do WhatsApp', 'lolis', 'daily'),
   r('Postar o sorteio diário no Instagram', 'lolis', 'daily'),
   r('Cobrar mensalidades Pix de hoje e as atrasadas', 'laura', 'daily'),
-  r('Conferir se o cadastro dos novos inscritos está completo (foto, Instagram)', 'lolis', 'daily'),
   r('Zerar os atrasados do Hub antes de encerrar o dia', 'laura', 'daily'),
   // Semanais
   r('Avisar quem tem 2 resultados pendentes (risco de suspensão)', 'lolis', 'weekly', { weekday: 1 }),
