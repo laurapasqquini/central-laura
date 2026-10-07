@@ -410,6 +410,8 @@ export function brindesDoDia(state, date) {
       out.push({
         key: `g:${id}:l`,
         tipo: 'lembrete',
+        sorteio: g.data,
+        prazo,
         title: `Lembrete de brinde: ${g.nome}`,
         linha,
         texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que o brinde que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, pode ser solicitado até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁`,
@@ -418,6 +420,8 @@ export function brindesDoDia(state, date) {
       out.push({
         key: `g:${id}:c`,
         tipo: 'conferir',
+        sorteio: g.data,
+        prazo,
         title: `Conferir brinde: ${g.nome}`,
         linha,
         texto: `Oi, ${nome}! E aí, conseguiu retirar o seu brinde do sorteio diário (${premio})? Deu tudo certo? 😊`,
@@ -437,10 +441,12 @@ const tituloBonito = (s = '') =>
     .join(' ');
 const juntar = (xs) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} e ${xs.at(-1)}`);
 
+// 150,00 → R$ 150,00
+const comReais = (s = '') => s.trim().replace(/(^|\s)(?<!R\$\s)(\d+,\d{2})\b/g, '$1R$ $2');
 // Prêmio com o nome do patrocinador (sem repetir quando o prêmio já traz o nome)
 const premioComNome = (x) => {
   const nome = tituloBonito(x.nome);
-  const p = (x.premio || '').trim().replace(/(^|\s)(?<!R\$\s)(\d+,\d{2})\b/g, '$1R$ $2'); // 150,00 → R$ 150,00
+  const p = comReais(x.premio);
   return semAcento(p).includes(semAcento(x.nome).split(' ')[0]) ? p : `${p} ${nome}`;
 };
 const EMOJIS = [
@@ -477,7 +483,7 @@ export function postsSorteio(state, date) {
     if (!d || !d.patrocinadores?.length) continue;
     const pats = d.patrocinadores;
     const nomes = pats.map((x) => x.nome);
-    const premios = pats.map((x) => `${x.premio} (${tituloBonito(x.nome)})`).join(' + ');
+    const premios = pats.map((x) => `${comReais(x.premio)} (${tituloBonito(x.nome)})`).join(' + ');
     const casa = pats.some((x) => /casa|contato|endere/i.test(x.local));
     const ganhador = Object.values(state.ganhadores || {}).find(
       (g) => g.data === date && semAcento(g.local).includes(semAcento(p.cidade)) && semAcento(g.local).includes(semAcento(p.esporte).split(' ')[0]),
@@ -505,7 +511,23 @@ export function postsSorteio(state, date) {
       '',
       `🤝 Obrigado ${pats.length > 1 ? 'aos' : 'ao'} *${juntar(nomes.map(tituloBonito))}* por ${pats.length > 1 ? 'fortalecerem' : 'fortalecer'} o Ranken e nossos atletas! 💚🎾`,
     ].join('\n');
-    out.push({ grupo: `${p.esporte} ${p.cidade}`, anuncio, parabens, ganhador: ganhador?.nome || null });
+    out.push({
+      grupo: `${p.esporte} ${p.cidade}`,
+      anuncio,
+      parabens,
+      ganhador: ganhador?.nome || null,
+      // para as mensagens no privado (ganhador e apoiador), montadas na página da Lolis com o nome do ganhador
+      titulo: tituloBonito(d.titulo || dia),
+      prazo: addDays(date, PRAZO_BRINDE),
+      patrocinadores: pats.map((x) => ({
+        nome: tituloBonito(x.nome),
+        premio: premioComNome(x),
+        local: x.local || '',
+        contato: x.contato || '',
+        regra: regraPatrocinador(x.nome),
+        canva: canvaPara(state, x.nome),
+      })),
+    });
   }
   return out;
 }
@@ -697,8 +719,8 @@ export function dadosPaginaLolis(state, ref = today()) {
       .sort((a, b) => ordem(a) - ordem(b))
       .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title) }));
     const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date })) : [];
-    const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto }) => ({ key, tipo, linha, texto, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
-    const posts = postsSorteio(state, d).map(({ grupo, anuncio, parabens, ganhador }) => ({ grupo, anuncio, parabens, ganhador }));
+    const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto, sorteio, prazo }) => ({ key, tipo, linha, texto, sorteio, prazo, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
+    const posts = postsSorteio(state, d);
     dias.push({ date: d, tarefas, atrasadas, brindes, posts });
   }
   return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title) };

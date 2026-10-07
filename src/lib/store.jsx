@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
-import { buildAgenda, dadosPaginaLolis } from './engine';
+import { buildAgenda, dadosPaginaLolis, postsSorteio } from './engine';
 import { INDICADORES_PADRAO } from './chefes';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
@@ -292,7 +292,8 @@ function aplicarFeitosLolis(s, rows) {
       if ((antes[dia] || []).includes(k)) continue; // já aplicado
       if (k.startsWith('t:')) tarefas.add(k.slice(2));
       else if (k.startsWith('r:')) routineDone[k.slice(2)] = true;
-      else if (k === 'sorteio')
+      else if (k === 'sorteio' || (k.startsWith('sorteio:') && chaves.filter((c) => c.startsWith('sorteio:')).length >= postsSorteio(s, dia).length))
+        // rotina do sorteio do dia: feita quando ela marca todos os sorteios do dia
         for (const r of s.routines) if (r.who === 'lolis' && /sorteio di[aá]rio/i.test(r.title)) routineDone[`${r.id}:${dia}`] = true;
     }
   }

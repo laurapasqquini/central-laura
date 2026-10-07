@@ -97,7 +97,7 @@ function lerProgramacao() {
     if (!dia || l.startsWith('§') || /^🎨/.test(l) || l === 'Add') return;
     if (!dia.titulo && /^(SEGUNDA|TERÇA|QUARTA|QUINTA|SEXTA|SÁBADO|DOMINGO)\b/i.test(l)) return (dia.titulo = l);
     if (L[k + 1] === '✕') {
-      pat = { nome: l, premio: '', local: '', insta: '' };
+      pat = { nome: l, premio: '', local: '', insta: '', contato: '' };
       dia.patrocinadores.push(pat);
       return;
     }
@@ -105,6 +105,7 @@ function lerProgramacao() {
     if (/^🎁/.test(l)) pat.premio ||= l.replace(/^🎁\s*/, '').replace(/\s*·\s*principal$/, '');
     else if (/^📍/.test(l)) pat.local = l.replace(/^📍\s*/, '');
     else if (/^📷/.test(l)) pat.insta = l.replace(/^📷\s*@?/, '');
+    else if (/^👤/.test(l)) pat.contato = l.replace(/^👤\s*/, ''); // só o nome do contato (o telefone não é lido)
   });
   // o prêmio escolhido numa lista suspensa vem marcado com §🎁
   L.forEach((l, k) => {

@@ -124,13 +124,18 @@ function HojeComLolis() {
   if (!state.lolisToken || !dia) return null;
   const feitos = new Set((state.lolisFeitos || {})[ref] || []);
   const ehSorteio = (t) => /sorteio di[aá]rio/i.test(t.titulo);
-  const temSorteio = dia.posts.length || dia.brindes.length || dia.tarefas.some(ehSorteio);
+  const lembretes = dia.brindes.filter((b) => b.tipo !== 'acao');
+  const sorteios = dia.posts.length
+    ? dia.posts.map((p) => ({ key: `sorteio:${p.grupo}`, titulo: `🎾 Sorteio diário · ${p.grupo}` }))
+    : dia.tarefas.some(ehSorteio) || lembretes.length
+      ? [{ key: 'sorteio', titulo: '🎾 Sorteio diário' }]
+      : [];
   const itens = [
     ...dia.atrasadas.map((t) => ({ key: t.key, titulo: `⚠️ ${t.titulo}` })),
-    ...(temSorteio ? [{ key: 'sorteio', titulo: '🎾 Sorteio diário: tênis e beach (grupo, Instagram e brindes)' }] : []),
+    ...sorteios,
     ...dia.tarefas.filter((t) => !ehSorteio(t)).map((t) => ({ key: t.key, titulo: t.titulo, feito: t.feito })),
   ];
-  const brindes = dia.brindes;
+  const brindes = lembretes;
   const total = itens.length + brindes.length;
   const ok = [...itens, ...brindes].filter((x) => feitos.has(x.key) || x.feito).length;
   const NOME = { acao: '🤝 Patrocinador', lembrete: '🎁 Lembrete do prazo', conferir: '✅ Conferir se deu certo' };

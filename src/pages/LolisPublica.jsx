@@ -62,8 +62,10 @@ export default function LolisPublica({ token }) {
   );
 }
 
-// As rotinas de postar o sorteio viram uma tarefa só ("Sorteio diário"), que abre a aba do sorteio
+// Rotinas de sorteio viram uma tarefa por sorteio do dia (Tênis Maringá, Tênis Londrina, Beach...), conforme a programação
 const ehSorteio = (t) => /sorteio di[aá]rio/i.test(t.titulo);
+const chaveSorteio = (p) => `sorteio:${p.grupo}`;
+const idGrupo = (p) => `sorteio-${p.grupo.replace(/\W+/g, '-')}`;
 
 function Dia({ dia, andamento, token }) {
   const [aba, setAba] = useState('tarefas');
@@ -89,17 +91,24 @@ function Dia({ dia, andamento, token }) {
       return n;
     });
 
-  const acoes = dia.brindes.filter((b) => b.tipo === 'acao');
-  const lembrar = dia.brindes.filter((b) => b.tipo === 'lembrete');
-  const conferir = dia.brindes.filter((b) => b.tipo === 'conferir');
-  const temSorteio = dia.posts.length > 0 || dia.brindes.length > 0 || dia.tarefas.some(ehSorteio);
+  const lembretes = dia.brindes.filter((b) => b.tipo !== 'acao');
+  const temRotinaSorteio = dia.tarefas.some(ehSorteio);
+  // um item por sorteio do dia; sem programação no Hub, fica o item geral
+  const itensSorteio = dia.posts.length
+    ? dia.posts.map((p) => ({ key: chaveSorteio(p), titulo: `🎾 Sorteio diário · ${p.grupo}`, alvo: idGrupo(p) }))
+    : temRotinaSorteio || lembretes.length
+      ? [{ key: 'sorteio', titulo: '🎾 Sorteio diário', alvo: null }]
+      : [];
   const tarefas = dia.tarefas.filter((t) => !ehSorteio(t));
-  const pendSorteio = dia.brindes.filter((b) => !feitos.includes(b.key)).length;
+  const pendTarefas = tarefas.filter((t) => !feitos.includes(t.key) && !t.feito).length + dia.atrasadas.filter((t) => !feitos.includes(t.key)).length + itensSorteio.filter((x) => !feitos.includes(x.key)).length;
+  const pendSorteio = itensSorteio.filter((x) => !feitos.includes(x.key)).length + lembretes.filter((b) => !feitos.includes(b.key)).length;
 
-  const ABAS = [
-    ['tarefas', '📝 Tarefas', tarefas.filter((t) => !feitos.includes(t.key)).length + dia.atrasadas.filter((t) => !feitos.includes(t.key)).length + (temSorteio && !feitos.includes('sorteio') ? 1 : 0)],
-    ...(temSorteio ? [['sorteio', '🎾 Sorteio diário', dia.posts.length + pendSorteio]] : []),
-  ];
+  const abrirSorteio = (alvo) => {
+    setAba('sorteio');
+    if (alvo) setTimeout(() => document.getElementById(alvo)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
+
+  const ABAS = [['tarefas', '📝 Tarefas', pendTarefas], ...(itensSorteio.length || lembretes.length ? [['sorteio', '🎾 Sorteio diário', pendSorteio]] : [])];
 
   return (
     <div className="space-y-5">
@@ -119,25 +128,25 @@ function Dia({ dia, andamento, token }) {
           {dia.atrasadas.length > 0 && (
             <Secao titulo="⚠️ Atrasadas (prioridade)">
               {dia.atrasadas.map((t) => (
-                <Tarefa key={t.key} t={t} feito={feitos.includes(t.key) || !!t.feito} onMarcar={() => marcar(t.key)} />
+                <Tarefa key={t.key} t={t} feito={feitos.includes(t.key)} onMarcar={() => marcar(t.key)} />
               ))}
             </Secao>
           )}
 
           <Secao titulo="Tarefas do dia">
-            {temSorteio && (
-              <div className={`flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200/70 ${feitos.includes('sorteio') ? 'opacity-50' : ''}`}>
-                <Marca feito={feitos.includes('sorteio')} onClick={() => marcar('sorteio')} />
-                <span className={`flex-1 text-[15px] ${feitos.includes('sorteio') ? 'text-slate-400 line-through' : 'text-slate-800'}`}>🎾 Sorteio diário: tênis e beach (grupo, Instagram e brindes)</span>
-                <button onClick={() => setAba('sorteio')} className="shrink-0 rounded-lg bg-ink px-3 py-1 text-xs font-bold text-white">
+            {itensSorteio.map((x) => (
+              <div key={x.key} className={`flex items-center gap-3 rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200/70 ${feitos.includes(x.key) ? 'opacity-50' : ''}`}>
+                <Marca feito={feitos.includes(x.key)} onClick={() => marcar(x.key)} />
+                <span className={`flex-1 text-[15px] ${feitos.includes(x.key) ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{x.titulo}</span>
+                <button onClick={() => abrirSorteio(x.alvo)} className="shrink-0 rounded-lg bg-ink px-3 py-1 text-xs font-bold text-white">
                   Abrir →
                 </button>
               </div>
-            )}
+            ))}
             {tarefas.map((t) => (
               <Tarefa key={t.key} t={t} feito={feitos.includes(t.key) || !!t.feito} onMarcar={() => marcar(t.key)} />
             ))}
-            {!tarefas.length && !temSorteio && <Caixa>Nenhuma tarefa.</Caixa>}
+            {!tarefas.length && !itensSorteio.length && <Caixa>Nenhuma tarefa.</Caixa>}
           </Secao>
 
           {andamento.length > 0 && (
@@ -155,32 +164,18 @@ function Dia({ dia, andamento, token }) {
       ) : (
         <>
           {dia.posts.length > 0 ? (
-            <Secao titulo="📣 Posts do sorteio" dica="Assim que chegar: 1) anúncio no grupo e no Instagram, 2) sorteio no Hub, 3) parabéns marcando o ganhador.">
+            <Secao titulo="🎾 Sorteios de hoje" dica="Assim que chegar: 1) anúncio no grupo e no Instagram, 2) sorteio no Hub, 3) parabéns no grupo e as mensagens no privado.">
               {dia.posts.map((p) => (
-                <Post key={p.grupo} p={p} />
+                <Post key={p.grupo} p={p} feito={feitos.includes(chaveSorteio(p))} onMarcar={() => marcar(chaveSorteio(p))} />
               ))}
             </Secao>
           ) : (
             <Caixa>A programação do sorteio deste dia ainda não chegou na central.</Caixa>
           )}
 
-          {acoes.length > 0 && (
-            <Secao titulo="🤝 Patrocinadores (ganhadores de hoje)">
-              {acoes.map((b) => (
-                <Mensagem key={b.key} b={b} feito={feitos.includes(b.key)} onMarcar={() => marcar(b.key)} semCopiar />
-              ))}
-            </Secao>
-          )}
-          {lembrar.length > 0 && (
-            <Secao titulo="🎁 Lembrar o prazo de 7 dias" dica="No privado do ganhador. O telefone está no Hub › Sorteio Diário › Ganhadores do dia (clicando no nome).">
-              {lembrar.map((b) => (
-                <Mensagem key={b.key} b={b} feito={feitos.includes(b.key)} onMarcar={() => marcar(b.key)} />
-              ))}
-            </Secao>
-          )}
-          {conferir.length > 0 && (
-            <Secao titulo="✅ Perguntar se deu certo">
-              {conferir.map((b) => (
+          {lembretes.length > 0 && (
+            <Secao titulo="📅 Lembretes de sorteios de dias anteriores" dica="Não são do sorteio de hoje: são para ganhadores de outros dias, no privado. O telefone está no Hub › Sorteio Diário › Ganhadores do dia (clicando no nome).">
+              {lembretes.map((b) => (
                 <Mensagem key={b.key} b={b} feito={feitos.includes(b.key)} onMarcar={() => marcar(b.key)} />
               ))}
             </Secao>
@@ -191,22 +186,65 @@ function Dia({ dia, andamento, token }) {
   );
 }
 
-// A marcação do ganhador só funciona escolhendo a pessoa no grupo (digitando @), por isso o texto vem com um espaço para isso
-function Post({ p }) {
+// Um sorteio do dia: à esquerda as mensagens do grupo; à direita, no privado, ganhador e apoiador
+function Post({ p, feito, onMarcar }) {
+  const [nome, setNome] = useState(p.ganhador || '');
+  const primeiro = nome.trim() ? nome.trim().split(/\s+/)[0] : '[nome]';
+  const quem = nome.trim() || '[nome do ganhador]';
+  const prazo = `${fmtLongo(p.prazo).split(',')[0]}, ${fmtCurto(p.prazo).slice(5)}`;
+  const premios = p.patrocinadores.map((x) => x.premio).join(' + ');
+  const voucher = p.patrocinadores.find((x) => x.canva);
+  const retirada = p.patrocinadores.map((x) => (x.local ? `${x.nome}: ${x.local}` : '')).filter(Boolean);
+  const msgGanhador = [
+    `Oi, ${primeiro}! Parabéns, você foi sorteado(a) hoje no sorteio diário da RANKEN (${p.titulo})! 🎉`,
+    '',
+    `🎁 Seu prêmio: ${premios}`,
+    ...(retirada.length ? [`📍 ${retirada.join(' · ')}`] : []),
+    `⏱ Você tem 7 dias para solicitar: até ${prazo}.`,
+    ...(voucher ? ['', 'Segue o seu voucher 👇'] : []),
+    '',
+    'Qualquer dúvida é só chamar aqui 💚',
+  ].join('\n');
+
   return (
-    <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
-      <div className="text-sm font-bold text-ink">{p.grupo}</div>
-      <Texto rotulo="1. Anúncio" texto={p.anuncio} />
-      <Texto rotulo="2. Parabéns (depois do sorteio no Hub)" texto={p.parabens} />
-      <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-        No grupo, apague <b>[marque o ganhador]</b>, digite <b>@</b> e escolha a pessoa na lista, para ela ser marcada de verdade.
-        {p.ganhador && (
-          <>
-            {' '}
-            Ganhador no Hub: <b>{p.ganhador}</b>
-          </>
-        )}
-      </p>
+    <div id={idGrupo(p)} className={`scroll-mt-4 space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 ${feito ? 'opacity-60' : ''}`}>
+      <div className="flex items-center gap-2">
+        <Marca feito={feito} onClick={onMarcar} />
+        <div className="flex-1 text-[15px] font-bold text-ink">Sorteio diário · {p.grupo}</div>
+        <span className="text-xs text-slate-400">{p.titulo}</span>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="space-y-3">
+          <div className="text-xs font-bold uppercase tracking-wide text-slate-500">👥 No grupo</div>
+          <Texto rotulo="1. Anúncio" texto={p.anuncio} />
+          <Texto rotulo="2. Parabéns (depois do sorteio no Hub)" texto={p.parabens} />
+          <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            No grupo, apague <b>[marque o ganhador]</b>, digite <b>@</b> e escolha a pessoa na lista, para ela ser marcada de verdade.
+          </p>
+        </div>
+
+        <div className="space-y-3 rounded-xl bg-slate-50 p-3">
+          <div className="text-xs font-bold uppercase tracking-wide text-slate-500">💬 No privado · sorteio de HOJE</div>
+          <input
+            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-indigo-400"
+            placeholder="Ganhador de hoje (nome)"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+          />
+          <Texto rotulo="Mensagem para o ganhador" texto={msgGanhador} />
+          {voucher && <BotaoCanva c={voucher.canva} />}
+          {p.patrocinadores.map((x) => (
+            <div key={x.nome} className="space-y-1.5">
+              {x.regra && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">{x.nome}: {x.regra}</p>}
+              <Texto
+                rotulo={`Mensagem para o apoiador · ${x.nome}${x.regra ? '' : ' (se precisar)'}`}
+                texto={`Oi${x.contato ? `, ${x.contato.split(/\s+/)[0][0].toUpperCase() + x.contato.split(/\s+/)[0].slice(1).toLowerCase()}` : ''}! Tudo bem? 😊 Passando pra avisar que o(a) ganhador(a) do sorteio diário da RANKEN de hoje (${p.titulo}) foi ${quem}, que vai retirar ${x.premio}. Obrigado pela parceria! 💚🎾`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -228,7 +266,14 @@ function Mensagem({ b, feito, onMarcar, semCopiar }) {
     <div className={`space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 ${feito ? 'opacity-50' : ''}`}>
       <div className="flex items-start gap-2">
         <Marca feito={feito} onClick={onMarcar} />
-        <div className="min-w-0 flex-1 text-sm font-semibold text-slate-700">{b.linha}</div>
+        <div className="min-w-0 flex-1">
+          {b.sorteio && (
+            <div className={`mb-0.5 text-xs font-bold ${b.tipo === 'lembrete' ? 'text-violet-700' : 'text-emerald-700'}`}>
+              {b.tipo === 'lembrete' ? '🎁 Lembrete do prazo (3º dia)' : '✅ Conferir se deu certo (4º dia)'} · sorteio de {fmtCurto(b.sorteio)} · prazo até {fmtCurto(b.prazo)}
+            </div>
+          )}
+          <div className="text-sm font-semibold text-slate-700">{b.linha}</div>
+        </div>
         {!semCopiar && <Copiar texto={b.texto} />}
       </div>
       {b.canva && <BotaoCanva c={b.canva} />}
