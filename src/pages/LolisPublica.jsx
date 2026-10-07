@@ -1,0 +1,240 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabase';
+import { today, fmtLongo, fmtCurto, relativo } from '../lib/dates';
+
+// Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
+// Os "feitos" ficam salvos só no computador dela.
+const lerFeitos = (date) => {
+  try {
+    return JSON.parse(localStorage.getItem(`lolis-feitos-${date}`) || '[]');
+  } catch {
+    return [];
+  }
+};
+
+export default function LolisPublica({ token }) {
+  const [dados, setDados] = useState(undefined);
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    let vivo = true;
+    // só no computador de desenvolvimento: dados de exemplo para testar a tela
+    if (import.meta.env.DEV && localStorage.getItem('paginaDemo')) return void setDados(JSON.parse(localStorage.getItem('paginaDemo')));
+    const carregar = () =>
+      supabase.rpc('pagina_lolis', { p_token: token }).then(({ data, error }) => vivo && setDados(error ? null : data));
+    carregar();
+    const t = setInterval(carregar, 5 * 60 * 1000); // atualiza sozinha a cada 5 min
+    return () => {
+      vivo = false;
+      clearInterval(t);
+    };
+  }, [token]);
+
+  if (dados === undefined) return <Tela>Carregando…</Tela>;
+  if (!dados) return <Tela>Link inválido ou desatualizado. Peça o link novo para a Laura.</Tela>;
+
+  const hoje = today();
+  const dias = (dados.dias || []).filter((d) => d.date >= hoje);
+  const dia = dias[Math.min(idx, dias.length - 1)];
+
+  return (
+    <div className="min-h-screen bg-paper">
+      <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:py-10">
+        <header className="space-y-1">
+          <p className="text-sm font-medium text-slate-500">RANKEN · Página da Lolis</p>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Oi, Lolis! 👋</h1>
+          <p className="text-xs text-slate-400">Atualizado {relativo(dados.geradoEm.slice(0, 10), hoje)} às {new Date(dados.geradoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · a página se atualiza sozinha</p>
+        </header>
+
+        {dias.length > 1 && (
+          <div className="flex gap-1.5">
+            {dias.map((d, i) => (
+              <button key={d.date} onClick={() => setIdx(i)} className={`rounded-full px-3 py-1.5 text-sm font-semibold ring-1 ${i === idx ? 'bg-ink text-white ring-ink' : 'bg-white text-slate-600 ring-slate-200'}`}>
+                {d.date === hoje ? 'Hoje' : fmtCurto(d.date)}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Dia dia={dia} andamento={dados.andamento || []} />}
+      </div>
+    </div>
+  );
+}
+
+function Dia({ dia, andamento }) {
+  const [feitos, setFeitos] = useState(() => lerFeitos(dia.date));
+  useEffect(() => setFeitos(lerFeitos(dia.date)), [dia.date]);
+  const marcar = (key) =>
+    setFeitos((f) => {
+      const n = f.includes(key) ? f.filter((k) => k !== key) : [...f, key];
+      try {
+        localStorage.setItem(`lolis-feitos-${dia.date}`, JSON.stringify(n));
+      } catch {
+        /* ignora */
+      }
+      return n;
+    });
+
+  const acoes = dia.brindes.filter((b) => b.tipo === 'acao');
+  const lembrar = dia.brindes.filter((b) => b.tipo === 'lembrete');
+  const conferir = dia.brindes.filter((b) => b.tipo === 'conferir');
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-sm font-semibold text-slate-500 first-letter:uppercase">{fmtLongo(dia.date)}</h2>
+
+      {dia.atrasadas.length > 0 && (
+        <Secao titulo="⚠️ Atrasadas (prioridade)">
+          {dia.atrasadas.map((t) => (
+            <Tarefa key={t.key} t={t} feito={feitos.includes(t.key)} onMarcar={() => marcar(t.key)} />
+          ))}
+        </Secao>
+      )}
+
+      <Secao titulo="📝 Tarefas do dia">
+        {dia.tarefas.length ? dia.tarefas.map((t) => <Tarefa key={t.key} t={t} feito={feitos.includes(t.key)} onMarcar={() => marcar(t.key)} />) : <Caixa>Nenhuma tarefa.</Caixa>}
+      </Secao>
+
+      {dia.posts.length > 0 && (
+        <Secao titulo="📣 Sorteio diário" dica="Anúncio antes do sorteio, parabéns depois. Digite o nome do ganhador e copie.">
+          {dia.posts.map((p) => (
+            <Post key={p.grupo} p={p} />
+          ))}
+        </Secao>
+      )}
+
+      {acoes.length > 0 && (
+        <Secao titulo="🤝 Patrocinadores (ganhadores de hoje)">
+          {acoes.map((b) => (
+            <Mensagem key={b.key} b={b} feito={feitos.includes(b.key)} onMarcar={() => marcar(b.key)} semCopiar />
+          ))}
+        </Secao>
+      )}
+      {lembrar.length > 0 && (
+        <Secao titulo="🎁 Lembrar o prazo de 7 dias" dica="No privado do ganhador. O telefone está no Hub › Sorteio Diário › Ganhadores do dia (clicando no nome).">
+          {lembrar.map((b) => (
+            <Mensagem key={b.key} b={b} feito={feitos.includes(b.key)} onMarcar={() => marcar(b.key)} />
+          ))}
+        </Secao>
+      )}
+      {conferir.length > 0 && (
+        <Secao titulo="✅ Perguntar se deu certo">
+          {conferir.map((b) => (
+            <Mensagem key={b.key} b={b} feito={feitos.includes(b.key)} onMarcar={() => marcar(b.key)} />
+          ))}
+        </Secao>
+      )}
+
+      {andamento.length > 0 && (
+        <Secao titulo="🗂️ Em andamento">
+          {andamento.map((t) => (
+            <div key={t} className="rounded-xl bg-white px-3 py-2.5 text-[15px] text-slate-700 shadow-sm ring-1 ring-slate-200/70">
+              {t}
+            </div>
+          ))}
+        </Secao>
+      )}
+
+      <Caixa>No fim do dia, manda pra Laura no WhatsApp o que você fez 💚</Caixa>
+    </div>
+  );
+}
+
+function Post({ p }) {
+  const [nome, setNome] = useState('');
+  const parabens = p.temGanhador || !nome.trim() ? p.parabens : p.parabens.replace('[nome do ganhador]', nome.trim());
+  return (
+    <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+      <div className="text-sm font-bold text-ink">{p.grupo}</div>
+      <Texto rotulo="Anúncio" texto={p.anuncio} />
+      {!p.temGanhador && (
+        <input
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+          placeholder="Nome do ganhador (como está no grupo)"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+        />
+      )}
+      <Texto rotulo="Parabéns" texto={parabens} />
+    </div>
+  );
+}
+
+function Texto({ rotulo, texto }) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{rotulo}</span>
+        <Copiar texto={texto} />
+      </div>
+      <pre className="whitespace-pre-wrap rounded-xl bg-[#e7ffdb] p-3 font-sans text-sm text-slate-800">{texto}</pre>
+    </div>
+  );
+}
+
+function Mensagem({ b, feito, onMarcar, semCopiar }) {
+  return (
+    <div className={`space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 ${feito ? 'opacity-50' : ''}`}>
+      <div className="flex items-start gap-2">
+        <Marca feito={feito} onClick={onMarcar} />
+        <div className="min-w-0 flex-1 text-sm font-semibold text-slate-700">{b.linha}</div>
+        {!semCopiar && <Copiar texto={b.texto} />}
+      </div>
+      <p className={`text-sm ${semCopiar ? 'font-medium text-amber-800' : 'whitespace-pre-wrap rounded-xl bg-[#e7ffdb] p-3 text-slate-800'}`}>{b.texto}</p>
+    </div>
+  );
+}
+
+function Tarefa({ t, feito, onMarcar }) {
+  return (
+    <div className={`flex items-start gap-3 rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200/70 ${feito ? 'opacity-50' : ''}`}>
+      <Marca feito={feito} onClick={onMarcar} />
+      <span className={`text-[15px] ${feito ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+        {t.titulo}
+        {t.era && <span className="ml-1 text-xs text-red-500">(era {fmtCurto(t.era)})</span>}
+      </span>
+    </div>
+  );
+}
+
+function Marca({ feito, onClick }) {
+  return (
+    <button onClick={onClick} aria-label={feito ? 'Desmarcar' : 'Feito'} className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 text-[11px] text-white ${feito ? 'border-transparent bg-emerald-500' : 'border-slate-300 bg-white'}`}>
+      {feito && '✓'}
+    </button>
+  );
+}
+
+function Copiar({ texto }) {
+  const [ok, setOk] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(texto);
+          setOk(true);
+          setTimeout(() => setOk(false), 1500);
+        } catch {
+          prompt('Copie:', texto);
+        }
+      }}
+      className={`shrink-0 rounded-lg px-3 py-1 text-xs font-bold text-white ${ok ? 'bg-emerald-600' : 'bg-ink'}`}
+    >
+      {ok ? '✓ Copiado' : 'Copiar'}
+    </button>
+  );
+}
+
+function Secao({ titulo, dica, children }) {
+  return (
+    <section className="space-y-2">
+      <h3 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">{titulo}</h3>
+      {dica && <p className="px-1 text-xs text-slate-500">{dica}</p>}
+      <div className="space-y-2">{children}</div>
+    </section>
+  );
+}
+
+const Caixa = ({ children }) => <div className="rounded-xl border border-dashed border-slate-200 bg-white/60 px-4 py-4 text-center text-sm text-slate-500">{children}</div>;
+const Tela = ({ children }) => <div className="grid min-h-screen place-items-center bg-paper px-6 text-center text-slate-500">{children}</div>;

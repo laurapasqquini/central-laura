@@ -468,7 +468,7 @@ export function postsSorteio(state, date) {
       `O prêmio: ${premios} 🔥`,
       ...(pats.some((x) => x.insta) ? ['', '*Sigam:*', ...pats.filter((x) => x.insta).map((x) => `👉 https://www.instagram.com/${x.insta}/`)] : []),
       '',
-      `🤝 Obrigado ${pats.length > 1 ? 'aos' : 'ao'} *${juntar(nomes.map(tituloBonito))}* por fortalecerem o Ranken e nossos atletas! 💚🎾`,
+      `🤝 Obrigado ${pats.length > 1 ? 'aos' : 'ao'} *${juntar(nomes.map(tituloBonito))}* por ${pats.length > 1 ? 'fortalecerem' : 'fortalecer'} o Ranken e nossos atletas! 💚🎾`,
     ].join('\n');
     out.push({ grupo: `${p.esporte} ${p.cidade}`, anuncio, parabens, temGanhador: !!ganhador });
   }
@@ -628,4 +628,24 @@ export function sugerirBaixas(state, date, texto) {
     if (acertos >= Math.max(1, Math.ceil(ws.length * 0.34)) && (acertos >= 2 || ws.length <= 2)) out.push({ ...x, score: acertos / ws.length });
   }
   return [...new Map(out.map((x) => [x.key, x])).values()].sort((a, b) => b.score - a.score);
+}
+
+// ── Página da Lolis (link sem login): o dia dela de hoje e do próximo dia útil ──
+export function dadosPaginaLolis(state, ref = today()) {
+  const f = { area: 'all', who: 'lolis' };
+  const dias = [];
+  for (let d = ref, n = 0; n < 2 && dias.length < 2; d = addDays(d, 1)) {
+    if (!isWorkday(state, d)) continue;
+    n++;
+    const ordem = (x) => (x.kind === 'task' ? 0 : x.freq === 'daily' ? 2 : 1);
+    const tarefas = buildDay(state, d, f)
+      .filter((x) => x.kind !== 'marco' && !x.done)
+      .sort((a, b) => ordem(a) - ordem(b))
+      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine' }));
+    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date })) : [];
+    const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto }) => ({ key, tipo, linha, texto }));
+    const posts = postsSorteio(state, d).map(({ grupo, anuncio, parabens, temGanhador }) => ({ grupo, anuncio, parabens, temGanhador }));
+    dias.push({ date: d, tarefas, atrasadas, brindes, posts });
+  }
+  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title) };
 }

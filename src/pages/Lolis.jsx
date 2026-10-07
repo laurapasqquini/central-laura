@@ -38,6 +38,8 @@ export default function Lolis() {
         </button>
       </header>
 
+      <LinkLolis />
+
       {late.length > 0 && (
         <Section title="Atrasadas: cobrar retorno" count={late.length} tone="red">
           <div className="space-y-1.5 rounded-2xl bg-red-50/60 p-2 ring-1 ring-red-100">{late.map((x) => <ItemRow key={x.key} item={x} onEdit={setEditing} />)}</div>
@@ -58,5 +60,39 @@ export default function Lolis() {
 
       {editing && <TaskModal id={editing} onClose={() => setEditing(null)} />}
     </div>
+  );
+}
+
+// Link da Página da Lolis (sem login): ela vê só o dia dela, com um Copiar em cada mensagem
+function LinkLolis() {
+  const { state, novoLinkLolis } = useStore();
+  const [ok, setOk] = useState(false);
+  const link = state.lolisToken ? `${location.origin}${import.meta.env.BASE_URL}#lolis=${state.lolisToken}` : '';
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setOk(true);
+      setTimeout(() => setOk(false), 1500);
+    } catch {
+      prompt('Copie o link:', link);
+    }
+  };
+  return (
+    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">🔗 Página da Lolis</h2>
+      <p className="text-sm text-slate-500">Um link só dela, sem login: as tarefas do dia, os lembretes de brinde e os posts do sorteio, cada mensagem com o seu botão Copiar. Atualiza sozinho quando a central salva.</p>
+      {link ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <code className="min-w-0 flex-1 truncate rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">{link}</code>
+          <button onClick={copiar} className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white">{ok ? 'Copiado ✓' : 'Copiar link'}</button>
+          <a href={link} target="_blank" rel="noreferrer" className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 ring-1 ring-slate-200">Abrir</a>
+          <button onClick={() => confirm('Criar um link novo? O link atual para de funcionar.') && novoLinkLolis()} className="text-xs font-semibold text-slate-400 hover:text-red-500">
+            trocar link
+          </button>
+        </div>
+      ) : (
+        <button onClick={novoLinkLolis} className="rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white">Criar o link da Lolis</button>
+      )}
+    </section>
   );
 }

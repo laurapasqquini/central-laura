@@ -10,6 +10,7 @@ import Gralha from './pages/Gralha';
 import Etapas from './pages/Etapas';
 import Relatorios from './pages/Relatorios';
 import Plano from './pages/Plano';
+import LolisPublica from './pages/LolisPublica';
 import { Revisao } from './components/Revisao';
 import { House, Target, Trophy, ShoppingBag, Users, BarChart3, Repeat, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
 
@@ -162,6 +163,10 @@ export default function App() {
     const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => data.subscription.unsubscribe();
   }, []);
+
+  // Página da Lolis: link secreto, sem login (…/#lolis=TOKEN)
+  const tokenLolis = (location.hash.match(/^#lolis=([a-f0-9]{20,})/) || [])[1];
+  if (tokenLolis) return <LolisPublica token={tokenLolis} />;
 
   // Só no computador de desenvolvimento: localhost:5190/#demo abre sem login, para testes.
   if (import.meta.env.DEV && location.hash === '#demo')

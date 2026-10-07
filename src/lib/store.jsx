@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
-import { buildAgenda } from './engine';
+import { buildAgenda, dadosPaginaLolis } from './engine';
 import { INDICADORES_PADRAO } from './chefes';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
@@ -244,7 +244,17 @@ const saveAgenda = (userId, state) =>
     .from('central_state')
     .update({ agenda: buildAgenda(state) })
     .eq('user_id', userId)
-    .then(() => {}, () => {});
+    .then(() => {}, () => {})
+    .then(() => salvarPaginaLolis(state));
+
+// Página da Lolis (link sem login): publica o dia dela sempre que a central salva.
+const salvarPaginaLolis = (state) =>
+  state.lolisToken
+    ? supabase
+        .from('lolis_pagina')
+        .upsert({ token: state.lolisToken, dados: dadosPaginaLolis(state), updated_at: new Date().toISOString() })
+        .then(() => {}, () => {})
+    : null;
 
 export function StoreProvider({ user, children }) {
   const [state, setState] = useState(load);
@@ -499,6 +509,13 @@ export function StoreProvider({ user, children }) {
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
       // Plano: iniciativas, radar descartado, metas do mês e números da semana
+      // link da Página da Lolis (novo link = o antigo para de funcionar)
+      novoLinkLolis: () =>
+        setState((s) => {
+          const token = Array.from(crypto.getRandomValues(new Uint8Array(18)), (b) => b.toString(16).padStart(2, '0')).join('');
+          if (s.lolisToken) supabase.from('lolis_pagina').delete().eq('token', s.lolisToken).then(() => {}, () => {});
+          return { ...s, lolisToken: token };
+        }),
       setPlano: (fn) => setState((s) => ({ ...s, plano: fn({ iniciativas: [], ocultos: [], metas: {}, numeros: {}, ...(s.plano || {}) }) })),
       // contas fixas pessoais (nome, valor, dia do vencimento)
       addConta: (c) => setState((s) => ({ ...s, contas: [...(s.contas || []), { id: uid(), ativo: true, ...c }] })),
