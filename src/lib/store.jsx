@@ -585,6 +585,8 @@ export function StoreProvider({ user, children }) {
 
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
       // Plano: iniciativas, radar descartado, metas do mês e números da semana
+      // links dos modelos do Canva da Lolis (6x0, vouchers)
+      setCanva: (id, url) => setState((s) => ({ ...s, canva: { ...(s.canva || {}), [id]: url.trim() } })),
       // frase do parabéns do sorteio diário, por cidade|esporte|dia (vazio = frase automática)
       setFraseSorteio: (chave, texto) =>
         setState((s) => {

@@ -231,6 +231,7 @@ function Mensagem({ b, feito, onMarcar, semCopiar }) {
         <div className="min-w-0 flex-1 text-sm font-semibold text-slate-700">{b.linha}</div>
         {!semCopiar && <Copiar texto={b.texto} />}
       </div>
+      {b.canva && <BotaoCanva c={b.canva} />}
       <p className={`text-sm ${semCopiar ? 'font-medium text-amber-800' : 'whitespace-pre-wrap rounded-xl bg-[#e7ffdb] p-3 text-slate-800'}`}>{b.texto}</p>
     </div>
   );
@@ -244,7 +245,17 @@ function Tarefa({ t, feito, onMarcar }) {
         {t.titulo}
         {t.era && <span className="ml-1 text-xs text-red-500">(era {fmtCurto(t.era)})</span>}
       </span>
+      {t.canva && <span className="ml-auto shrink-0"><BotaoCanva c={t.canva} /></span>}
     </div>
+  );
+}
+
+// Abre o modelo do Canva desta tarefa (link colado pela Laura)
+function BotaoCanva({ c }) {
+  return (
+    <a href={c.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1 text-xs font-bold text-white hover:bg-violet-700">
+      🎨 Abrir modelo no Canva
+    </a>
   );
 }
 

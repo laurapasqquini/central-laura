@@ -674,6 +674,17 @@ export function sugerirBaixas(state, date, texto) {
 }
 
 // ── Página da Lolis (link sem login): o dia dela de hoje e do próximo dia útil ──
+// Modelos do Canva que a Lolis usa (a Laura cola os links em Lolis › Modelos do Canva)
+export const MODELOS_CANVA = [
+  { id: '6x0', nome: 'Arte dos 6x0', re: /6\s*[x×]\s*0/i },
+  { id: 'burgo', nome: 'Voucher Burgo', re: /burgo/i },
+  { id: 'jacare', nome: 'Voucher Jacaré Vermelho', re: /jacar[eé]/i },
+];
+const canvaPara = (state, texto) => {
+  const m = MODELOS_CANVA.find((x) => x.re.test(texto) && (state.canva || {})[x.id]);
+  return m ? { nome: m.nome, url: state.canva[m.id] } : null;
+};
+
 export function dadosPaginaLolis(state, ref = today()) {
   const f = { area: 'all', who: 'lolis' };
   const dias = [];
@@ -684,9 +695,9 @@ export function dadosPaginaLolis(state, ref = today()) {
     const tarefas = buildDay(state, d, f)
       .filter((x) => x.kind !== 'marco')
       .sort((a, b) => ordem(a) - ordem(b))
-      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done }));
+      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title) }));
     const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date })) : [];
-    const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto }) => ({ key, tipo, linha, texto }));
+    const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto }) => ({ key, tipo, linha, texto, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
     const posts = postsSorteio(state, d).map(({ grupo, anuncio, parabens, ganhador }) => ({ grupo, anuncio, parabens, ganhador }));
     dias.push({ date: d, tarefas, atrasadas, brindes, posts });
   }

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, MODELOS_CANVA } from '../lib/engine';
 import { today, addDays } from '../lib/dates';
 import { ItemRow, Section, Empty, TaskModal, inputCls } from '../components/ui';
 
@@ -40,6 +40,7 @@ export default function Lolis() {
 
       <HojeComLolis />
       <LinkLolis />
+      <ModelosCanva />
       <FrasesSorteio />
 
       {late.length > 0 && (
@@ -217,6 +218,25 @@ function FrasesSorteio() {
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+// Links dos modelos do Canva: aparecem como botão nas tarefas da página da Lolis
+function ModelosCanva() {
+  const { state, setCanva } = useStore();
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">🎨 Modelos do Canva</h2>
+      <p className="text-xs text-slate-500">Cole o link de cada modelo. Na página da Lolis, a tarefa ganha o botão "Abrir modelo no Canva".</p>
+      <div className="space-y-2">
+        {MODELOS_CANVA.map((m) => (
+          <label key={m.id} className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="w-48 shrink-0 font-medium text-slate-700">{m.nome}</span>
+            <input className={`${inputCls} min-w-0 flex-1`} placeholder="https://www.canva.com/design/..." value={(state.canva || {})[m.id] || ''} onChange={(e) => setCanva(m.id, e.target.value)} />
+          </label>
+        ))}
+      </div>
     </section>
   );
 }
