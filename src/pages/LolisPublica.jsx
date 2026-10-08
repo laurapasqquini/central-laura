@@ -1,6 +1,7 @@
 import { Component, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { today, fmtLongo, fmtCurto, relativo } from '../lib/dates';
+import { gerarVoucher, modeloVoucher } from '../lib/voucher';
 
 // Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
 // O que ela marca (feito / não consegui + nota) vai para a central da Laura.
@@ -221,7 +222,7 @@ function Dia({ dia, andamento, token }) {
           {dia.posts.length > 0 ? (
             <Secao titulo="🎾 Sorteios de hoje" dica="Assim que chegar: 1) anúncio no grupo e no Instagram, 2) sorteio no Hub, 3) parabéns no grupo e as mensagens no privado.">
               {dia.posts.map((p) => (
-                <Post key={p.grupo} p={p} feito={feitos.includes(chaveSorteio(p))} marca={marcas[chaveSorteio(p)]} onMarcar={() => marcar(chaveSorteio(p))} />
+                <Post key={p.grupo} p={p} data={dia.date} feito={feitos.includes(chaveSorteio(p))} marca={marcas[chaveSorteio(p)]} onMarcar={() => marcar(chaveSorteio(p))} />
               ))}
             </Secao>
           ) : (
@@ -242,7 +243,7 @@ function Dia({ dia, andamento, token }) {
 }
 
 // Um sorteio do dia: à esquerda as mensagens do grupo; à direita, no privado, ganhador e apoiador
-function Post({ p: post, feito, marca, onMarcar }) {
+function Post({ p: post, data, feito, marca, onMarcar }) {
   // dados publicados por uma versão antiga da central podem não ter patrocinadores/prazo
   const p = { titulo: post.grupo, patrocinadores: [], ...post };
   const [nome, setNome] = useState(p.ganhador || '');
@@ -309,7 +310,10 @@ function Post({ p: post, feito, marca, onMarcar }) {
           <Texto rotulo="Mensagem para o ganhador" texto={msgGanhador} />
           <div className="flex flex-wrap gap-2">
             <BotaoWhats tel={p.telefoneGanhador} texto={msgGanhador} />
-            {voucher && <BotaoCanva c={voucher.canva} />}
+            {p.patrocinadores.filter((x) => modeloVoucher(x.nome)).map((x) => (
+              <BotaoVoucher key={x.nome} patrocinador={x.nome} nome={nome} data={data} />
+            ))}
+            {voucher && !modeloVoucher(voucher.nome) && <BotaoCanva c={voucher.canva} />}
           </div>
           {p.patrocinadores.filter((x) => x.regra && !avisa(x)).map((x) => (
             <p key={`r-${x.nome}`} className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">{x.nome}: {x.regra}</p>
@@ -408,6 +412,29 @@ function Tarefa({ t, feito, marca, onMarcar }) {
       </span>
       {t.canva && <span className="shrink-0"><BotaoCanva c={t.canva} /></span>}
     </div>
+  );
+}
+
+// Voucher pronto em PDF (Burgo, Jacaré): modelo do Canva + nome do ganhador + data do sorteio
+function BotaoVoucher({ patrocinador, nome, data }) {
+  const [gerando, setGerando] = useState(false);
+  const semNome = !nome.trim();
+  return (
+    <button
+      disabled={semNome || gerando}
+      title={semNome ? 'Preencha o nome do ganhador' : ''}
+      onClick={async () => {
+        setGerando(true);
+        try {
+          await gerarVoucher(patrocinador, nome, data);
+        } finally {
+          setGerando(false);
+        }
+      }}
+      className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1 text-xs font-bold text-white hover:bg-violet-700 disabled:opacity-40"
+    >
+      {gerando ? 'Gerando…' : `📄 Baixar voucher ${modeloVoucher(patrocinador).nome} (PDF)`}
+    </button>
   );
 }
 
