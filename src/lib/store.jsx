@@ -14,7 +14,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 21,
+    version: 22,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -227,6 +227,10 @@ function migrate(s) {
   if (s.version < 21) {
     const t = (due) => ({ ...tarefa('Conferir as duplas do Beach Masculino de Santa Fé (começa domingo, 11/10)', due, 'lolis'), urgent: true });
     s = { ...s, version: 21, tasks: [t('2026-10-07'), t('2026-10-08'), t('2026-10-09'), ...s.tasks] };
+  }
+  // v22: aviso de brindes de quinta ficou repetido (o sorteio diário já manda local, prazo, lembrete e conferência)
+  if (s.version < 22) {
+    s = { ...s, version: 22, routines: s.routines.filter((r) => !/^Avisar ganhadores dos brindes/.test(r.title)) };
   }
   return s;
 }

@@ -19,7 +19,6 @@ export const seedRoutines = () => [
   r('Conferir WOs e pedidos de substituição', 'lolis', 'weekly', { weekday: 2 }),
   r('Conferir os 6x0 novos e avisar os ganhadores', 'lolis', 'weekly', { weekday: 3 }),
   r('Sorteio semanal de brindes (só quem está em dia)', 'laura', 'weekly', { weekday: 4 }),
-  r('Avisar ganhadores dos brindes: local e prazo de 7 dias', 'lolis', 'weekly', { weekday: 4 }),
   r('Lembrar no grupo: licenciamento até domingo 19h59', 'lolis', 'weekly', { weekday: 5 }),
   r('Revisar inadimplentes e o placar da semana no Hub', 'laura', 'weekly', { weekday: 5 }),
   r('Checar a retirada dos brindes da semana passada', 'lolis', 'weekly', { weekday: 5 }),
