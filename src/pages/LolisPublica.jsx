@@ -268,6 +268,10 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
     '',
     `🎁 Seu prêmio: ${premios}`,
     ...(retirada.length ? [`📍 ${retirada.join(' · ')}`] : []),
+    // retirada que depende de combinar com alguém (receber em casa, entrar em contato...): vai o contato do patrocinador
+    ...p.patrocinadores
+      .filter((x) => x.contato?.trim() && x.telefone && /contato|casa|combin|endere|entrega/i.test(x.local || ''))
+      .map((x) => `📞 Para combinar, fale com ${nomeProprio(x.contato)} (${x.nome}) no WhatsApp: ${x.telefone}${linkWhats(x.telefone, '') ? ` · ${linkWhats(x.telefone, '').replace('?text=', '')}` : ''}`),
     `⏱ Você tem 7 dias para solicitar: até ${prazo}.`,
     ...(voucher ? ['', 'Segue o seu voucher 👇'] : []),
     '',
