@@ -446,7 +446,9 @@ export function StoreProvider({ user, children }) {
             const a = abertas.get(chave(t.title));
             if (a) {
               abertas.delete(chave(t.title));
-              return a.prazo && a.prazo !== t.due && !t.done ? { ...t, due: a.prazo } : t;
+              const notas = a.descricao ? `${a.descricao}\n\nVeio do Hub (Atividades › Minha equipe › Lolis)` : t.notes;
+              const muda = (a.prazo && a.prazo !== t.due && !t.done) || notas !== t.notes;
+              return muda ? { ...t, due: a.prazo && !t.done ? a.prazo : t.due, notes: notas } : t;
             }
             return t.done ? t : { ...t, done: true, doneAt: dia, notes: `${t.notes ? `${t.notes}\n` : ''}Saiu de "em aberto" no Hub em ${dia.split('-').reverse().join('/')}` };
           });
@@ -462,7 +464,7 @@ export function StoreProvider({ user, children }) {
             done: false,
             createdAt: dia,
             postponed: 0,
-            notes: 'Veio do Hub (Atividades › Minha equipe › Lolis)',
+            notes: `${a.descricao ? `${a.descricao}\n\n` : ''}Veio do Hub (Atividades › Minha equipe › Lolis)`,
           }));
           tasks = [...novas, ...tasks];
           s = { ...s, tasks, hubLolisEm: dia };

@@ -715,6 +715,9 @@ const canvaPara = (state, texto) => {
   return m ? { nome: m.nome, url: state.canva[m.id] } : null;
 };
 
+// texto da tarefa para a Lolis (sem a linha de origem que a central acrescenta)
+const detalheTarefa = (x) => (x.kind === 'task' && x.notes ? x.notes.replace(/\n*Veio do Hub \(Atividades › Minha equipe › Lolis\)$/, '').trim() : '');
+
 export function dadosPaginaLolis(state, ref = today()) {
   const f = { area: 'all', who: 'lolis' };
   const dias = [];
@@ -725,8 +728,8 @@ export function dadosPaginaLolis(state, ref = today()) {
     const tarefas = buildDay(state, d, f)
       .filter((x) => x.kind !== 'marco')
       .sort((a, b) => ordem(a) - ordem(b))
-      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title) }));
-    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date })) : [];
+      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title), detalhe: detalheTarefa(x) }));
+    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x) })) : [];
     const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto, sorteio, prazo, telefone }) => ({ key, tipo, linha, texto, sorteio, prazo, telefone, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
     const posts = postsSorteio(state, d);
     dias.push({ date: d, tarefas, atrasadas, brindes, posts });

@@ -386,15 +386,27 @@ function Mensagem({ b, feito, marca, onMarcar, semCopiar }) {
 }
 
 function Tarefa({ t, feito, marca, onMarcar }) {
+  const [verTexto, setVerTexto] = useState(false);
   return (
     <div className={`flex items-start gap-3 rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200/70 ${feito ? 'opacity-50' : ''}`}>
       <Marca feito={feito} marca={marca} onClick={onMarcar} />
-      <span className={`text-[15px] ${feito ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
-        {t.titulo}
-        {t.era && <span className="ml-1 text-xs text-red-500">(era {fmtCurto(t.era)})</span>}
+      <span className="min-w-0 flex-1">
+        <span className={`text-[15px] ${feito ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+          {t.titulo}
+          {t.era && <span className="ml-1 text-xs text-red-500">(era {fmtCurto(t.era)})</span>}
+        </span>
         <Nota marca={marca} />
+        {/* o que está escrito na tarefa (ex.: o recado completo que veio do Hub) */}
+        {t.detalhe && (
+          <>
+            <button onClick={() => setVerTexto(!verTexto)} className="mt-1 block text-xs font-semibold text-indigo-600">
+              {verTexto ? '▲ esconder detalhes' : '▼ ver detalhes'}
+            </button>
+            {verTexto && <span className="mt-1.5 block whitespace-pre-wrap rounded-lg bg-slate-50 p-2.5 text-sm text-slate-700">{t.detalhe}</span>}
+          </>
+        )}
       </span>
-      {t.canva && <span className="ml-auto shrink-0"><BotaoCanva c={t.canva} /></span>}
+      {t.canva && <span className="shrink-0"><BotaoCanva c={t.canva} /></span>}
     </div>
   );
 }

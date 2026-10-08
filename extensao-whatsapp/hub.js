@@ -252,12 +252,45 @@ function lerEquipeLolis() {
   return { dia: hoje.toLocaleDateString('sv-SE'), abertas };
 }
 
+// Descrição de cada tarefa em aberto: abre "Detalhes da tarefa" (clicando no título), lê o texto e fecha.
+// Fica guardada na extensão, para não abrir de novo a mesma tarefa.
+let lendoDetalhes = false;
+async function comDetalhes(n) {
+  const { descEquipe = {} } = await chrome.storage.local.get('descEquipe');
+  if (!lendoDetalhes) {
+    lendoDetalhes = true;
+    for (const a of n.abertas) {
+      if (descEquipe[a.titulo] !== undefined) continue;
+      const span = [...document.querySelectorAll('main span, main button')].find((e) => e.textContent.trim() === a.titulo);
+      const botao = span?.closest('button') || span;
+      if (!botao) continue;
+      botao.click(); // abre os detalhes (só leitura)
+      await new Promise((r) => setTimeout(r, 900));
+      const janela = [...document.querySelectorAll('[role=dialog], .fixed')].find((d) => /Detalhes da tarefa/.test(d.innerText));
+      if (janela) {
+        const L = janela.innerText.split('\n').map((s) => s.trim()).filter(Boolean);
+        const ini = L.findIndex((l) => l === a.titulo);
+        const fim = L.findIndex((l, i) => i > ini && l === 'Status');
+        descEquipe[a.titulo] = ini >= 0 ? L.slice(ini + 1, fim > ini ? fim : undefined).join('\n') : '';
+      } else descEquipe[a.titulo] = '';
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); // fecha
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    // guarda só as das tarefas que ainda estão em aberto
+    for (const k of Object.keys(descEquipe)) if (!n.abertas.some((a) => a.titulo === k)) delete descEquipe[k];
+    await chrome.storage.local.set({ descEquipe });
+    lendoDetalhes = false;
+  }
+  return { ...n, abertas: n.abertas.map((a) => ({ ...a, descricao: descEquipe[a.titulo] || '' })) };
+}
+
 async function rodarAutoEquipe() {
   for (let i = 0; i < 40; i++) {
     await new Promise((r) => setTimeout(r, 500));
     const n = lerEquipeLolis();
     if (n) {
-      chrome.runtime.sendMessage({ tipo: 'hub-lolis', dados: n }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
+      const completo = await comDetalhes(n);
+      chrome.runtime.sendMessage({ tipo: 'hub-lolis', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
     }
   }
@@ -269,7 +302,7 @@ async function tentar() {
   if (enviando || AUTO || AUTO_EQUIPE) return;
   if (/^\/atividades\/equipe/.test(location.pathname)) {
     const n = lerEquipeLolis();
-    if (n) mandar('hub-lolis', n, 'ultimoEquipe', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`);
+    if (n && !lendoDetalhes) comDetalhes(n).then((c) => mandar('hub-lolis', c, 'ultimoEquipe', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`));
     return;
   }
   if (/^\/beach/.test(location.pathname)) {
