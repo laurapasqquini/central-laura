@@ -7,7 +7,7 @@ import { gerarVoucher, modeloVoucher } from '../lib/voucher';
 // O que ela marca (feito / não consegui + nota) vai para a central da Laura.
 
 // quem recebe mensagem do ganhador (dados antigos não trazem isso: decide pelo nome)
-const avisa = (x) => x.avisar ?? /primor|bonna|olaia/i.test(x.nome);
+const avisa = (x) => x.avisar ?? /bonna|olaia/i.test(x.nome);
 
 const nomeProprio = (s) => {
   const w = s.trim().split(/\s+/)[0];
@@ -270,8 +270,8 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
     ...(retirada.length ? [`📍 ${retirada.join(' · ')}`] : []),
     // retirada que depende de combinar com alguém (receber em casa, entrar em contato...): vai o contato do patrocinador
     ...p.patrocinadores
-      .filter((x) => x.contato?.trim() && x.telefone && /contato|casa|combin|endere|entrega/i.test(x.local || ''))
-      .map((x) => `📞 Para combinar, fale com ${nomeProprio(x.contato)} (${x.nome}) no WhatsApp: ${x.telefone}${linkWhats(x.telefone, '') ? ` · ${linkWhats(x.telefone, '').replace('?text=', '')}` : ''}`),
+      .filter((x) => x.contato?.trim() && x.telefone && (x.contatoAtleta ?? /bonna|olaia/i.test(x.nome)))
+      .map((x) => `📞 Entre em contato com ${nomeProprio(x.contato)} (${x.nome}) ${x.instrucao || (/olaia/i.test(x.nome) ? 'para fazer o pedido da sua marmita' : 'para combinar a retirada')}: ${x.telefone}${linkWhats(x.telefone, '') ? ` · ${linkWhats(x.telefone, '').replace('?text=', '')}` : ''}`),
     `⏱ Você tem 7 dias para solicitar: até ${prazo}.`,
     ...(voucher ? ['', 'Segue o seu voucher 👇'] : []),
     '',

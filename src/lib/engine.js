@@ -126,6 +126,7 @@ export function buildDay(state, date, filter) {
     if (it) routines.push(it);
   }
   routines.push(...contasDoDia(state, date));
+  if (filter.who !== 'lolis') routines.push(...avisosLaura(state, date));
   for (const x of routines) if (/^Planejar a próxima semana/.test(x.title)) x.acao = 'revisao';
   const marcos = state.marcos
     .filter((m) => m.date === date)
@@ -525,7 +526,9 @@ export function postsSorteio(state, date) {
       patrocinadores: pats.map((x) => ({
         nome: tituloBonito(x.nome),
         premio: premioComNome(x),
-        local: x.local || '',
+        local: regraDe(x.nome).local || x.local || '',
+        contatoAtleta: !!regraDe(x.nome).contatoAtleta,
+        instrucao: regraDe(x.nome).instrucao || '',
         contato: x.contato || '',
         telefone: x.telefone || '',
         regra: regraPatrocinador(x.nome),
@@ -556,15 +559,19 @@ function blocoPosts(state, date) {
 }
 
 // O que fazer com cada patrocinador quando sai o ganhador (combinado pela Laura)
+// Regras de cada patrocinador (combinadas com a Laura em 08/10):
+// regra = o que a Lolis faz · avisar = a Lolis manda mensagem ao patrocinador · contatoAtleta = o ganhador recebe o contato dele
+// local = onde retirar (sobrepõe o texto do Hub) · laura = quem avisa é a Laura (Primor: o Leo gera o voucher)
 const REGRAS_PATROCINADOR = [
-  [/primor/i, 'Mandar o nome do ganhador no privado do dono da Primor.', true],
-  [/bonna/i, 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', true],
-  [/olaia/i, 'Avisar a Olaia Grill no privado quem ganhou.', true],
-  [/burgo|jacar[eé]/i, 'Fazer o voucher no Canva e mandar no privado do ganhador.', false],
+  { re: /primor/i, regra: 'A Laura manda o nome do ganhador para o Leo, que gera o voucher.', laura: true, local: 'o voucher chega por aqui em breve' },
+  { re: /bonna/i, regra: 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para combinar a retirada da sua pizza' },
+  { re: /olaia/i, regra: 'Avisar a Olaia Grill no privado quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para fazer o pedido da sua marmita' },
+  { re: /burgo|jacar[eé]/i, regra: 'Fazer o voucher e mandar no privado do ganhador.' },
+  { re: /vamo|cristal|enara/i, local: 'Retirada no QG da RANKEN' },
 ];
-// só esses patrocinadores recebem mensagem (os outros não precisam ser avisados)
-const avisarPatrocinador = (p = '') => !!REGRAS_PATROCINADOR.find(([re]) => re.test(p))?.[2];
-const regraPatrocinador = (p = '') => REGRAS_PATROCINADOR.find(([re]) => re.test(p))?.[1] || '';
+const regraDe = (p = '') => REGRAS_PATROCINADOR.find((r) => r.re.test(p)) || {};
+const avisarPatrocinador = (p) => !!regraDe(p).avisar;
+const regraPatrocinador = (p) => regraDe(p).regra || '';
 
 function blocoBrindes(itens) {
   const acoes = itens.filter((x) => x.tipo === 'acao');
@@ -735,4 +742,31 @@ export function dadosPaginaLolis(state, ref = today()) {
     dias.push({ date: d, tarefas, atrasadas, brindes, posts });
   }
   return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title) };
+}
+
+// ── Patrocinadores que a própria Laura avisa (Primor: o Leo gera o voucher com o nome do ganhador) ──
+export function avisosLaura(state, date) {
+  if (!isWorkday(state, date)) return [];
+  const out = [];
+  for (const p of postsSorteio(state, date)) {
+    for (const x of p.patrocinadores.filter((y) => regraDe(y.nome).laura)) {
+      const id = `avisa-${x.nome}-${p.grupo}`.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-');
+      const quem = p.ganhador || '[nome do ganhador]';
+      const contato = x.contato ? x.contato.trim().split(/s+/)[0] : '';
+      out.push({
+        key: `r:${id}:${date}`,
+        kind: 'routine',
+        id,
+        title: `Mandar para ${contato || 'o patrocinador'} (${x.nome}) o nome do ganhador · ${p.grupo}${p.ganhador ? '' : ' (o nome chega quando a Lolis fizer o sorteio)'}`,
+        area: 'ranken',
+        who: 'laura',
+        urgent: false,
+        date,
+        done: !!state.routineDone[`${id}:${date}`],
+        freq: 'calendario',
+        mensagem: `Oi${contato ? `, ${contato[0].toUpperCase() + contato.slice(1).toLowerCase()}` : ''}! Tudo bem? 😊 O(a) ganhador(a) do sorteio diário da RANKEN de hoje (${p.titulo}) foi ${quem}. Pode gerar o voucher do ${x.premio}? Obrigada! 💚🎾`,
+      });
+    }
+  }
+  return out;
 }
