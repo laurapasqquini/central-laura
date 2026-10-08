@@ -389,6 +389,15 @@ function mensagemSemanaLolis(state, date, late) {
 const PRAZO_BRINDE = 7;
 const diaNome = (d) => DIA_NOME[weekday(d)].toLowerCase();
 const capitaliza = (s) => (s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s);
+// Patrocinadores do sorteio em que a pessoa ganhou (Programação do Hub, pelo dia da semana, cidade e esporte)
+function programacaoDoGanhador(state, g) {
+  const local = semAcento(g.local || '');
+  const p = Object.values(state.programacao || {}).find((x) => local.includes(semAcento(x.cidade)) && local.includes(semAcento(x.esporte).split(' ')[0]));
+  const pats = p?.dias?.[DIA_NOME[weekday(g.data)]]?.patrocinadores;
+  // só confia se o patrocinador que aparece no Hub está no dia
+  return pats?.length && pats.some((x) => semAcento(x.nome) === semAcento(g.patrocinador || '')) ? pats : null;
+}
+
 export function brindesDoDia(state, date) {
   const out = [];
   for (const [id, g] of Object.entries(state.ganhadores || {})) {
@@ -398,7 +407,13 @@ export function brindesDoDia(state, date) {
     if (date !== lembrete && date !== conferir && date !== acao) continue;
     const prazo = addDays(g.data, PRAZO_BRINDE);
     const nome = capitaliza((g.nome || '').trim().split(/\s+/)[0]);
-    const premio = [g.premio, g.patrocinador && `(${g.patrocinador})`].filter(Boolean).join(' ');
+    // a lista de ganhadores do Hub só mostra o 1º prêmio ("+1" esconde o resto):
+    // o prêmio completo vem da Programação daquele dia, na cidade e esporte do ganhador
+    const doDia = programacaoDoGanhador(state, g);
+    const varios = (doDia?.length || 0) > 1 || !!g.extra;
+    const premio = doDia
+      ? doDia.map((x) => premioComNome(x)).join(' + ')
+      : [g.premio, g.patrocinador && `(${g.patrocinador})`, g.extra ? '+ outro prêmio (confira no Hub)' : ''].filter(Boolean).join(' ');
     const linha = [g.nome, g.local, premio].filter(Boolean).join(' · ');
     // no dia do sorteio: o que cada patrocinador precisa (avisar o dono, voucher no Canva...)
     if (date === acao) {
@@ -415,7 +430,7 @@ export function brindesDoDia(state, date) {
         telefone: g.telefone || '',
         title: `Lembrete de brinde: ${g.nome}`,
         linha,
-        texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que o brinde que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, pode ser solicitado até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁`,
+        texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁`,
       });
     else if (date === conferir)
       out.push({
@@ -426,7 +441,7 @@ export function brindesDoDia(state, date) {
         telefone: g.telefone || '',
         title: `Conferir brinde: ${g.nome}`,
         linha,
-        texto: `Oi, ${nome}! E aí, conseguiu retirar o seu brinde do sorteio diário (${premio})? Deu tudo certo? 😊`,
+        texto: `Oi, ${nome}! E aí, conseguiu retirar ${varios ? 'os seus brindes' : 'o seu brinde'} do sorteio diário (${premio})? Deu tudo certo? 😊`,
       });
   }
   return out.sort((a, b) => a.linha.localeCompare(b.linha));
