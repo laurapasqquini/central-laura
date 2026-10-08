@@ -302,7 +302,7 @@ async function tentar() {
   if (enviando || AUTO || AUTO_EQUIPE) return;
   if (/^\/atividades\/equipe/.test(location.pathname)) {
     const n = lerEquipeLolis();
-    if (n && !lendoDetalhes) comDetalhes(n).then((c) => mandar('hub-lolis', c, 'ultimoEquipe', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`));
+    if (n && !lendoDetalhes) comDetalhes(n).then((c) => mandar('hub-lolis', c, 'ultimoEquipe-v2', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`));
     return;
   }
   if (/^\/beach/.test(location.pathname)) {
