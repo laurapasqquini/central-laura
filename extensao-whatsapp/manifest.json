@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Central da Laura",
-  "version": "1.8",
+  "version": "1.9",
   "description": "Botão ➕ Central no WhatsApp Web e números do Beach Tênis do RANKEN Hub direto na Central da Laura.",
   "permissions": [
     "storage",
-    "contextMenus"
+    "contextMenus",
+    "alarms"
   ],
   "host_permissions": [
     "https://qkjqngddavxoqhnhbame.supabase.co/*"

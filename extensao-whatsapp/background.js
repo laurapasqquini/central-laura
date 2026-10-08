@@ -56,6 +56,7 @@ chrome.runtime.onMessage.addListener((msg, sender, responder) => {
     : msg.tipo === 'numeros' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Beach Tênis' }, 'numeros')
     : msg.tipo === 'ganhadores' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Sorteio Diário' }, 'ganhadores')
     : msg.tipo === 'programacao' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Programação' }, 'programacao')
+    : msg.tipo === 'hub-lolis' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Equipe (Lolis)' }, 'hub-lolis')
     : Promise.resolve();
   run.then((r) => responder({ ok: true, ...r }), (e) => responder({ ok: false, erro: e.message }));
   return true; // resposta assíncrona
@@ -78,4 +79,21 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   } catch (e) {
     chrome.tabs.sendMessage(tab.id, { tipo: 'aviso', texto: '⚠️ ' + e.message });
   }
+});
+
+// Todo dia útil, a partir das 13h25 (a Lolis entra 13h30): abre Atividades › Minha equipe › Lolis
+// numa aba em segundo plano, lê o que está em aberto com ela e fecha. Só no computador da Laura (logada).
+const HUB = 'https://ranken-financeiro.vercel.app';
+const garantirAlarme = () => chrome.alarms.create('equipeLolis', { periodInMinutes: 10, delayInMinutes: 1 });
+chrome.runtime.onInstalled.addListener(garantirAlarme);
+chrome.runtime.onStartup.addListener(garantirAlarme);
+chrome.alarms.onAlarm.addListener(async (a) => {
+  if (a.name !== 'equipeLolis') return;
+  const agora = new Date();
+  const dia = agora.toLocaleDateString('sv-SE');
+  if ([0, 6].includes(agora.getDay()) || agora.getHours() * 60 + agora.getMinutes() < 13 * 60 + 25) return;
+  const { sessao, autoEquipe } = await chrome.storage.local.get(['sessao', 'autoEquipe']);
+  if (!sessao || autoEquipe === dia) return;
+  await chrome.storage.local.set({ autoEquipe: dia });
+  chrome.tabs.create({ url: `${HUB}/atividades/equipe?pessoa=lolis&central=equipe`, active: false });
 });

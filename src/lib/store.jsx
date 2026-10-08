@@ -424,9 +424,48 @@ export function StoreProvider({ user, children }) {
           if (!p?.cidade || !p?.esporte || !p.dias) continue;
           s = { ...s, programacao: { ...(s.programacao || {}), [`${p.cidade}|${p.esporte}`]: { cidade: p.cidade, esporte: p.esporte, dias: p.dias, em: new Date(r.created_at).toLocaleDateString('sv-SE') } } };
         }
+        // tarefas em aberto da Lolis no Hub (Atividades › Minha equipe): viram tarefas dela aqui;
+        // as que saíram de "em aberto" (resolvidas ou repassadas no Hub) ganham baixa
+        for (const r of rows.filter((x) => x.conta === 'hub-lolis')) {
+          let d = null;
+          try {
+            d = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!Array.isArray(d?.abertas)) continue;
+          const chave = (t) => t.trim().toLowerCase();
+          const abertas = new Map(d.abertas.map((a) => [chave(a.titulo), a]));
+          const dia = d.dia || today();
+          let tasks = s.tasks.map((t) => {
+            if (!t.hubLolis) return t;
+            const a = abertas.get(chave(t.title));
+            if (a) {
+              abertas.delete(chave(t.title));
+              return a.prazo && a.prazo !== t.due && !t.done ? { ...t, due: a.prazo } : t;
+            }
+            return t.done ? t : { ...t, done: true, doneAt: dia, notes: `${t.notes ? `${t.notes}\n` : ''}Saiu de "em aberto" no Hub em ${dia.split('-').reverse().join('/')}` };
+          });
+          const novas = [...abertas.values()].map((a) => ({
+            id: uid(),
+            title: a.titulo,
+            area: 'ranken',
+            who: 'lolis',
+            urgent: !!a.prazo && a.prazo < dia,
+            due: a.prazo || dia,
+            hub: true,
+            hubLolis: true,
+            done: false,
+            createdAt: dia,
+            postponed: 0,
+            notes: 'Veio do Hub (Atividades › Minha equipe › Lolis)',
+          }));
+          tasks = [...novas, ...tasks];
+          s = { ...s, tasks, hubLolisEm: dia };
+        }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores', 'programacao'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {

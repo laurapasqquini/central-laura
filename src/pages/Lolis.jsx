@@ -93,6 +93,11 @@ function LinkLolis() {
         ) : (
           <div className="text-red-600">✗ Nenhuma programação ainda: abra o Hub em Sorteio Diário › Programação, em cada cidade e esporte.</div>
         )}
+        {state.hubLolisEm ? (
+          <div className="text-emerald-700">✓ Tarefas em aberto da Lolis no Hub lidas em {state.hubLolisEm.split('-').reverse().slice(0, 2).join('/')}</div>
+        ) : (
+          <div className="text-slate-500">○ Tarefas da Lolis no Hub: chegam às 13h25 (ou ao abrir Atividades › Minha equipe › Lolis)</div>
+        )}
         {state.ganhadoresEm ? (
           <div className="text-emerald-700">✓ Ganhadores atualizados em {state.ganhadoresEm.split('-').reverse().slice(0, 2).join('/')}</div>
         ) : (

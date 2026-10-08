@@ -155,7 +155,7 @@ const AUTO = new URLSearchParams(location.search).get('central') === 'auto';
 const hojeISO = () => new Date().toLocaleDateString('sv-SE');
 
 async function agendarAuto() {
-  if (AUTO || /^\/sorteio/.test(location.pathname)) return;
+  if (AUTO || AUTO_EQUIPE || /^\/sorteio/.test(location.pathname)) return;
   const { autoGanhadores } = await chrome.storage.local.get('autoGanhadores');
   if (autoGanhadores === hojeISO()) return;
   await chrome.storage.local.set({ autoGanhadores: hojeISO() });
@@ -218,8 +218,60 @@ async function rodarAuto() {
 if (AUTO) rodarAuto();
 else setTimeout(agendarAuto, 3000);
 
+// ── Atividades › Minha equipe › Lolis: o que está "Ainda em aberto" com ela vira tarefa dela na Central ──
+// (às 13h25 a extensão abre esta tela sozinha, numa aba em segundo plano; também lê quando a Laura abre)
+const AUTO_EQUIPE = new URLSearchParams(location.search).get('central') === 'equipe';
+const MESES_PT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+function lerEquipeLolis() {
+  if (!/^\/atividades\/equipe/.test(location.pathname)) return null;
+  const L = linhasDaTela();
+  // só a Lolis, e só no dia de hoje (a tela deixa navegar para outros dias)
+  const cab = L.find((l) => /^Lolis · /.test(l));
+  if (!cab) return null;
+  const hoje = new Date();
+  const m = cab.match(/(\d{1,2}) de (\p{L}+)/u);
+  if (!m || +m[1] !== hoje.getDate() || MESES_PT.indexOf(m[2].toLowerCase()) !== hoje.getMonth()) return null;
+  const ini = L.findIndex((l) => /^Ainda em aberto/.test(l));
+  const fim = L.findIndex((l, i) => i > ini && /^Adiou$/.test(l));
+  if (ini < 0) return null;
+  const bloco = L.slice(ini + 1, fim > ini ? fim : undefined);
+  const abertas = [];
+  bloco.forEach((l, i) => {
+    if (/^\d+$/.test(l) || /^prazo /i.test(l) || (l === l.toUpperCase() && /[A-ZÀ-Ú]/.test(l) && !/[a-zà-ú]/.test(l))) return; // contagem, prazo, subtítulo
+    if (/^Nenhuma /.test(l)) return;
+    const p = (bloco[i + 1] || '').match(/^prazo (\d{2})\/(\d{2})/i);
+    let prazo = null;
+    if (p) {
+      let ano = hoje.getFullYear();
+      if (+p[2] - 1 < hoje.getMonth() - 6) ano++;
+      prazo = `${ano}-${p[2]}-${p[1]}`;
+    }
+    abertas.push({ titulo: l, prazo });
+  });
+  return { dia: hoje.toLocaleDateString('sv-SE'), abertas };
+}
+
+async function rodarAutoEquipe() {
+  for (let i = 0; i < 40; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    const n = lerEquipeLolis();
+    if (n) {
+      chrome.runtime.sendMessage({ tipo: 'hub-lolis', dados: n }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
+      return;
+    }
+  }
+  chrome.runtime.sendMessage({ tipo: 'fechar-aba' });
+}
+if (AUTO_EQUIPE) rodarAutoEquipe();
+
 async function tentar() {
-  if (enviando || AUTO) return;
+  if (enviando || AUTO || AUTO_EQUIPE) return;
+  if (/^\/atividades\/equipe/.test(location.pathname)) {
+    const n = lerEquipeLolis();
+    if (n) mandar('hub-lolis', n, 'ultimoEquipe', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`);
+    return;
+  }
   if (/^\/beach/.test(location.pathname)) {
     const n = lerBeach();
     if (n) mandar('numeros', n, 'ultimoHub', '✓ Números do Beach na Central');
