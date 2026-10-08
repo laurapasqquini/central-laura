@@ -529,6 +529,7 @@ export function postsSorteio(state, date) {
         contatoAtleta: !!regraDe(x.nome).contatoAtleta,
         instrucao: regraDe(x.nome).instrucao || '',
         pedeVoucher: !!regraDe(x.nome).pedeVoucher,
+        apelido: regraDe(x.nome).apelido || '',
         contato: x.contato || '',
         telefone: x.telefone || '',
         regra: regraPatrocinador(x.nome),
@@ -563,7 +564,7 @@ function blocoPosts(state, date) {
 // regra = o que a Lolis faz · avisar = a Lolis manda mensagem ao patrocinador · contatoAtleta = o ganhador recebe o contato dele
 // local = onde retirar (sobrepõe o texto do Hub) · laura = quem avisa é a Laura (Primor: o Leo gera o voucher)
 const REGRAS_PATROCINADOR = [
-  { re: /primor/i, regra: 'Mandar para o Leo o nome do ganhador: ele gera o voucher.', avisar: true, pedeVoucher: true, local: 'o voucher chega por aqui em breve' },
+  { re: /primor/i, regra: 'Mandar para o Leo o nome do ganhador: ele gera o voucher.', avisar: true, pedeVoucher: true, apelido: 'Leo', local: 'o voucher chega por aqui em breve' },
   { re: /bonna/i, regra: 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para combinar a retirada da sua pizza' },
   { re: /olaia/i, regra: 'Avisar a Olaia Grill no privado quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para fazer o pedido da sua marmita' },
   { re: /burgo|jacar[eé]/i, regra: 'Fazer o voucher e mandar no privado do ganhador.' },

@@ -262,7 +262,10 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
     if (feito) setAberto(false); // marcou como feito: recolhe
   }, [feito]);
   const msgApoiador = (x) =>
-    `Oi${x.contato?.trim() ? `, ${nomeProprio(x.contato)}` : ''}! Tudo bem? 😊 Passando pra avisar que o(a) ganhador(a) do sorteio diário da RANKEN de hoje (${p.titulo}) foi ${quem}, que vai retirar ${x.premio}. ${x.pedeVoucher ? 'Pode gerar o voucher? Obrigada! 💚🎾' : 'Obrigado pela parceria! 💚🎾'}`;
+    // Primor: mensagem curta e informal, só com o nome do ganhador (o Leo gera o voucher)
+    x.pedeVoucher
+      ? `Oii ${x.apelido || (x.contato?.trim() ? nomeProprio(x.contato) : '')}, tudo bem? Segue o nome do ganhador de hoje: ${quem} 💚`
+      : `Oi${x.contato?.trim() ? `, ${nomeProprio(x.contato)}` : ''}! Tudo bem? 😊 Passando pra avisar que o(a) ganhador(a) do sorteio diário da RANKEN de hoje (${p.titulo}) foi ${quem}, que vai retirar ${x.premio}. ${x.pedeVoucher ? 'Pode gerar o voucher? Obrigada! 💚🎾' : 'Obrigado pela parceria! 💚🎾'}`;
   const msgGanhador = [
     `Oi, ${primeiro}! Parabéns, você foi sorteado(a) hoje no sorteio diário da RANKEN (${p.titulo})! 🎉`,
     '',
