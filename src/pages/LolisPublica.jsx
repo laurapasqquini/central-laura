@@ -7,7 +7,7 @@ import { gerarVoucher, modeloVoucher } from '../lib/voucher';
 // O que ela marca (feito / não consegui + nota) vai para a central da Laura.
 
 // quem recebe mensagem do ganhador (dados antigos não trazem isso: decide pelo nome)
-const avisa = (x) => x.avisar ?? /bonna|olaia/i.test(x.nome);
+const avisa = (x) => x.avisar ?? /primor|bonna|olaia/i.test(x.nome);
 
 const nomeProprio = (s) => {
   const w = s.trim().split(/\s+/)[0];
@@ -262,7 +262,7 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
     if (feito) setAberto(false); // marcou como feito: recolhe
   }, [feito]);
   const msgApoiador = (x) =>
-    `Oi${x.contato?.trim() ? `, ${nomeProprio(x.contato)}` : ''}! Tudo bem? 😊 Passando pra avisar que o(a) ganhador(a) do sorteio diário da RANKEN de hoje (${p.titulo}) foi ${quem}, que vai retirar ${x.premio}. Obrigado pela parceria! 💚🎾`;
+    `Oi${x.contato?.trim() ? `, ${nomeProprio(x.contato)}` : ''}! Tudo bem? 😊 Passando pra avisar que o(a) ganhador(a) do sorteio diário da RANKEN de hoje (${p.titulo}) foi ${quem}, que vai retirar ${x.premio}. ${x.pedeVoucher ? 'Pode gerar o voucher? Obrigada! 💚🎾' : 'Obrigado pela parceria! 💚🎾'}`;
   const msgGanhador = [
     `Oi, ${primeiro}! Parabéns, você foi sorteado(a) hoje no sorteio diário da RANKEN (${p.titulo})! 🎉`,
     '',
