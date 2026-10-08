@@ -35,7 +35,7 @@ export async function gerarVoucher(patrocinador, ganhador, dataISO) {
   const blob = new Blob([await doc.save()], { type: 'application/pdf' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `VOUCHER ${modelo.nome} - ${nome}.pdf`;
+  a.download = `VOUCHER ${modelo.nome} - ${nome}.pdf`.normalize('NFD').replace(/[̀-ͯ]/g, ''); // sem acento: o Chrome se atrapalha para abrir
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 5000);
 }
