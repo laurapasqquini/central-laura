@@ -389,6 +389,31 @@ function mensagemSemanaLolis(state, date, late) {
 const PRAZO_BRINDE = 7;
 const diaNome = (d) => DIA_NOME[weekday(d)].toLowerCase();
 const capitaliza = (s) => (s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s);
+// Como retirar cada prêmio (para as mensagens ao ganhador): contato de quem combina a entrega
+// (Olaia, Bonna) ou o lugar de retirada (QG da RANKEN, unidade, anexo à Flow...)
+const whatsDe = (tel = '') => {
+  let d = tel.replace(/\D/g, '');
+  if (!d) return '';
+  if (!(d.startsWith('55') && d.length >= 12)) d = '55' + d;
+  if (d.length === 12 && /[6-9]/.test(d[4])) d = d.slice(0, 4) + '9' + d.slice(4); // celular antigo sem o 9
+  return `https://wa.me/${d}`;
+};
+export function comoRetirar(pats) {
+  if (!pats?.length) return '';
+  return pats
+    .map((x) => {
+      const r = regraDe(x.nome);
+      const nome = tituloBonito(x.nome);
+      const contato = (x.contato || '').trim().split(/\s+/)[0];
+      if (r.contatoAtleta && contato && x.telefone)
+        return `📞 ${nome}: fale com ${capitaliza(contato)} ${r.instrucao || 'para combinar a retirada'}: ${x.telefone} · ${whatsDe(x.telefone)}`;
+      const local = r.local || x.local;
+      return local ? `📍 ${nome}: ${local}` : '';
+    })
+    .filter(Boolean)
+    .join('\n');
+}
+
 // Patrocinadores do sorteio em que a pessoa ganhou (Programação do Hub, pelo dia da semana, cidade e esporte)
 function programacaoDoGanhador(state, g) {
   const local = semAcento(g.local || '');
@@ -430,7 +455,7 @@ export function brindesDoDia(state, date) {
         telefone: g.telefone || '',
         title: `Lembrete de brinde: ${g.nome}`,
         linha,
-        texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁`,
+        texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁${comoRetirar(doDia) ? `\n\n${comoRetirar(doDia)}` : ''}`,
       });
     else if (date === conferir)
       out.push({
