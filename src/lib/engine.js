@@ -76,7 +76,26 @@ const fromTask = (t, projects, state) => ({
   phase: t.phase,
   notes: t.notes,
   hub: !!t.hub,
+  ...cobrancaPix(t),
 });
+
+// Tarefa de Pix que vem do Hub ("Cobrar mensalidade Pix — Nome (Esporte) — vence em 08/10"):
+// ganha a mensagem padrão de cobrança com o primeiro nome da atleta (e o WhatsApp, se estiver na descrição)
+function cobrancaPix(t) {
+  const m = (t.title || '').match(/^Cobrar (mensalidade|renova[cç][aã]o) Pix\s*[—-]\s*([^—]+?)\s*(?:\([^)]*\))?\s*(?:[—-]\s*vence em (\d{2})\/(\d{2}))?\s*$/i);
+  if (!m) return {};
+  const primeiro = m[2].trim().split(/\s+/)[0];
+  const nome = primeiro[0].toUpperCase() + primeiro.slice(1).toLowerCase();
+  const hoje = today();
+  const venc = m[3] ? `${hoje.slice(0, 4)}-${m[4]}-${m[3]}` : hoje;
+  const oque = /renova/i.test(m[1]) ? 'a renovação do ranken' : 'a mensalidade do ranken';
+  const quando = venc === hoje ? 'venceu hoje' : venc < hoje ? `venceu dia ${m[3]}/${m[4]}` : `vence dia ${m[3]}/${m[4]}`;
+  const tel = ((t.notes || '').match(/(?:\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}-?\d{4}/) || [])[0] || '';
+  return {
+    mensagem: `Boa tardee ${nome}, tudo bem? Passando pra lembrar que ${oque} ${quando}.\nAssim que fizer o pagamento consegue me mandar o comprovante aqui por favorr?\n\nSegue a chave pix: contato@ranken.com.br`,
+    telefone: tel,
+  };
+}
 
 const fromRoutine = (r, date, routineDone) => ({
   key: `r:${r.id}:${date}`,
@@ -776,8 +795,8 @@ export function dadosPaginaLolis(state, ref = today()) {
     const tarefas = buildDay(state, d, f)
       .filter((x) => x.kind !== 'marco')
       .sort((a, b) => ordem(a) - ordem(b))
-      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title), detalhe: detalheTarefa(x) }));
-    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x) })) : [];
+      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title), detalhe: detalheTarefa(x), mensagem: x.kind === 'task' ? x.mensagem || '' : '', telefone: x.telefone || '' }));
+    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x), mensagem: x.mensagem || '', telefone: x.telefone || '' })) : [];
     const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto, sorteio, prazo, telefone }) => ({ key, tipo, linha, texto, sorteio, prazo, telefone, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
     const posts = postsSorteio(state, d);
     dias.push({ date: d, tarefas, atrasadas, brindes, posts });

@@ -407,6 +407,16 @@ function Tarefa({ t, feito, marca, onMarcar }) {
           {t.era && <span className="ml-1 text-xs text-red-500">(era {fmtCurto(t.era)})</span>}
         </span>
         <Nota marca={marca} />
+        {/* mensagem pronta (ex.: cobrança de Pix), com Copiar e WhatsApp */}
+        {t.mensagem && !feito && (
+          <span className="mt-2 block space-y-2 rounded-lg bg-[#e7ffdb] p-2.5">
+            <span className="block whitespace-pre-wrap text-sm text-slate-800">{t.mensagem}</span>
+            <span className="flex flex-wrap gap-2">
+              <Copiar texto={t.mensagem} />
+              <BotaoWhats tel={t.telefone} texto={t.mensagem} />
+            </span>
+          </span>
+        )}
         {/* o que está escrito na tarefa (ex.: o recado completo que veio do Hub) */}
         {t.detalhe && (
           <>
