@@ -45,26 +45,31 @@ export default function Gralha() {
         <Empty>Carregando catálogo…</Empty>
       ) : view.startsWith('contrato:') && (state.pedidos || []).some((p) => p.id === view.slice(9)) ? (
         <Contrato key={view} pedido={state.pedidos.find((p) => p.id === view.slice(9))} cat={cat} onVoltar={() => setView('pedidos')} />
+      ) : view.startsWith('editar:') && (state.pedidos || []).some((p) => p.id === view.slice(7)) ? (
+        <Novo key={view} cat={cat} pedido={state.pedidos.find((p) => p.id === view.slice(7))} onSaved={() => setView('pedidos')} />
       ) : view === 'novo' ? (
         <Novo cat={cat} onSaved={() => setView('pedidos')} />
       ) : (
-        <Pedidos cat={cat} onContrato={(id) => setView(`contrato:${id}`)} />
+        <Pedidos cat={cat} onContrato={(id) => setView(`contrato:${id}`)} onEditar={(id) => setView(`editar:${id}`)} />
       )}
     </div>
   );
 }
 
-function Novo({ cat, onSaved }) {
-  const { addPedido } = useStore();
+// Novo orçamento, ou edição de um pedido já salvo (pedido = o pedido a editar)
+function Novo({ cat, onSaved, pedido }) {
+  const { addPedido, updatePedido } = useStore();
   const [q, setQ] = useState('');
   const [aba, setAba] = useState('');
-  const [modo, setModo] = useState('qtd'); // qtd | tabela
-  const [itens, setItens] = useState([]);
-  const [cliente, setCliente] = useState('');
-  const [cidade, setCidade] = useState('');
-  const [frete, setFrete] = useState('');
-  const [desconto, setDesconto] = useState(''); // "10%" ou valor em R$
-  const [ativacao, setAtivacao] = useState('');
+  const [modo, setModo] = useState(pedido?.tipo || 'qtd'); // qtd | tabela
+  const [itens, setItens] = useState(() =>
+    (pedido?.itens || []).filter((it) => cat.produtos.some((p) => p.id === it.prodId)).map((it) => ({ key: crypto.randomUUID().slice(0, 6), ...it })),
+  );
+  const [cliente, setCliente] = useState(pedido?.cliente || '');
+  const [cidade, setCidade] = useState(pedido?.cidade || '');
+  const [frete, setFrete] = useState(pedido?.frete ? String(pedido.frete).replace('.', ',') : '');
+  const [desconto, setDesconto] = useState(pedido?.descontoTexto || ''); // "10%" ou valor em R$
+  const [ativacao, setAtivacao] = useState(pedido?.ativacao || '');
   const { state } = useStore();
   const ativacoes = useMemo(() => [...new Set((state.pedidos || []).map((p) => (p.ativacao || '').trim()).filter(Boolean))], [state.pedidos]);
   const [copied, setCopied] = useState(false);
@@ -96,7 +101,10 @@ function Novo({ cat, onSaved }) {
   };
 
   const salvar = () => {
-    addPedido({ cliente: cliente.trim() || 'Cliente sem nome', cidade, tipo: modo, itens: itens.map(({ prodId, qtd }) => ({ prodId, qtd })), frete: freteNum, total: tabela ? null : total, mensagem: msg, ativacao: ativacao.trim(), descontoTexto: desconto.trim(), desconto: tabela ? 0 : descontoR });
+    const dados = { cliente: cliente.trim() || 'Cliente sem nome', cidade, tipo: modo, itens: itens.map(({ prodId, qtd, precoManual }) => ({ prodId, qtd, ...(precoManual != null ? { precoManual } : {}) })), frete: freteNum, total: tabela ? null : total, mensagem: msg, ativacao: ativacao.trim(), descontoTexto: desconto.trim(), desconto: tabela ? 0 : descontoR };
+    // editando: atualiza o mesmo pedido (mantém a etapa e o histórico)
+    if (pedido) updatePedido(pedido.id, { ...dados, editadoEm: today() });
+    else addPedido(dados);
     onSaved();
   };
 
@@ -233,9 +241,16 @@ function Novo({ cat, onSaved }) {
             <pre className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded-2xl bg-[#e7ffdb] p-4 font-sans text-sm text-slate-800 shadow-sm ring-1 ring-emerald-100">{msg}</pre>
             <div className="grid grid-cols-2 gap-2">
               <button onClick={copy} className="rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white">{copied ? 'Copiado ✓' : 'Copiar mensagem'}</button>
-              <button onClick={salvar} className="rounded-xl bg-ink py-3 text-sm font-bold text-white">Salvar e acompanhar</button>
+              <button onClick={salvar} className="rounded-xl bg-ink py-3 text-sm font-bold text-white">{pedido ? 'Salvar alterações' : 'Salvar e acompanhar'}</button>
             </div>
-            <p className="px-1 text-xs text-slate-400">"Salvar e acompanhar" coloca o pedido no funil e cria o follow-up em 2 dias.</p>
+            {pedido ? (
+              <p className="px-1 text-xs text-slate-400">
+                Atualiza o pedido de {pedido.cliente}, sem mudar a etapa.
+                {pedido.contrato && <b className="text-amber-600"> O contrato já começado não muda sozinho: confira as quantidades e os preços nele.</b>}
+              </p>
+            ) : (
+              <p className="px-1 text-xs text-slate-400">"Salvar e acompanhar" coloca o pedido no funil e cria o follow-up em 2 dias.</p>
+            )}
           </>
         ) : (
           <Empty>Busque e adicione produtos. A mensagem aparece aqui, pronta para colar.</Empty>
@@ -288,7 +303,7 @@ function Ativacoes({ pedidos }) {
   );
 }
 
-function Pedidos({ onContrato }) {
+function Pedidos({ onContrato, onEditar }) {
   const { state, moveStage, deletePedido, setGralhaCfg } = useStore();
   const [open, setOpen] = useState(null);
   const pedidos = state.pedidos || [];
@@ -384,9 +399,14 @@ function Pedidos({ onContrato }) {
                     </div>
                   )}
                   {p.stage !== 'perdido' && (
-                    <button onClick={() => onContrato(p.id)} className="mt-2 rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
-                      📄 {p.contrato ? 'Continuar contrato' : 'Contrato'}
-                    </button>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <button onClick={() => onContrato(p.id)} className="rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
+                        📄 {p.contrato ? 'Continuar contrato' : 'Contrato'}
+                      </button>
+                      <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
+                        ✏️ Editar orçamento
+                      </button>
+                    </div>
                   )}
                   {open === p.id && (
                     <div className="mt-3 space-y-2">
