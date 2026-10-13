@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, MODELOS_CANVA } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica } from '../lib/engine';
 import { today, addDays } from '../lib/dates';
-import { ItemRow, Section, Empty, TaskModal, inputCls } from '../components/ui';
+import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../components/ui';
+import LolisPublica from './LolisPublica';
 
 export default function Lolis() {
   const { state } = useStore();
   const [editing, setEditing] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [vista, setVista] = useState('pagina');
   const f = { area: 'all', who: 'lolis' };
   const ref = today();
   const late = buildOverdue(state, f, ref);
@@ -38,9 +40,27 @@ export default function Lolis() {
         </button>
       </header>
 
+      <Segmented
+        value={vista}
+        onChange={setVista}
+        options={[
+          ['pagina', '👀 O que ela vê', 'bg-amber-500 text-white ring-transparent'],
+          ['gestao', '⚙️ Delegado, link e frases', 'bg-amber-500 text-white ring-transparent'],
+        ]}
+      />
+
+      {vista === 'pagina' ? (
+        state.lolisToken ? (
+          <div className="rounded-3xl bg-paper p-1 ring-1 ring-amber-200 sm:p-3">
+            <LolisPublica token={state.lolisToken} embutida />
+          </div>
+        ) : (
+          <Empty>Crie o link da Lolis em "Delegado, link e frases" para ver a página dela aqui.</Empty>
+        )
+      ) : (
+        <>
       <HojeComLolis />
       <LinkLolis />
-      <ModelosCanva />
       <FrasesSorteio />
 
       {late.length > 0 && (
@@ -59,6 +79,8 @@ export default function Lolis() {
         <Section title="Em andamento (sem data)" count={semData.length}>
           <div className="space-y-1.5">{semData.map((x) => <ItemRow key={x.key} item={x} onEdit={setEditing} />)}</div>
         </Section>
+      )}
+        </>
       )}
 
       {editing && <TaskModal id={editing} onClose={() => setEditing(null)} />}
@@ -250,21 +272,3 @@ function FrasesSorteio() {
   );
 }
 
-// Links dos modelos do Canva: aparecem como botão nas tarefas da página da Lolis
-function ModelosCanva() {
-  const { state, setCanva } = useStore();
-  return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">🎨 Modelos do Canva</h2>
-      <p className="text-xs text-slate-500">Cole o link de cada modelo. Na página da Lolis, a tarefa ganha o botão "Abrir modelo no Canva".</p>
-      <div className="space-y-2">
-        {MODELOS_CANVA.map((m) => (
-          <label key={m.id} className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="w-48 shrink-0 font-medium text-slate-700">{m.nome}</span>
-            <input className={`${inputCls} min-w-0 flex-1`} placeholder="https://www.canva.com/design/..." value={(state.canva || {})[m.id] || ''} onChange={(e) => setCanva(m.id, e.target.value)} />
-          </label>
-        ))}
-      </div>
-    </section>
-  );
-}

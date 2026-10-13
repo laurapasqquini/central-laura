@@ -31,7 +31,8 @@ class Protecao extends Component {
   }
 }
 
-export default function LolisPublica({ token }) {
+// embutida = dentro da central da Laura (aba Lolis): a mesma página, sem a moldura de tela cheia
+export default function LolisPublica({ token, embutida }) {
   const [dados, setDados] = useState(undefined);
   const [idx, setIdx] = useState(0);
 
@@ -49,19 +50,19 @@ export default function LolisPublica({ token }) {
     };
   }, [token]);
 
-  if (dados === undefined) return <Tela>Carregando…</Tela>;
-  if (!dados) return <Tela>Link inválido ou desatualizado. Peça o link novo para a Laura.</Tela>;
+  if (dados === undefined) return embutida ? <Caixa>Carregando a página da Lolis…</Caixa> : <Tela>Carregando…</Tela>;
+  if (!dados) return embutida ? <Caixa>Não consegui abrir a página dela. Tente "trocar link" em Delegado, link e frases.</Caixa> : <Tela>Link inválido ou desatualizado. Peça o link novo para a Laura.</Tela>;
 
   const hoje = today();
   const dias = (dados.dias || []).filter((d) => d.date >= hoje);
   const dia = dias[Math.min(idx, dias.length - 1)];
 
   return (
-    <div className="min-h-screen bg-paper">
-      <div className="mx-auto max-w-3xl space-y-5 px-4 py-6 sm:py-10">
+    <div className={embutida ? '' : 'min-h-screen bg-paper'}>
+      <div className={embutida ? 'space-y-5 p-2 sm:p-3' : 'mx-auto max-w-3xl space-y-5 px-4 py-6 sm:py-10'}>
         <header className="space-y-1">
-          <p className="text-sm font-medium text-slate-500">RANKEN · Página da Lolis</p>
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Oi, Lolis! 👋</h1>
+          <p className="text-sm font-medium text-slate-500">RANKEN · Página da Lolis{embutida && ' · exatamente o que ela vê agora'}</p>
+          {!embutida && <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Oi, Lolis! 👋</h1>}
           <p className="text-xs text-slate-400">Atualizado {relativo(dados.geradoEm.slice(0, 10), hoje)} às {new Date(dados.geradoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · a página se atualiza sozinha</p>
         </header>
 

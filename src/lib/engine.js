@@ -791,9 +791,10 @@ export const MODELOS_CANVA = [
   { id: 'burgo', nome: 'Voucher Burgo', re: /burgo/i },
   { id: 'jacare', nome: 'Voucher Jacaré Vermelho', re: /jacar[eé]/i },
 ];
+// as artes foram automatizadas: a página da Lolis não mostra mais os botões do Canva
+// eslint-disable-next-line no-unused-vars
 const canvaPara = (state, texto) => {
-  const m = MODELOS_CANVA.find((x) => x.re.test(texto) && (state.canva || {})[x.id]);
-  return m ? { nome: m.nome, url: state.canva[m.id] } : null;
+  return null;
 };
 
 // texto da tarefa para a Lolis (sem a linha de origem que a central acrescenta)
