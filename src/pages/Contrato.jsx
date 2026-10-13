@@ -55,7 +55,11 @@ export function lerResposta(txt) {
   return out;
 }
 
-const maiorNumero = (s) => Math.max(...(String(s || '').match(/\d+/g) || ['30']).map(Number));
+// Produtos sem grade de tamanhos: no contrato vão como "ÚNICO", já com a quantidade do orçamento
+const TAMANHO_UNICO = /bon[eé]|caneca|tirante|tatuagem|trof[eé]u|[oó]culos|bandana|bandeira|fl[aâ]mula|porta documento|ecobag|sacochila|toalha|gorro|avental/i;
+const ehUnico = (it) => it.tamanhos.length === 1 && it.tamanhos[0].tam === 'ÚNICO';
+
+const maiorNumero =(s) => Math.max(...(String(s || '').match(/\d+/g) || ['30']).map(Number));
 
 function contratoInicial(p, cat) {
   const itens = (p.itens || []).map((it) => {
@@ -71,7 +75,7 @@ function contratoInicial(p, cat) {
       personalizacao: prod.personalizacao || '',
       descPers: 'Conforme layout aprovado.',
       preco: it.precoManual ?? priceFor(prod, it.qtd || prod.minimo || 1).atual?.preco ?? 0,
-      tamanhos: TAMANHOS.map((tam) => ({ tam, qtd: '' })),
+      tamanhos: TAMANHO_UNICO.test(prod.nome || '') ? [{ tam: 'ÚNICO', qtd: String(it.qtd || '') }] : TAMANHOS.map((tam) => ({ tam, qtd: '' })),
     };
   });
   const prazo = Math.max(30, ...itens.map((i) => maiorNumero(cat.produtos.find((x) => x.id === i.prodId)?.prazo)));
@@ -385,7 +389,22 @@ function Item({ n, it, fotos, set, remover, addFotos, tiraFoto, prod }) {
 
       {/* Tamanhos */}
       <div className="space-y-1">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quantidade por tamanho</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Quantidade por tamanho</span>
+          <button
+            type="button"
+            onClick={() =>
+              set({
+                tamanhos: ehUnico(it)
+                  ? TAMANHOS.map((tam) => ({ tam, qtd: '' }))
+                  : [{ tam: 'ÚNICO', qtd: String(soma || it.qtdOrcada || '') }],
+              })
+            }
+            className="rounded-full px-2.5 py-0.5 text-xs font-semibold text-sky-600 ring-1 ring-sky-200"
+          >
+            {ehUnico(it) ? '↩ Usar grade de tamanhos' : 'Tamanho único'}
+          </button>
+        </div>
         <div className="flex flex-wrap items-end gap-2">
           {it.tamanhos.map((t, i) => (
             <label key={t.tam} className="w-14 text-center">
