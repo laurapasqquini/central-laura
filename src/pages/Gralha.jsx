@@ -221,7 +221,7 @@ function Novo({ cat, onSaved }) {
             <Row label="Produtos" value={brl(produtosTotal)} />
             {descontoR > 0 && <Row label={`Desconto${ativacao.trim() ? ` · ${ativacao.trim()}` : ''}`} value={`−${brl(descontoR)}`} />}
             <Row label="Total" value={brl(total)} strong />
-            <Row label="À vista (5% off nos produtos)" value={brl(aVista)} />
+            <Row label="Se pedirem desconto: à vista (5% off nos produtos)" value={brl(aVista)} />
           </div>
         )}
       </div>

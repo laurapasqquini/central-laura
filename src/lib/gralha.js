@@ -63,7 +63,8 @@ export function mensagemTabela({ cliente, cidade, itens, produtos, descontoTexto
     const d = String(descontoTexto).trim();
     out.push(`${rotuloDesconto(ativacao)} ${ehPorcentagem(d) ? `${d} nos produtos` : `${brl(descontoValor(d, Infinity))} no pedido`}`);
   }
-  out.push('5% de desconto no pagamento à vista', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
+  // os 5% à vista não vão no orçamento: só se o cliente pedir desconto
+  out.push('*Pagamento:* 50% no fechamento do pedido e 50% no envio');
   return out.join('\n');
 }
 
@@ -96,7 +97,7 @@ export function totals(itens, produtos, frete, descontoTexto) {
 const rotuloDesconto = (ativacao) => `*Desconto${ativacao ? ` · ${ativacao}` : ''}:*`;
 
 export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, descontoTexto, ativacao }) {
-  const { linhas, produtosTotal, desconto, total, aVista } = totals(itens, produtos, frete, descontoTexto);
+  const { linhas, produtosTotal, desconto, total } = totals(itens, produtos, frete, descontoTexto);
   const prazos = [...new Set(linhas.map((l) => l.p.prazo).filter(Boolean))];
   const out = ['*ORÇAMENTO GRALHA AZUL UNIFORMES*', ''];
   if (cliente) out.push(`Cliente: ${cliente}`, '');
@@ -109,7 +110,8 @@ export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, 
   out.push(`*Frete:* ${isMaringa(cidade) ? 'grátis para Maringá-PR' : frete ? `${brl(frete)}${cidade ? ` (${cidade})` : ''}` : freteTexto || 'a calcular conforme o endereço de entrega'}`);
   out.push('');
   if (desconto > 0) out.push(`Produtos: ${brl(produtosTotal)}`, `${rotuloDesconto(ativacao)} −${brl(desconto)}${ehPorcentagem(descontoTexto) ? ` (${String(descontoTexto).trim()})` : ''}`);
-  out.push(`*Total: ${brl(total)}*`, `À vista (5% de desconto nos produtos): *${brl(aVista)}*`, '', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
+  // os 5% à vista não vão no orçamento: só se o cliente pedir desconto (o valor fica na tela)
+  out.push(`*Total: ${brl(total)}*`, '', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
   return out.join('\n');
 }
 
