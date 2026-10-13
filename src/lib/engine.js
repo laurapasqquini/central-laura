@@ -418,11 +418,11 @@ const whatsDe = (tel = '') => {
   if (d.length === 12 && /[6-9]/.test(d[4])) d = d.slice(0, 4) + '9' + d.slice(4); // celular antigo sem o 9
   return `https://wa.me/${d}`;
 };
-export function comoRetirar(pats) {
+export function comoRetirar(pats, cidade = '') {
   if (!pats?.length) return '';
   return pats
     .map((x) => {
-      const r = regraDe(x.nome);
+      const r = regraDe(x.nome, cidade);
       const nome = tituloBonito(x.nome);
       const contato = (x.contato || '').trim().split(/\s+/)[0];
       if (r.contatoAtleta && contato && x.telefone)
@@ -475,7 +475,7 @@ export function brindesDoDia(state, date) {
         telefone: g.telefone || '',
         title: `Lembrete de brinde: ${g.nome}`,
         linha,
-        texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁${comoRetirar(doDia) ? `\n\n${comoRetirar(doDia)}` : ''}`,
+        texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁${comoRetirar(doDia, g.local) ? `\n\n${comoRetirar(doDia, g.local)}` : ''}`,
       });
     else if (date === conferir)
       out.push({
@@ -585,7 +585,7 @@ export function postsSorteio(state, date) {
       patrocinadores: pats.map((x) => ({
         nome: tituloBonito(x.nome),
         premio: premioComNome(x),
-        local: regraDe(x.nome).local || x.local || '',
+        local: regraDe(x.nome, p.cidade).local || x.local || '',
         contatoAtleta: !!regraDe(x.nome).contatoAtleta,
         instrucao: regraDe(x.nome).instrucao || '',
         pedeVoucher: !!regraDe(x.nome).pedeVoucher,
@@ -628,9 +628,11 @@ const REGRAS_PATROCINADOR = [
   { re: /bonna/i, regra: 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para combinar a retirada da sua pizza' },
   { re: /olaia/i, regra: 'Avisar a Olaia Grill no privado quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para fazer o pedido da sua marmita' },
   { re: /burgo|jacar[eé]/i, regra: 'Fazer o voucher e mandar no privado do ganhador.' },
+  // regra só de uma cidade vem antes da geral
+  { re: /cristal/i, cidade: /londrina/i, local: 'Retirada na R. Araguaia, 725 - Jardim Agari' },
   { re: /vamo|cristal|enara/i, local: 'Retirada no QG da RANKEN' },
 ];
-const regraDe = (p = '') => REGRAS_PATROCINADOR.find((r) => r.re.test(p)) || {};
+const regraDe = (p = '', cidade = '') => REGRAS_PATROCINADOR.find((r) => r.re.test(p) && (!r.cidade || r.cidade.test(semAcento(cidade)))) || {};
 const avisarPatrocinador = (p) => !!regraDe(p).avisar;
 const regraPatrocinador = (p) => regraDe(p).regra || '';
 
