@@ -16,6 +16,15 @@ async function imagensDaMarca() {
   return { cabecalho: await rel('header1'), rodape: await rel('footer1') };
 }
 
+// Altura (em pontos) que a imagem ocupa com 595 de largura: lê largura e altura do PNG
+function alturaImagem(dataUrl, largura = 595) {
+  const bin = atob(dataUrl.split(',')[1].slice(0, 44));
+  const n = (i) => ((bin.charCodeAt(i) << 24) | (bin.charCodeAt(i + 1) << 16) | (bin.charCodeAt(i + 2) << 8) | bin.charCodeAt(i + 3)) >>> 0;
+  const w = n(16);
+  const h = n(20);
+  return w && h ? (largura * h) / w : 90;
+}
+
 export async function gerarContratoPdf(c) {
   const [{ default: pdfMake }, { default: vfs }, marca] = await Promise.all([import('pdfmake/build/pdfmake'), import('pdfmake/build/vfs_fonts'), imagensDaMarca()]);
   pdfMake.addVirtualFileSystem(vfs);
@@ -112,7 +121,8 @@ export async function gerarContratoPdf(c) {
 
   const def = {
     pageSize: 'A4',
-    pageMargins: [56, 100, 56, 80],
+    // margens pela altura real do cabeçalho e do rodapé (senão o texto fica embaixo deles)
+    pageMargins: [56, Math.ceil(8 + alturaImagem(marca.cabecalho) + 16), 56, Math.ceil(10 + alturaImagem(marca.rodape) + 12)],
     defaultStyle: { font: 'Roboto', fontSize: 10.5, lineHeight: 1.2 },
     header: { image: marca.cabecalho, width: 595, margin: [0, 8, 0, 0] },
     footer: { image: marca.rodape, width: 595, margin: [0, 10, 0, 0] },
@@ -167,10 +177,11 @@ export async function gerarContratoPdf(c) {
           { text: linhaFrete(c, t), bold: true },
           { text: [b('Total do pedido: '), b(brl(t.total))], margin: [0, 0, 0, 6] },
           ...parcelas,
-          { text: '4.3 Dados bancários', bold: true, margin: [0, 8, 0, 2] },
-          { text: pag.via },
-          { text: pag.detalhe },
-          { text: 'JULIA MARIA FERREIRA RICOBELLO', bold: true },
+          // 4.3 com marca-texto amarelo
+          { text: '4.3 Dados bancários', bold: true, background: '#fff200', margin: [0, 8, 0, 2] },
+          { text: pag.via, background: '#fff200' },
+          { text: pag.detalhe, background: '#fff200' },
+          { text: 'JULIA MARIA FERREIRA RICOBELLO', bold: true, background: '#fff200' },
         ],
       },
       titulo('5. DISPOSIÇÕES GERAIS'),

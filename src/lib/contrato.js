@@ -47,6 +47,25 @@ export const totaisContrato = (c) => {
 export const linhaFrete = (c, t) =>
   [t.desconto > 0 ? `Desconto${c.ativacao ? ` · ${c.ativacao}` : ''}: −${brl(t.desconto)}` : '', t.frete ? `Frete: ${brl(t.frete)}` : 'Frete grátis'].filter(Boolean).join(' · ');
 
+// 4.3 Dados bancários (título + 3 linhas) com marca-texto amarelo
+function marcaDadosBancarios(xml) {
+  const ini = xml.search(/<w:p[ >](?:(?!<\/w:p>)[\s\S])*Dados banc/);
+  if (ini < 0) return xml;
+  let fim = ini;
+  for (let n = 0; n < 4; n++) {
+    const f = xml.indexOf('</w:p>', fim);
+    if (f < 0) return xml;
+    fim = f + 6;
+  }
+  const marca = xml
+    .slice(ini, fim)
+    .replace(/(<w:r(?: [^>]*)?>)(?!\s*<w:rPr>)/g, '$1<w:rPr></w:rPr>')
+    .replace(/(<w:r(?: [^>]*)?>\s*<w:rPr>)([\s\S]*?)(<\/w:rPr>)/g, (m, a, dentro, c) =>
+      /w:highlight/.test(dentro) ? m : dentro.includes('<w:lang') ? a + dentro.replace('<w:lang', '<w:highlight w:val="yellow"/><w:lang') + c : a + dentro + '<w:highlight w:val="yellow"/>' + c,
+    );
+  return xml.slice(0, ini) + marca + xml.slice(fim);
+}
+
 // Divide o <w:body> em parágrafos/tabelas de primeiro nível
 function filhosDoBody(body) {
   const kids = [];
@@ -203,7 +222,7 @@ export async function gerarContrato(c) {
     return fill(x, geral);
   });
 
-  const novo = doc.slice(0, b0) + out.join('') + doc.slice(b1);
+  const novo = marcaDadosBancarios(doc.slice(0, b0) + out.join('') + doc.slice(b1));
   if (/\{\{[A-Z_0-9]+\}\}/.test(novo)) throw new Error('faltou preencher: ' + novo.match(/\{\{[A-Z_0-9]+\}\}/)[0]);
   zip.file('word/document.xml', novo);
   zip.file('word/_rels/document.xml.rels', rels);
