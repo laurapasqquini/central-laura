@@ -57,6 +57,7 @@ chrome.runtime.onMessage.addListener((msg, sender, responder) => {
     : msg.tipo === 'ganhadores' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Sorteio Diário' }, 'ganhadores')
     : msg.tipo === 'programacao' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Programação' }, 'programacao')
     : msg.tipo === 'hub-lolis' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Equipe (Lolis)' }, 'hub-lolis')
+    : msg.tipo === 'hub-laura' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Atividades (Laura)' }, 'hub-laura')
     : Promise.resolve();
   run.then((r) => responder({ ok: true, ...r }), (e) => responder({ ok: false, erro: e.message }));
   return true; // resposta assíncrona
@@ -91,6 +92,15 @@ chrome.alarms.onAlarm.addListener(async (a) => {
   if (a.name !== 'equipeLolis') return;
   const agora = new Date();
   const dia = agora.toLocaleDateString('sv-SE');
+  const minutos = agora.getHours() * 60 + agora.getMinutes();
+  // Atividades da Laura: de 2 em 2 horas, das 8h às 19h, em dia útil
+  if (![0, 6].includes(agora.getDay()) && minutos >= 8 * 60 && minutos < 19 * 60) {
+    const { sessao: s, autoLaura = 0 } = await chrome.storage.local.get(['sessao', 'autoLaura']);
+    if (s && Date.now() - autoLaura >= 2 * 3600e3) {
+      await chrome.storage.local.set({ autoLaura: Date.now() });
+      chrome.tabs.create({ url: `${HUB}/atividades?central=laura`, active: false });
+    }
+  }
   if ([0, 6].includes(agora.getDay()) || agora.getHours() * 60 + agora.getMinutes() < 13 * 60 + 25) return;
   const { sessao, autoEquipe } = await chrome.storage.local.get(['sessao', 'autoEquipe']);
   if (!sessao || autoEquipe === dia) return;

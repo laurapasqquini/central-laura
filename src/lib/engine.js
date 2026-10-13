@@ -76,13 +76,14 @@ const fromTask = (t, projects, state) => ({
   phase: t.phase,
   notes: t.notes,
   hub: !!t.hub,
+  hubPath: t.hubPath,
   ...cobrancaPix(t),
 });
 
 // Tarefa de Pix que vem do Hub ("Cobrar mensalidade Pix — Nome (Esporte) — vence em 08/10"):
 // ganha a mensagem padrão de cobrança com o primeiro nome da atleta (e o WhatsApp, se estiver na descrição)
 function cobrancaPix(t) {
-  const m = (t.title || '').match(/^Cobrar (mensalidade|renova[cç][aã]o) Pix\s*[—-]\s*([^—]+?)\s*(?:\([^)]*\))?\s*(?:[—-]\s*vence em (\d{2})\/(\d{2}))?\s*$/i);
+  const m = (t.title || '').match(/^Cobrar (mensalidade|renova[cç][aã]o) Pix\s*[—-]\s*([^—]+?)\s*(?:\([^)]*\))?\s*(?:[—-]\s*venc(?:e|eu) em (\d{2})\/(\d{2}))?\s*$/i);
   if (!m) return {};
   const primeiro = m[2].trim().split(/\s+/)[0];
   const nome = primeiro[0].toUpperCase() + primeiro.slice(1).toLowerCase();
@@ -783,7 +784,7 @@ const canvaPara = (state, texto) => {
 };
 
 // texto da tarefa para a Lolis (sem a linha de origem que a central acrescenta)
-const detalheTarefa = (x) => (x.kind === 'task' && x.notes ? x.notes.replace(/\n*Veio do Hub \(Atividades › Minha equipe › Lolis\)$/, '').trim() : '');
+const detalheTarefa = (x) => (x.kind === 'task' && x.notes ? x.notes.replace(/\n*Veio do Hub \(Atividades[^)]*\)$/, '').trim() : '');
 
 export function dadosPaginaLolis(state, ref = today()) {
   const f = { area: 'all', who: 'lolis' };

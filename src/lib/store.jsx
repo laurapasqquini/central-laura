@@ -469,9 +469,54 @@ export function StoreProvider({ user, children }) {
           tasks = [...novas, ...tasks];
           s = { ...s, tasks, hubLolisEm: dia };
         }
+        // tarefas em aberto da Laura no Hub (Atividades): viram tarefas dela aqui (se ela repassar
+        // para a Lolis na Central, continua ligada ao Hub); as que saíram de "em aberto" ganham baixa
+        for (const r of rows.filter((x) => x.conta === 'hub-laura')) {
+          let d = null;
+          try {
+            d = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!Array.isArray(d?.abertas) || !d.abertas.length) continue;
+          const RODAPE = 'Veio do Hub (Atividades › Laura)';
+          const chave = (titulo, prazo) => `${titulo.trim().toLowerCase()}|${prazo || ''}`;
+          const abertas = new Map(d.abertas.map((a) => [chave(a.titulo, a.prazo), a]));
+          const dia = d.dia || today();
+          let tasks = s.tasks.map((t) => {
+            if (!t.hubLaura) return t;
+            const k = chave(t.title, t.hubPrazo);
+            const a = abertas.get(k);
+            if (a) {
+              abertas.delete(k);
+              const notas = a.descricao ? `${a.descricao}\n\n${RODAPE}` : t.notes;
+              const muda = notas !== t.notes || (!t.done && !!a.urgente !== !!t.urgent);
+              return muda ? { ...t, notes: notas, urgent: t.done ? t.urgent : !!a.urgente } : t;
+            }
+            return t.done ? t : { ...t, done: true, doneAt: dia, notes: `${t.notes ? `${t.notes}\n` : ''}Saiu de "em aberto" no Hub em ${dia.split('-').reverse().join('/')}` };
+          });
+          const novas = [...abertas.values()].map((a) => ({
+            id: uid(),
+            title: a.titulo,
+            area: 'ranken',
+            who: 'laura',
+            urgent: !!a.urgente,
+            due: a.prazo || null,
+            hub: true,
+            hubPath: 'atividades',
+            hubLaura: true,
+            hubPrazo: a.prazo || null,
+            done: false,
+            createdAt: dia,
+            postponed: 0,
+            notes: `${a.descricao ? `${a.descricao}\n\n` : ''}${RODAPE}`,
+          }));
+          tasks = [...novas, ...tasks];
+          s = { ...s, tasks, hubLauraEm: dia };
+        }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {

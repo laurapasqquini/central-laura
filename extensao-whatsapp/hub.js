@@ -155,7 +155,7 @@ const AUTO = new URLSearchParams(location.search).get('central') === 'auto';
 const hojeISO = () => new Date().toLocaleDateString('sv-SE');
 
 async function agendarAuto() {
-  if (AUTO || AUTO_EQUIPE || /^\/sorteio/.test(location.pathname)) return;
+  if (AUTO || AUTO_EQUIPE || AUTO_LAURA || /^\/sorteio/.test(location.pathname)) return;
   const { autoGanhadores } = await chrome.storage.local.get('autoGanhadores');
   if (autoGanhadores === hojeISO()) return;
   await chrome.storage.local.set({ autoGanhadores: hojeISO() });
@@ -284,6 +284,92 @@ async function comDetalhes(n) {
   return { ...n, abertas: n.abertas.map((a) => ({ ...a, descricao: descEquipe[a.titulo] || '' })) };
 }
 
+// ── Atividades (lista da Laura): o que está em aberto com ela vira tarefa dela na Central ──
+// (de 2 em 2 horas a extensão abre esta tela numa aba em segundo plano; também lê quando a Laura abre)
+const AUTO_LAURA = new URLSearchParams(location.search).get('central') === 'laura';
+
+function lerAtividadesLaura() {
+  if (location.pathname !== '/atividades') return null;
+  const main = document.querySelector('main');
+  if (!main || !/O dia de Laura/.test(main.innerText)) return null; // só com o filtro na Laura
+  const hoje = new Date();
+  const iso = (d) => d.toLocaleDateString('sv-SE');
+  const abertas = [];
+  for (const card of main.querySelectorAll('div[class*="border-l-[3px]"]')) {
+    // seção do cartão (ATRASADAS, HOJE, SEM PRAZO…): as concluídas ficam de fora
+    // (sobe pelos blocos até achar o título da seção; pula os que começam pelo próprio cartão,
+    // senão uma tarefa escrita em maiúsculas, como "CAMPEAS", parece título de seção)
+    const primeira = (card.innerText || '').split('\n')[0].trim();
+    let sec = card;
+    let cab = '';
+    while (sec && sec !== main) {
+      const f = (sec.innerText || '').split('\n')[0].trim();
+      if (f !== primeira && /^[A-ZÀ-Ú ]{4,}( \(\d+\))?$/.test(f)) {
+        cab = f;
+        break;
+      }
+      sec = sec.parentElement;
+    }
+    if (!cab || /^CONCLU/.test(cab)) continue;
+    // o primeiro botão do cartão é o de concluir (vazio): o título é o botão com texto
+    const titulo = [...card.querySelectorAll('button')].map((b) => b.textContent.trim()).find(Boolean);
+    if (!titulo) continue;
+    const meta = card.innerText.split('\n').map((s) => s.trim()).filter(Boolean).slice(1);
+    let prazo = null;
+    const lim = meta.map((l) => l.match(/^Limite: (\d{2})\/(\d{2})\/(\d{4})/)).find(Boolean);
+    if (lim) prazo = `${lim[3]}-${lim[2]}-${lim[1]}`;
+    else if (meta.includes('Hoje')) prazo = iso(hoje);
+    else if (meta.includes('Ontem')) prazo = iso(new Date(hoje - 864e5));
+    else if (meta.includes('Amanhã')) prazo = iso(new Date(+hoje + 864e5));
+    abertas.push({ titulo, prazo, urgente: meta.some((l) => /URGENTE/.test(l)) });
+  }
+  return abertas.length ? { dia: iso(hoje), abertas } : null;
+}
+
+// Descrição das tarefas da Laura: na lista dela o Hub abre "Editar tarefa"; lê a descrição e
+// fecha em "Cancelar" (nunca salva nada). Fica guardada na extensão, para não abrir de novo.
+// Só abre as tarefas na aba automática: com a Laura usando a tela, usa só o que já tem guardado
+// (para nunca fechar uma tarefa que ela esteja editando).
+let lendoLaura = false;
+async function comDescricaoLaura(n, buscar) {
+  const { descLaura = {} } = await chrome.storage.local.get('descLaura');
+  const chave = (a) => `${a.titulo}|${a.prazo || ''}`;
+  if (buscar && !lendoLaura) {
+    lendoLaura = true;
+    for (const a of n.abertas) {
+      if (descLaura[chave(a)] !== undefined) continue;
+      const botao = [...document.querySelectorAll('main div[class*="border-l-[3px]"] button')].find((b) => b.textContent.trim() === a.titulo);
+      if (!botao) continue;
+      botao.click(); // abre a tarefa
+      await new Promise((r) => setTimeout(r, 900));
+      const caixa = document.querySelector('textarea');
+      descLaura[chave(a)] = caixa ? caixa.value.trim() : '';
+      const cancelar = [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Cancelar');
+      if (cancelar) cancelar.click(); // fecha sem salvar
+      else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    for (const k of Object.keys(descLaura)) if (!n.abertas.some((a) => chave(a) === k)) delete descLaura[k];
+    await chrome.storage.local.set({ descLaura });
+    lendoLaura = false;
+  }
+  return { ...n, abertas: n.abertas.map((a) => ({ ...a, descricao: descLaura[chave(a)] || '' })) };
+}
+
+async function rodarAutoLaura() {
+  for (let i = 0; i < 40; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    const n = lerAtividadesLaura();
+    if (n) {
+      const completo = await comDescricaoLaura(n, true);
+      chrome.runtime.sendMessage({ tipo: 'hub-laura', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
+      return;
+    }
+  }
+  chrome.runtime.sendMessage({ tipo: 'fechar-aba' });
+}
+if (AUTO_LAURA) rodarAutoLaura();
+
 async function rodarAutoEquipe() {
   for (let i = 0; i < 40; i++) {
     await new Promise((r) => setTimeout(r, 500));
@@ -299,7 +385,12 @@ async function rodarAutoEquipe() {
 if (AUTO_EQUIPE) rodarAutoEquipe();
 
 async function tentar() {
-  if (enviando || AUTO || AUTO_EQUIPE) return;
+  if (enviando || AUTO || AUTO_EQUIPE || AUTO_LAURA) return;
+  if (location.pathname === '/atividades') {
+    const n = lerAtividadesLaura();
+    if (n) comDescricaoLaura(n, false).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
+    return;
+  }
   if (/^\/atividades\/equipe/.test(location.pathname)) {
     const n = lerEquipeLolis();
     if (n && !lendoDetalhes) comDetalhes(n).then((c) => mandar('hub-lolis', c, 'ultimoEquipe-v2', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`));

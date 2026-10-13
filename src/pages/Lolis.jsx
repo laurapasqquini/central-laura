@@ -98,6 +98,11 @@ function LinkLolis() {
         ) : (
           <div className="text-slate-500">○ Tarefas da Lolis no Hub: chegam às 13h25 (ou ao abrir Atividades › Minha equipe › Lolis)</div>
         )}
+        {state.hubLauraEm ? (
+          <div className="text-emerald-700">✓ Suas tarefas em aberto no Hub lidas em {state.hubLauraEm.split('-').reverse().slice(0, 2).join('/')}</div>
+        ) : (
+          <div className="text-slate-500">○ Suas tarefas do Hub: chegam de 2 em 2 horas (ou ao abrir Atividades no Hub)</div>
+        )}
         {state.ganhadoresEm ? (
           <div className="text-emerald-700">✓ Ganhadores atualizados em {state.ganhadoresEm.split('-').reverse().slice(0, 2).join('/')}</div>
         ) : (
