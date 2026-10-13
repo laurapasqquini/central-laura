@@ -355,13 +355,30 @@ const linkWhats = (tel, texto) => {
   if (d.length === 12 && /[6-9]/.test(d[4])) d = d.slice(0, 4) + '9' + d.slice(4); // celular antigo sem o 9
   return `https://wa.me/${d}?text=${encodeURIComponent(texto)}`;
 };
-function BotaoWhats({ tel, texto }) {
-  const href = linkWhats(tel, texto);
-  if (!href) return null;
+// Número da pessoa para copiar e colar no WhatsApp (só os números, com DDD, sem o 55):
+// mais fácil do que o link "Abrir no WhatsApp"
+function BotaoWhats({ tel }) {
+  const [ok, setOk] = useState(false);
+  let d = String(tel || '').replace(/\D/g, '');
+  if (d.startsWith('55') && d.length >= 12) d = d.slice(2);
+  if (d.length < 10) return null;
+  const bonito = `(${d.slice(0, 2)}) ${d.slice(2, -4)}-${d.slice(-4)}`;
   return (
-    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1 text-xs font-bold text-white hover:bg-emerald-700">
-      💬 Abrir no WhatsApp
-    </a>
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(d);
+          setOk(true);
+          setTimeout(() => setOk(false), 1500);
+        } catch {
+          prompt('Copie o número:', d);
+        }
+      }}
+      title="Copiar o número"
+      className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-bold ring-1 ${ok ? 'bg-emerald-600 text-white ring-emerald-600' : 'bg-white text-emerald-700 ring-emerald-300 hover:bg-emerald-50'}`}
+    >
+      📱 {bonito} <span className="font-semibold">{ok ? '✓ copiado' : '· copiar'}</span>
+    </button>
   );
 }
 
