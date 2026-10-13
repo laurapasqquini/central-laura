@@ -110,9 +110,34 @@ export function ItemRow({ item, showDate = false, onEdit }) {
         <button onClick={copiar} className="w-full rounded-lg bg-emerald-600 py-2 text-sm font-bold text-white hover:bg-emerald-700">
           {copiado ? 'Copiado ✓' : '📋 Copiar mensagem'}
         </button>
+        {item.telefone && <CopiarNumero tel={item.telefone} />}
       </div>
     )}
     </div>
+  );
+}
+
+// Número da pessoa para copiar e colar no WhatsApp (só números, com DDD, sem o 55)
+function CopiarNumero({ tel }) {
+  const [ok, setOk] = useState(false);
+  let d = String(tel || '').replace(/\D/g, '');
+  if (d.startsWith('55') && d.length >= 12) d = d.slice(2);
+  if (d.length < 10) return null;
+  return (
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(d);
+          setOk(true);
+          setTimeout(() => setOk(false), 1500);
+        } catch {
+          prompt('Copie o número:', d);
+        }
+      }}
+      className="w-full rounded-lg bg-white py-2 text-sm font-bold text-emerald-700 ring-1 ring-emerald-300 hover:bg-emerald-50"
+    >
+      📱 ({d.slice(0, 2)}) {d.slice(2, -4)}-{d.slice(-4)} · {ok ? 'copiado ✓' : 'copiar número'}
+    </button>
   );
 }
 

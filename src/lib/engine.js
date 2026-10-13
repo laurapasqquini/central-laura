@@ -91,7 +91,7 @@ function cobrancaPix(t) {
   const venc = m[3] ? `${hoje.slice(0, 4)}-${m[4]}-${m[3]}` : hoje;
   const oque = /renova/i.test(m[1]) ? 'a renovação do ranken' : 'a mensalidade do ranken';
   const quando = venc === hoje ? 'venceu hoje' : venc < hoje ? `venceu dia ${m[3]}/${m[4]}` : `vence dia ${m[3]}/${m[4]}`;
-  const tel = ((t.notes || '').match(/(?:\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}-?\d{4}/) || [])[0] || '';
+  const tel = t.telefone || ((t.notes || '').match(/(?:\+?55\s?)?\(?\d{2}\)?\s?9?\d{4}-?\d{4}/) || [])[0] || '';
   return {
     mensagem: `Boa tardee ${nome}, tudo bem? Passando pra lembrar que ${oque} ${quando}.\nAssim que fizer o pagamento consegue me mandar o comprovante aqui por favorr?\n\nSegue a chave pix: contato@ranken.com.br`,
     telefone: tel,

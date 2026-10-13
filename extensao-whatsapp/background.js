@@ -57,6 +57,7 @@ chrome.runtime.onMessage.addListener((msg, sender, responder) => {
     : msg.tipo === 'ganhadores' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Sorteio Diário' }, 'ganhadores')
     : msg.tipo === 'programacao' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Programação' }, 'programacao')
     : msg.tipo === 'hub-lolis' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Equipe (Lolis)' }, 'hub-lolis')
+    : msg.tipo === 'telefones' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Cadastros' }, 'telefones')
     : msg.tipo === 'hub-laura' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Atividades (Laura)' }, 'hub-laura')
     : Promise.resolve();
   run.then((r) => responder({ ok: true, ...r }), (e) => responder({ ok: false, erro: e.message }));

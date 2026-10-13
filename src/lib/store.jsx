@@ -447,8 +447,8 @@ export function StoreProvider({ user, children }) {
             if (a) {
               abertas.delete(chave(t.title));
               const notas = a.descricao ? `${a.descricao}\n\nVeio do Hub (Atividades › Minha equipe › Lolis)` : t.notes;
-              const muda = (a.prazo && a.prazo !== t.due && !t.done) || notas !== t.notes;
-              return muda ? { ...t, due: a.prazo && !t.done ? a.prazo : t.due, notes: notas } : t;
+              const muda = (a.prazo && a.prazo !== t.due && !t.done) || notas !== t.notes || (a.telefone && a.telefone !== t.telefone);
+              return muda ? { ...t, due: a.prazo && !t.done ? a.prazo : t.due, notes: notas, ...(a.telefone ? { telefone: a.telefone } : {}) } : t;
             }
             return t.done ? t : { ...t, done: true, doneAt: dia, notes: `${t.notes ? `${t.notes}\n` : ''}Saiu de "em aberto" no Hub em ${dia.split('-').reverse().join('/')}` };
           });
@@ -461,6 +461,7 @@ export function StoreProvider({ user, children }) {
             due: a.prazo || dia,
             hub: true,
             hubLolis: true,
+            ...(a.telefone ? { telefone: a.telefone } : {}),
             done: false,
             createdAt: dia,
             postponed: 0,
@@ -490,8 +491,8 @@ export function StoreProvider({ user, children }) {
             if (a) {
               abertas.delete(k);
               const notas = a.descricao ? `${a.descricao}\n\n${RODAPE}` : t.notes;
-              const muda = notas !== t.notes || (!t.done && !!a.urgente !== !!t.urgent);
-              return muda ? { ...t, notes: notas, urgent: t.done ? t.urgent : !!a.urgente } : t;
+              const muda = notas !== t.notes || (!t.done && !!a.urgente !== !!t.urgent) || (a.telefone && a.telefone !== t.telefone);
+              return muda ? { ...t, notes: notas, urgent: t.done ? t.urgent : !!a.urgente, ...(a.telefone ? { telefone: a.telefone } : {}) } : t;
             }
             return t.done ? t : { ...t, done: true, doneAt: dia, notes: `${t.notes ? `${t.notes}\n` : ''}Saiu de "em aberto" no Hub em ${dia.split('-').reverse().join('/')}` };
           });
@@ -506,6 +507,7 @@ export function StoreProvider({ user, children }) {
             hubPath: 'atividades',
             hubLaura: true,
             hubPrazo: a.prazo || null,
+            ...(a.telefone ? { telefone: a.telefone } : {}),
             done: false,
             createdAt: dia,
             postponed: 0,
@@ -514,9 +516,29 @@ export function StoreProvider({ user, children }) {
           tasks = [...novas, ...tasks];
           s = { ...s, tasks, hubLauraEm: dia };
         }
+        // telefones das cobranças Pix (achados em Cadastros do Hub): { "Nome da atleta": "5544999999999" }
+        for (const r of rows.filter((x) => x.conta === 'telefones')) {
+          let mapa = null;
+          try {
+            mapa = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!mapa) continue;
+          const norm = (x) => x.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+          const pares = Object.entries(mapa).map(([n, tel]) => [norm(n), tel]);
+          s = {
+            ...s,
+            tasks: s.tasks.map((t) => {
+              if (t.done || t.telefone || !/^Cobrar (mensalidade|renova[cç][aã]o) Pix/i.test(t.title || '')) return t;
+              const achou = pares.find(([n]) => norm(t.title).includes(n));
+              return achou ? { ...t, telefone: achou[1] } : t;
+            }),
+          };
+        }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {

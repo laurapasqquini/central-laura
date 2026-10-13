@@ -155,7 +155,7 @@ const AUTO = new URLSearchParams(location.search).get('central') === 'auto';
 const hojeISO = () => new Date().toLocaleDateString('sv-SE');
 
 async function agendarAuto() {
-  if (AUTO || AUTO_EQUIPE || AUTO_LAURA || /^\/sorteio/.test(location.pathname)) return;
+  if (AUTO || AUTO_EQUIPE || AUTO_LAURA || AUTO_TEL || /^\/sorteio/.test(location.pathname)) return;
   const { autoGanhadores } = await chrome.storage.local.get('autoGanhadores');
   if (autoGanhadores === hojeISO()) return;
   await chrome.storage.local.set({ autoGanhadores: hojeISO() });
@@ -284,6 +284,58 @@ async function comDetalhes(n) {
   return { ...n, abertas: n.abertas.map((a) => ({ ...a, descricao: descEquipe[a.titulo] || '' })) };
 }
 
+// ── Telefone das cobranças Pix ("Cobrar mensalidade Pix — Nome …"): a tarefa do Hub não tem o número,
+// então a extensão busca o nome em Cadastros (só digita na busca e lê o link do WhatsApp) e guarda.
+const AUTO_TEL = new URLSearchParams(location.search).get('central') === 'tel';
+const semAcentoX = (s = '') => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+const nomePix = (titulo = '') => (titulo.match(/^Cobrar (?:mensalidade|renova[cç][aã]o) Pix\s*[—-]\s*([^—(]+?)\s*(?:\(|[—-]|$)/i) || [])[1]?.trim() || '';
+
+// põe o telefone já conhecido em cada cobrança Pix e, se faltar algum, abre Cadastros para buscar
+async function comTelefonePix(n) {
+  const { telPix = {}, sessao, telPixPedidoEm = 0 } = await chrome.storage.local.get(['telPix', 'sessao', 'telPixPedidoEm']);
+  const nomes = [...new Set(n.abertas.map((a) => nomePix(a.titulo)).filter(Boolean))];
+  const faltam = nomes.filter((x) => telPix[x] === undefined);
+  // só no computador da Laura (logada), no máximo a cada 30 min
+  if (sessao && faltam.length && Date.now() - telPixPedidoEm > 30 * 60e3) {
+    await chrome.storage.local.set({ telPixFaltam: faltam, telPixPedidoEm: Date.now() });
+    chrome.runtime.sendMessage({ tipo: 'abrir-aba', url: `${location.origin}/cadastros?central=tel` });
+  }
+  return { ...n, abertas: n.abertas.map((a) => (telPix[nomePix(a.titulo)] && telPix[nomePix(a.titulo)] !== '-' ? { ...a, telefone: telPix[nomePix(a.titulo)] } : a)) };
+}
+
+async function rodarAutoTel() {
+  const { telPixFaltam = [], telPix = {} } = await chrome.storage.local.get(['telPixFaltam', 'telPix']);
+  let busca = null;
+  for (let i = 0; i < 40 && !busca; i++) {
+    await new Promise((r) => setTimeout(r, 500));
+    busca = document.querySelector('main input[placeholder^="Buscar por nome"]');
+  }
+  const achados = {};
+  if (busca) {
+    const setValor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    for (const nome of telPixFaltam) {
+      setValor.call(busca, nome); // só a busca da tela, não altera nada
+      busca.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise((r) => setTimeout(r, 1500));
+      const alvo = semAcentoX(nome);
+      const linha = [...document.querySelectorAll('main tr')].find((tr) => {
+        const n = semAcentoX((tr.querySelector('td')?.innerText || '').split('\n')[0]);
+        return n && (n === alvo || n.startsWith(alvo) || alvo.startsWith(n));
+      });
+      const tel = ((linha?.querySelector('a[href*="wa.me/"]')?.getAttribute('href') || '').match(/wa\.me\/(\d+)/) || [])[1] || '';
+      telPix[nome] = tel || '-'; // '-' = não achou (não busca de novo)
+      if (tel) achados[nome] = tel;
+    }
+    // guarda só os últimos 200 nomes
+    const chaves = Object.keys(telPix);
+    for (const k of chaves.slice(0, Math.max(0, chaves.length - 200))) delete telPix[k];
+    await chrome.storage.local.set({ telPix, telPixFaltam: [] });
+  }
+  if (Object.keys(achados).length) chrome.runtime.sendMessage({ tipo: 'telefones', dados: achados }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
+  else chrome.runtime.sendMessage({ tipo: 'fechar-aba' });
+}
+if (AUTO_TEL) rodarAutoTel();
+
 // ── Atividades (lista da Laura): o que está em aberto com ela vira tarefa dela na Central ──
 // (de 2 em 2 horas a extensão abre esta tela numa aba em segundo plano; também lê quando a Laura abre)
 const AUTO_LAURA = new URLSearchParams(location.search).get('central') === 'laura';
@@ -361,7 +413,7 @@ async function rodarAutoLaura() {
     await new Promise((r) => setTimeout(r, 500));
     const n = lerAtividadesLaura();
     if (n) {
-      const completo = await comDescricaoLaura(n, true);
+      const completo = await comTelefonePix(await comDescricaoLaura(n, true));
       chrome.runtime.sendMessage({ tipo: 'hub-laura', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
     }
@@ -375,7 +427,7 @@ async function rodarAutoEquipe() {
     await new Promise((r) => setTimeout(r, 500));
     const n = lerEquipeLolis();
     if (n) {
-      const completo = await comDetalhes(n);
+      const completo = await comTelefonePix(await comDetalhes(n));
       chrome.runtime.sendMessage({ tipo: 'hub-lolis', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
     }
@@ -385,15 +437,15 @@ async function rodarAutoEquipe() {
 if (AUTO_EQUIPE) rodarAutoEquipe();
 
 async function tentar() {
-  if (enviando || AUTO || AUTO_EQUIPE || AUTO_LAURA) return;
+  if (enviando || AUTO || AUTO_EQUIPE || AUTO_LAURA || AUTO_TEL) return;
   if (location.pathname === '/atividades') {
     const n = lerAtividadesLaura();
-    if (n) comDescricaoLaura(n, false).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
+    if (n) comDescricaoLaura(n, false).then(comTelefonePix).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
     return;
   }
   if (/^\/atividades\/equipe/.test(location.pathname)) {
     const n = lerEquipeLolis();
-    if (n && !lendoDetalhes) comDetalhes(n).then((c) => mandar('hub-lolis', c, 'ultimoEquipe-v2', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`));
+    if (n && !lendoDetalhes) comDetalhes(n).then(comTelefonePix).then((c) => mandar('hub-lolis', c, 'ultimoEquipe-v2', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`));
     return;
   }
   if (/^\/beach/.test(location.pathname)) {
