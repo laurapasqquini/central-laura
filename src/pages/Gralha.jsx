@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
-import { cfgComissao, comissaoDe, dataFechamento, valoresPedido } from '../lib/gralha';
+import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes } from '../lib/gralha';
 import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa } from '../lib/gralha';
 import { fmtCurto, relativo, today } from '../lib/dates';
 import { inputCls, inputBase, Empty, Pill, Segmented } from '../components/ui';
@@ -63,6 +63,10 @@ function Novo({ cat, onSaved }) {
   const [cliente, setCliente] = useState('');
   const [cidade, setCidade] = useState('');
   const [frete, setFrete] = useState('');
+  const [desconto, setDesconto] = useState(''); // "10%" ou valor em R$
+  const [ativacao, setAtivacao] = useState('');
+  const { state } = useStore();
+  const ativacoes = useMemo(() => [...new Set((state.pedidos || []).map((p) => (p.ativacao || '').trim()).filter(Boolean))], [state.pedidos]);
   const [copied, setCopied] = useState(false);
   const abas = useMemo(() => [...new Set(cat.produtos.map((p) => p.aba))], [cat]);
   const groups = useMemo(() => {
@@ -72,9 +76,9 @@ function Novo({ cat, onSaved }) {
   const added = new Set(itens.map((i) => i.prodId));
 
   const freteNum = isMaringa(cidade) ? 0 : parseFloat(String(frete).replace(',', '.')) || 0;
-  const { linhas, produtosTotal, total, aVista } = totals(itens, cat.produtos, freteNum);
+  const { linhas, produtosTotal, desconto: descontoR, total, aVista } = totals(itens, cat.produtos, freteNum, desconto);
   const tabela = modo === 'tabela';
-  const msg = !itens.length ? '' : tabela ? mensagemTabela({ cliente, cidade, itens, produtos: cat.produtos }) : mensagem({ cliente, cidade, itens, produtos: cat.produtos, frete: freteNum });
+  const msg = !itens.length ? '' : tabela ? mensagemTabela({ cliente, cidade, itens, produtos: cat.produtos, descontoTexto: desconto, ativacao: ativacao.trim() }) : mensagem({ cliente, cidade, itens, produtos: cat.produtos, frete: freteNum, descontoTexto: desconto, ativacao: ativacao.trim() });
 
   const add = (p) => {
     setItens((xs) => [...xs, { key: crypto.randomUUID().slice(0, 6), prodId: p.id, qtd: Math.max(p.minimo || 1, 1) }]);
@@ -92,7 +96,7 @@ function Novo({ cat, onSaved }) {
   };
 
   const salvar = () => {
-    addPedido({ cliente: cliente.trim() || 'Cliente sem nome', cidade, tipo: modo, itens: itens.map(({ prodId, qtd }) => ({ prodId, qtd })), frete: freteNum, total: tabela ? null : total, mensagem: msg });
+    addPedido({ cliente: cliente.trim() || 'Cliente sem nome', cidade, tipo: modo, itens: itens.map(({ prodId, qtd }) => ({ prodId, qtd })), frete: freteNum, total: tabela ? null : total, mensagem: msg, ativacao: ativacao.trim(), descontoTexto: desconto.trim(), desconto: tabela ? 0 : descontoR });
     onSaved();
   };
 
@@ -190,6 +194,20 @@ function Novo({ cat, onSaved }) {
           );
         })}
 
+        {itens.length > 0 && (
+          <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <div className="text-sm font-semibold text-slate-700">🎯 Desconto de ativação <span className="font-normal text-slate-400">(opcional)</span></div>
+            <div className="grid grid-cols-[minmax(0,1fr)_8rem] gap-2">
+              <input className={inputBase} list="ativacoes-gralha" placeholder="Ativação / motivo (ex.: Jogos Universitários)" value={ativacao} onChange={(e) => setAtivacao(e.target.value)} />
+              <input className={`${inputBase} text-right`} placeholder="R$ ou %" value={desconto} onChange={(e) => setDesconto(e.target.value)} />
+            </div>
+            <datalist id="ativacoes-gralha">
+              {ativacoes.map((a) => <option key={a} value={a} />)}
+            </datalist>
+            {desconto.trim() && !ativacao.trim() && <p className="text-xs font-semibold text-amber-600">Coloque a ativação ou o motivo, para dar para acompanhar depois quanto vendeu.</p>}
+          </div>
+        )}
+
         {itens.length > 0 && !tabela && (
           <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <div className="flex items-center justify-between gap-3 text-sm">
@@ -201,6 +219,7 @@ function Novo({ cat, onSaved }) {
               )}
             </div>
             <Row label="Produtos" value={brl(produtosTotal)} />
+            {descontoR > 0 && <Row label={`Desconto${ativacao.trim() ? ` · ${ativacao.trim()}` : ''}`} value={`−${brl(descontoR)}`} />}
             <Row label="Total" value={brl(total)} strong />
             <Row label="À vista (5% off nos produtos)" value={brl(aVista)} />
           </div>
@@ -232,6 +251,42 @@ const Row = ({ label, value, strong }) => (
     <span>{value}</span>
   </div>
 );
+
+// Quanto cada ativação trouxe: orçamentos, fechados, vendido e desconto dado
+function Ativacoes({ pedidos }) {
+  const lista = resumoAtivacoes(pedidos);
+  if (!lista.length) return null;
+  return (
+    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">🎯 Ativações</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-slate-400">
+              <th className="py-1 pr-3 font-semibold">Ativação</th>
+              <th className="py-1 pr-3 text-right font-semibold">Orçamentos</th>
+              <th className="py-1 pr-3 text-right font-semibold">Fechados</th>
+              <th className="py-1 pr-3 text-right font-semibold">Vendido</th>
+              <th className="py-1 text-right font-semibold">Desconto dado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lista.map((a) => (
+              <tr key={a.nome} className="border-t border-slate-100">
+                <td className="py-1.5 pr-3 font-semibold text-slate-800">{a.nome}</td>
+                <td className="py-1.5 pr-3 text-right text-slate-600">{a.orcamentos}</td>
+                <td className="py-1.5 pr-3 text-right text-slate-600">{a.fechados}{a.perdidos > 0 && <span className="text-slate-400"> · {a.perdidos} perdido{a.perdidos > 1 ? 's' : ''}</span>}</td>
+                <td className="py-1.5 pr-3 text-right font-bold text-ink">{brl(a.vendido)}</td>
+                <td className="py-1.5 text-right text-slate-600">{brl(a.desconto)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-slate-400">Vendido e desconto contam só os pedidos fechados (ou em contrato).</p>
+    </section>
+  );
+}
 
 function Pedidos({ onContrato }) {
   const { state, moveStage, deletePedido, setGralhaCfg } = useStore();
@@ -275,6 +330,7 @@ function Pedidos({ onContrato }) {
           </div>
         </div>
       </section>
+      <Ativacoes pedidos={pedidos} />
       {STAGES.map((st) => {
         const list = pedidos.filter((p) => p.stage === st.id);
         if (!list.length) return null;
@@ -298,7 +354,8 @@ function Pedidos({ onContrato }) {
                       <div className="text-xs text-slate-500">
                         {p.total == null && !p.contrato ? 'tabela de preços' : brl(valoresPedido(p).total)}
                         {['fechado', 'contrato'].includes(p.stage) && <b className="text-emerald-600"> · comissão {brl(comissaoDe(p, cfg))}</b>} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}
-                        {p.cidade && ` · ${p.cidade}`} · nesta etapa desde {since === today() ? 'hoje' : relativo(since)}
+                        {p.cidade && ` · ${p.cidade}`}
+                        {p.ativacao && <b className="text-violet-600"> · 🎯 {p.ativacao}{valoresPedido(p).desconto > 0 && ` (−${brl(valoresPedido(p).desconto)})`}</b>} · nesta etapa desde {since === today() ? 'hoje' : relativo(since)}
                       </div>
                     </button>
                     <span className="shrink-0 text-xs text-slate-400">{fmtCurto(p.createdAt)}</span>

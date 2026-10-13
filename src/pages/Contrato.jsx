@@ -88,7 +88,8 @@ function contratoInicial(p, cat) {
 
 export default function Contrato({ pedido, cat, onVoltar }) {
   const { updatePedido, moveStage } = useStore();
-  const [c, setC] = useState(() => pedido.contrato || contratoInicial(pedido, cat));
+  // desconto de ativação: vem do orçamento (também nos rascunhos de contrato feitos antes de existir)
+  const [c, setC] = useState(() => ({ desconto: pedido.descontoTexto || '', ativacao: pedido.ativacao || '', ...(pedido.contrato || contratoInicial(pedido, cat)) }));
   const [fotos, setFotos] = useState({}); // { itemKey: [{dataUrl,w,h,nome}] }
   const [colado, setColado] = useState('');
   const [msg, setMsg] = useState('');
@@ -226,6 +227,8 @@ export default function Contrato({ pedido, cat, onVoltar }) {
       <Bloco n="3" titulo="Valores, pagamento e prazo">
         <div className="grid gap-3 sm:grid-cols-3">
           <Campo rotulo="Frete (R$, 0 = grátis)" valor={c.frete} onChange={(v) => set({ frete: v.replace(',', '.') })} />
+          <Campo rotulo="Desconto (R$ ou %)" valor={c.desconto} onChange={(v) => set({ desconto: v })} />
+          <Campo rotulo="Ativação / motivo do desconto" valor={c.ativacao} onChange={(v) => set({ ativacao: v })} />
           <Campo rotulo="Prazo (dias úteis)" valor={c.prazoDias} onChange={(v) => set({ prazoDias: v.replace(/\D/g, '') })} />
           <label className="block space-y-1">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Data do contrato</span>
@@ -242,6 +245,12 @@ export default function Contrato({ pedido, cat, onVoltar }) {
               <span>{brl(i.subtotal)}</span>
             </div>
           ))}
+          {t.desconto > 0 && (
+            <div className="flex justify-between text-violet-700">
+              <span>Desconto{c.ativacao ? ` · ${c.ativacao}` : ''}</span>
+              <span>−{brl(t.desconto)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-slate-600">
             <span>Frete</span>
             <span>{t.frete ? brl(t.frete) : 'grátis'}</span>

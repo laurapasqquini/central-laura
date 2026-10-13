@@ -1,6 +1,7 @@
 // Monta o contrato da Gralha Azul (.docx) no próprio navegador, a partir de public/contrato-modelo.docx.
 // O modelo tem marcadores {{...}}; os itens, a tabela de tamanhos e as fotos são repetidos aqui.
 import JSZip from 'jszip';
+import { descontoValor } from './gralha';
 
 export const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/ /g, ' ');
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -38,8 +39,13 @@ export const totaisContrato = (c) => {
   });
   const produtos = itens.reduce((s, i) => s + i.subtotal, 0);
   const frete = Number(c.frete) || 0;
-  return { itens, produtos, frete, total: produtos + frete, unidades: itens.reduce((s, i) => s + i.qtdTotal, 0) };
+  const desconto = descontoValor(c.desconto, produtos); // desconto de ativação (vem do orçamento)
+  return { itens, produtos, desconto, frete, total: produtos - desconto + frete, unidades: itens.reduce((s, i) => s + i.qtdTotal, 0) };
 };
+
+// "Desconto · Ativação: −R$ 140,40 · Frete grátis" (mesma linha do frete no contrato)
+export const linhaFrete = (c, t) =>
+  [t.desconto > 0 ? `Desconto${c.ativacao ? ` · ${c.ativacao}` : ''}: −${brl(t.desconto)}` : '', t.frete ? `Frete: ${brl(t.frete)}` : 'Frete grátis'].filter(Boolean).join(' · ');
 
 // Divide o <w:body> em parágrafos/tabelas de primeiro nível
 function filhosDoBody(body) {
@@ -170,7 +176,7 @@ export async function gerarContrato(c) {
       c.prazoTexto ||
       `As partes concordam que o prazo de produção e envio será de até ${c.prazoDias} (${extenso(Number(c.prazoDias))}) dias úteis, a contar da confirmação deste contrato e do pagamento da entrada.`,
     PAGAMENTO_TEXTO: c.pagamentoTexto || pag.texto,
-    FRETE_LINHA: t.frete ? `Frete: ${brl(t.frete)}` : 'Frete grátis',
+    FRETE_LINHA: linhaFrete(c, t),
     TOTAL_PEDIDO: brl(t.total),
     PAG_VIA: pag.via,
     PAG_DETALHE: pag.detalhe,

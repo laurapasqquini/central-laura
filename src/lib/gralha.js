@@ -47,7 +47,7 @@ export function faixasLabel(prod) {
 }
 
 // Mensagem só com a tabela de preços (cliente ainda sem quantidade definida).
-export function mensagemTabela({ cliente, cidade, itens, produtos }) {
+export function mensagemTabela({ cliente, cidade, itens, produtos, descontoTexto, ativacao }) {
   const out = ['*ORÇAMENTO GRALHA AZUL UNIFORMES*', ''];
   if (cliente) out.push(`Cliente: ${cliente}`, '');
   itens.forEach((it, i) => {
@@ -59,13 +59,27 @@ export function mensagemTabela({ cliente, cidade, itens, produtos }) {
     out.push('');
   });
   out.push(`*Frete:* ${isMaringa(cidade) ? 'grátis para Maringá-PR' : 'a calcular conforme o endereço de entrega'}`);
+  if (String(descontoTexto || '').trim()) {
+    const d = String(descontoTexto).trim();
+    out.push(`${rotuloDesconto(ativacao)} ${ehPorcentagem(d) ? `${d} nos produtos` : `${brl(descontoValor(d, Infinity))} no pedido`}`);
+  }
   out.push('5% de desconto no pagamento à vista', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
   return out.join('\n');
 }
 
 export const detalhe = (p) => [p.tecido, p.tamanho, p.personalizacao].filter(Boolean).join(' · ');
 
-export function totals(itens, produtos, frete) {
+// Desconto de ativação: "10%" = porcentagem dos produtos; "150" ou "150,00" = valor em R$
+export function descontoValor(texto, produtosTotal) {
+  const s = String(texto || '').trim();
+  if (!s) return 0;
+  const n = parseFloat(s.replace(/[^\d,.]/g, '').replace(/\.(?=\d{3}(\D|$))/g, '').replace(',', '.')) || 0;
+  const v = /%/.test(s) ? (produtosTotal * n) / 100 : n;
+  return Math.min(Math.max(0, Math.round(v * 100) / 100), produtosTotal);
+}
+const ehPorcentagem = (texto) => /%/.test(String(texto || ''));
+
+export function totals(itens, produtos, frete, descontoTexto) {
   const linhas = itens.map((it) => {
     const p = produtos.find((x) => x.id === it.prodId);
     const { atual } = priceFor(p, it.qtd);
@@ -73,12 +87,16 @@ export function totals(itens, produtos, frete) {
     return { ...it, p, unit, subtotal: unit * it.qtd };
   });
   const produtosTotal = linhas.reduce((s, l) => s + l.subtotal, 0);
-  const total = produtosTotal + (frete || 0);
-  return { linhas, produtosTotal, total, aVista: produtosTotal * 0.95 + (frete || 0) };
+  const desconto = descontoValor(descontoTexto, produtosTotal);
+  const comDesconto = produtosTotal - desconto;
+  const total = comDesconto + (frete || 0);
+  return { linhas, produtosTotal, desconto, total, aVista: comDesconto * 0.95 + (frete || 0) };
 }
 
-export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto }) {
-  const { linhas, total, aVista } = totals(itens, produtos, frete);
+const rotuloDesconto = (ativacao) => `*Desconto${ativacao ? ` · ${ativacao}` : ''}:*`;
+
+export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, descontoTexto, ativacao }) {
+  const { linhas, produtosTotal, desconto, total, aVista } = totals(itens, produtos, frete, descontoTexto);
   const prazos = [...new Set(linhas.map((l) => l.p.prazo).filter(Boolean))];
   const out = ['*ORÇAMENTO GRALHA AZUL UNIFORMES*', ''];
   if (cliente) out.push(`Cliente: ${cliente}`, '');
@@ -89,7 +107,9 @@ export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto }
   });
   if (prazos.length) out.push(`*Prazo de produção:* ${prazos.join(' / ')}`);
   out.push(`*Frete:* ${isMaringa(cidade) ? 'grátis para Maringá-PR' : frete ? `${brl(frete)}${cidade ? ` (${cidade})` : ''}` : freteTexto || 'a calcular conforme o endereço de entrega'}`);
-  out.push('', `*Total: ${brl(total)}*`, `À vista (5% de desconto nos produtos): *${brl(aVista)}*`, '', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
+  out.push('');
+  if (desconto > 0) out.push(`Produtos: ${brl(produtosTotal)}`, `${rotuloDesconto(ativacao)} −${brl(desconto)}${ehPorcentagem(descontoTexto) ? ` (${String(descontoTexto).trim()})` : ''}`);
+  out.push(`*Total: ${brl(total)}*`, `À vista (5% de desconto nos produtos): *${brl(aVista)}*`, '', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
   return out.join('\n');
 }
 
@@ -101,11 +121,32 @@ export function valoresPedido(p) {
   if (p.contrato) {
     const produtos = p.contrato.itens.reduce((s, i) => s + i.tamanhos.reduce((a, t) => a + (Number(t.qtd) || 0), 0) * (Number(i.preco) || 0), 0);
     const frete = Number(p.contrato.frete) || 0;
-    if (produtos > 0) return { produtos, frete, total: produtos + frete };
+    // desconto de ativação: o do contrato (que começa igual ao do orçamento)
+    const desconto = descontoValor(p.contrato.desconto ?? p.descontoTexto, produtos);
+    if (produtos > 0) return { produtos: produtos - desconto, frete, total: produtos - desconto + frete, desconto };
   }
   const frete = Number(p.frete) || 0;
   const total = Number(p.total) || 0;
-  return { produtos: Math.max(0, total - frete), frete, total };
+  return { produtos: Math.max(0, total - frete), frete, total, desconto: Number(p.desconto) || 0 };
+}
+
+// Resumo por ativação: quantos orçamentos, quantos fecharam, quanto vendeu e quanto de desconto deu
+export function resumoAtivacoes(pedidos) {
+  const por = {};
+  for (const p of pedidos || []) {
+    const nome = (p.contrato?.ativacao ?? p.ativacao ?? '').trim();
+    if (!nome) continue;
+    const r = (por[nome.toLowerCase()] ||= { nome, orcamentos: 0, fechados: 0, vendido: 0, desconto: 0, perdidos: 0 });
+    r.orcamentos++;
+    if (p.stage === 'perdido') r.perdidos++;
+    else if (dataFechamento(p) || ['fechado', 'contrato'].includes(p.stage)) {
+      const v = valoresPedido(p);
+      r.fechados++;
+      r.vendido += v.total;
+      r.desconto += v.desconto || 0;
+    }
+  }
+  return Object.values(por).sort((a, b) => b.vendido - a.vendido || b.orcamentos - a.orcamentos);
 }
 
 export const comissaoDe = (p, cfg) => {

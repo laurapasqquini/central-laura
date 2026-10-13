@@ -1,7 +1,7 @@
 // PDF do contrato da Gralha Azul, gerado no navegador (mesmo conteúdo do Word).
 // Cabeçalho e rodapé vêm das imagens do próprio modelo (public/contrato-modelo.docx).
 import JSZip from 'jszip';
-import { totaisContrato, brl, extenso, dataPorExtenso, PAGAMENTOS } from './contrato';
+import { totaisContrato, linhaFrete, brl, extenso, dataPorExtenso, PAGAMENTOS } from './contrato';
 
 const AZUL = '#0b63b5';
 
@@ -164,7 +164,7 @@ export async function gerarContratoPdf(c) {
           par(c.pagamentoTexto || pag.texto),
           { text: 'Valores acordados:', bold: true, margin: [0, 2, 0, 2] },
           ...t.itens.map((it) => ({ text: `${it.produto}: ${it.qtdTotal} x ${brl(Number(it.preco))} = ${brl(it.subtotal)}` })),
-          { text: t.frete ? `Frete: ${brl(t.frete)}` : 'Frete grátis', bold: true },
+          { text: linhaFrete(c, t), bold: true },
           { text: [b('Total do pedido: '), b(brl(t.total))], margin: [0, 0, 0, 6] },
           ...parcelas,
           { text: '4.3 Dados bancários', bold: true, margin: [0, 8, 0, 2] },
