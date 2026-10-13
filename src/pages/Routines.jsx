@@ -5,7 +5,6 @@ import { DIAS } from '../lib/dates';
 import { Modal, Segmented, areaOptions, inputCls, inputBase, Pill } from '../components/ui';
 import { NotifCard } from '../components/Notif';
 import { FolgasCard } from '../components/Folgas';
-import { ContasCard } from '../components/Contas';
 
 const when = (r) => (r.freq === 'daily' ? 'seg a sex' : r.freq === 'weekly' ? `toda ${DIAS[r.weekday]}` : `dia ${r.monthday}`) + (r.hora ? ` às ${r.hora}` : '');
 
@@ -26,8 +25,6 @@ export default function Routines() {
       <div id="notificacoes">
         <NotifCard />
       </div>
-
-      <ContasCard />
 
       <FolgasCard />
 

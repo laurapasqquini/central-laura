@@ -3,24 +3,20 @@ import { supabase } from './lib/supabase';
 import Login from './pages/Login';
 import { StoreProvider, useStore } from './lib/store';
 import { buildOverdue } from './lib/engine';
-import Home from './pages/Home';
+import Inicio from './pages/Inicio';
 import Routines from './pages/Routines';
-import Lolis from './pages/Lolis';
 import Gralha from './pages/Gralha';
-import Etapas from './pages/Etapas';
-import Relatorios from './pages/Relatorios';
-import Plano from './pages/Plano';
+import Ranken, { SUBABAS_RANKEN } from './pages/Ranken';
+import Pessoal from './pages/Pessoal';
 import LolisPublica from './pages/LolisPublica';
 import { Revisao } from './components/Revisao';
-import { House, Target, Trophy, ShoppingBag, Users, BarChart3, Repeat, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
+import { House, Trophy, ShoppingBag, Heart, Repeat, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
 
 const TABS = [
-  { id: 'home', label: 'Início', Icon: House, C: Home },
-  { id: 'plano', label: 'Plano', Icon: Target, C: Plano },
-  { id: 'etapas', label: 'Etapas', Icon: Trophy, C: Etapas },
+  { id: 'home', label: 'Início', Icon: House, C: Inicio },
+  { id: 'ranken', label: 'RANKEN', Icon: Trophy, C: Ranken },
   { id: 'gralha', label: 'Gralha', Icon: ShoppingBag, C: Gralha },
-  { id: 'lolis', label: 'Lolis', Icon: Users, C: Lolis },
-  { id: 'relatorios', label: 'Relatórios', Icon: BarChart3, C: Relatorios },
+  { id: 'pessoal', label: 'Pessoal', Icon: Heart, C: Pessoal },
   { id: 'routines', label: 'Rotinas', Icon: Repeat, C: Routines },
 ];
 
@@ -35,7 +31,15 @@ const lerMenu = () => {
 
 function Shell() {
   const { state, sync, user } = useStore();
-  const [tab, setTab] = useState('home');
+  const [tab, setAba] = useState('home');
+  const [sub, setSub] = useState('tarefas'); // subaba do RANKEN
+  // ir para uma aba; "etapas", "plano", "lolis"… são subabas do RANKEN
+  const setTab = (id) => {
+    if (SUBABAS_RANKEN.some((s) => s.id === id)) {
+      setSub(id);
+      setAba('ranken');
+    } else setAba(id);
+  };
   const [revisao, setRevisao] = useState(null);
   const [fechado, setFechado] = useState(lerMenu);
 
@@ -121,11 +125,11 @@ function Shell() {
 
       <main className={`mx-auto w-full min-w-0 px-4 pt-6 pb-28 sm:px-8 sm:pt-10 sm:pb-12 ${fechado ? 'max-w-6xl' : 'max-w-5xl'}`}>
         <div className="mb-3 flex justify-end sm:hidden"><SyncDot sync={sync} dark /></div>
-        <Page go={setTab} />
+        <Page go={setTab} sub={sub} setSub={setSub} />
         {revisao && <Revisao item={revisao.id ? revisao : null} go={setTab} onClose={() => setRevisao(null)} />}
       </main>
 
-      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-7 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
+      <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
         {TABS.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)} className={`relative flex min-w-0 flex-col items-center gap-1 py-1 text-[10px] font-medium ${tab === id ? 'text-ink' : 'text-slate-400'}`}>
             <Icon size={20} strokeWidth={tab === id ? 2.2 : 1.8} />

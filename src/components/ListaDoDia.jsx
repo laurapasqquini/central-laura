@@ -1,11 +1,15 @@
+// Lista completa de uma frente (RANKEN, Gralha ou Pessoal): hoje, atrasadas, rotinas, sem data e próximos dias.
 import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { buildDay, buildOverdue, noDate, suggestions, AREAS, folgaDe, isWorkday } from '../lib/engine';
-import { today, addDays, fmtLongo, fmtCurto, relativo } from '../lib/dates';
-import { ItemRow, Empty, QuickAdd, TaskModal, Segmented } from '../components/ui';
-import { NotifBanner } from '../components/Notif';
+import { today, addDays, fmtCurto, relativo } from '../lib/dates';
+import { ItemRow, Empty, QuickAdd, TaskModal, Segmented } from './ui';
 
-const TONE_DOT = { red: 'bg-red-500', amber: 'bg-amber-500', violet: 'bg-violet-500', sky: 'bg-sky-500' };
+// de qual frente é cada aviso (pelo ícone); sem frente = aviso geral
+const FRENTE_AVISO = { '💸': 'pessoal', '💜': 'pessoal', '🐦': 'gralha', '📣': 'ranken', '🙋': 'ranken', '🎉': 'ranken', '📅': 'ranken', '🚧': 'ranken' };
+export const frenteDoAviso = (t) => FRENTE_AVISO[t.icon] || null;
+
+const TONE_DOT ={ red: 'bg-red-500', amber: 'bg-amber-500', violet: 'bg-violet-500', sky: 'bg-sky-500' };
 
 // Um grupo dentro do bloco "Hoje"
 function Grupo({ icone, titulo, conta, cor = 'text-slate-700', children }) {
@@ -21,9 +25,9 @@ function Grupo({ icone, titulo, conta, cor = 'text-slate-700', children }) {
   );
 }
 
-export default function Home({ go }) {
+export default function ListaDoDia({ area }) {
   const { state } = useStore();
-  const [filter, setFilter] = useState({ area: 'all', who: 'all' });
+  const [filter, setFilter] = useState({ area, who: 'all' });
   const [editing, setEditing] = useState(null);
   const [verRotinas, setVerRotinas] = useState(false);
   const [verDicas, setVerDicas] = useState(false);
@@ -47,20 +51,13 @@ export default function Home({ go }) {
 
   const next = Array.from({ length: 7 }, (_, i) => addDays(ref, i + 1)).map((d) => ({ d, items: buildDay(state, d, filter) }));
   const semData = noDate(state, filter);
-  const dicas = suggestions(state, ref);
-  const hora = new Date().getHours();
-  const saud = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+  // avisos só desta frente (os gerais, como "itens atrasados", ficam no Início)
+  const dicas = suggestions(state, ref).filter((t) => frenteDoAviso(t) === area);
   const folgaHoje = !isWorkday(state, ref);
 
   return (
     <div className="space-y-5">
-      <header>
-        <p className="text-sm font-medium text-slate-500 first-letter:uppercase">{fmtLongo(ref)}</p>
-        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{saud}, Laura</h1>
-      </header>
-
-      <NotifBanner onOpen={() => go?.('routines')} />
-      <QuickAdd defaultArea={filter.area === 'all' ? 'ranken' : filter.area} />
+      <QuickAdd defaultArea={area} />
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         {/* ---------------- HOJE ---------------- */}
@@ -74,12 +71,6 @@ export default function Home({ go }) {
               <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-sky-500 to-violet-500 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <Segmented
-                value={filter.area}
-                onChange={(area) => setFilter((f) => ({ ...f, area }))}
-                options={[['all', 'Tudo'], ...Object.entries(AREAS).map(([k, a]) => [k, a.label, `${a.bar} text-white ring-transparent`])]}
-              />
-              <span className="hidden h-5 w-px bg-slate-200 sm:block" />
               <Segmented
                 value={filter.who}
                 onChange={(who) => setFilter((f) => ({ ...f, who }))}

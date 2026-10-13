@@ -5,6 +5,7 @@ import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemT
 import { fmtCurto, relativo, today } from '../lib/dates';
 import { inputCls, inputBase, Empty, Pill, Segmented } from '../components/ui';
 import Contrato from './Contrato';
+import ListaDoDia from '../components/ListaDoDia';
 import { pedidosParados } from '../lib/engine';
 
 // O catálogo (242 produtos) só carrega quando a aba é aberta.
@@ -38,10 +39,13 @@ export default function Gralha() {
           options={[
             ['novo', '+ Novo orçamento', 'bg-sky-500 text-white ring-transparent'],
             ['pedidos', `Pedidos${abertos ? ` (${abertos})` : ''}`, 'bg-sky-500 text-white ring-transparent'],
+            ['tarefas', 'Tarefas', 'bg-sky-500 text-white ring-transparent'],
           ]}
         />
       </header>
-      {!cat ? (
+      {view === 'tarefas' ? (
+        <ListaDoDia area="gralha" />
+      ) : !cat ? (
         <Empty>Carregando catálogo…</Empty>
       ) : view.startsWith('contrato:') && (state.pedidos || []).some((p) => p.id === view.slice(9)) ? (
         <Contrato key={view} pedido={state.pedidos.find((p) => p.id === view.slice(9))} cat={cat} onVoltar={() => setView('pedidos')} />
