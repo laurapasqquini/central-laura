@@ -418,6 +418,15 @@ const whatsDe = (tel = '') => {
   if (d.length === 12 && /[6-9]/.test(d[4])) d = d.slice(0, 4) + '9' + d.slice(4); // celular antigo sem o 9
   return `https://wa.me/${d}`;
 };
+// "(44) 99982-1234" → "9982": tira o 55, o DDD e o 9 a mais do celular
+export const inicioCelular = (tel = '') => {
+  let d = String(tel || '').replace(/\D/g, '');
+  if (d.startsWith('55') && d.length >= 12) d = d.slice(2);
+  if (d.length >= 10) d = d.slice(2);
+  if (d.length === 9 && d[0] === '9') d = d.slice(1);
+  return d.length >= 8 ? d.slice(0, 4) : '';
+};
+
 export function comoRetirar(pats, cidade = '') {
   if (!pats?.length) return '';
   return pats
@@ -564,7 +573,9 @@ export function postsSorteio(state, date) {
       `🎾🔥 *${pats.length > 1 ? 'APOIADORES' : 'APOIADOR'} RANKEN → ${juntar(nomes)}* 🔥🎾`,
       '',
       `Parabéns ${delas ? 'à ganhadora' : 'ao(à) ganhador(a)'} da ${tituloBonito(d.titulo || dia)}! 👏🎉`,
-      '👉 @[marque o ganhador]', // a marcação só vale escolhendo a pessoa no grupo (pelo @)
+      // a marcação só vale escolhendo a pessoa no grupo (pelo @): já vai com os 4 primeiros números
+      // do celular (sem o DDD e sem o 9 da frente), que é o que se digita depois do @ para achar a pessoa
+      `👉 @${inicioCelular(ganhador?.telefone) || '[marque o ganhador]'}`,
       '',
       fraseSorteio(state, p, dia),
       '',

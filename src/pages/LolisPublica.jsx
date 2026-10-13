@@ -302,7 +302,15 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
           <Texto rotulo="1. Anúncio" texto={p.anuncio} />
           <Texto rotulo="2. Parabéns (depois do sorteio no Hub)" texto={p.parabens} />
           <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            No grupo, apague <b>[marque o ganhador]</b>, digite <b>@</b> e escolha a pessoa na lista, para ela ser marcada de verdade.
+            {/@\d{4}/.test(p.parabens) ? (
+              <>
+                No grupo, o <b>{p.parabens.match(/@\d{4}/)[0]}</b> colado ainda não marca: apague o último número e digite de novo. Aí a lista abre e você escolhe a pessoa.
+              </>
+            ) : (
+              <>
+                No grupo, apague <b>[marque o ganhador]</b>, digite <b>@</b> e escolha a pessoa na lista, para ela ser marcada de verdade.
+              </>
+            )}
           </p>
         </div>
 
