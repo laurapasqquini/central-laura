@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
-import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes } from '../lib/gralha';
+import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes, cidadesConhecidas, cidadeDe } from '../lib/gralha';
 import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa } from '../lib/gralha';
 import { fmtCurto, relativo, today } from '../lib/dates';
 import { inputCls, inputBase, Empty, Pill, Segmented } from '../components/ui';
@@ -72,6 +72,8 @@ function Novo({ cat, onSaved, pedido }) {
   const [ativacao, setAtivacao] = useState(pedido?.ativacao || '');
   const { state } = useStore();
   const ativacoes = useMemo(() => [...new Set((state.pedidos || []).map((p) => (p.ativacao || '').trim()).filter(Boolean))], [state.pedidos]);
+  const cidades = useMemo(() => cidadesConhecidas((state.pedidos || []).filter((p) => p.id !== pedido?.id)), [state.pedidos, pedido]);
+  const cidadeSalva = cidadeDe(cidades, cidade);
   const [copied, setCopied] = useState(false);
   const abas = useMemo(() => [...new Set(cat.produtos.map((p) => p.aba))], [cat]);
   const groups = useMemo(() => {
@@ -121,8 +123,11 @@ function Novo({ cat, onSaved, pedido }) {
         />
         <div className="grid grid-cols-2 gap-3">
           <input className={inputCls} placeholder="Cliente (ex.: Medicina UEM 2027)" value={cliente} onChange={(e) => setCliente(e.target.value)} />
-          <input className={inputCls} placeholder="Cidade de entrega" value={cidade} onChange={(e) => setCidade(e.target.value)} />
+          <input className={inputCls} list="cidades-gralha" placeholder="Cidade de entrega" value={cidade} onChange={(e) => setCidade(e.target.value)} />
         </div>
+        <datalist id="cidades-gralha">
+          {Object.values(cidades).map((c) => <option key={c.nome} value={c.nome} />)}
+        </datalist>
 
         <div className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
           <input autoFocus className={inputCls} placeholder="Buscar… vários de uma vez com vírgula: camiseta algodão, samba, body" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -226,6 +231,22 @@ function Novo({ cat, onSaved, pedido }) {
                 <input className={`${inputBase} w-36 text-right`} placeholder="R$ (opcional)" value={frete} onChange={(e) => setFrete(e.target.value)} />
               )}
             </div>
+            {/* fretes já passados para esta cidade: referência (o valor muda com o volume) */}
+            {!isMaringa(cidade) && cidadeSalva?.fretes.length > 0 && (
+              <div className="space-y-1 rounded-lg bg-sky-50 px-2.5 py-2 text-xs text-sky-800">
+                <div className="font-semibold">🚚 Fretes já passados para {cidadeSalva.nome}:</div>
+                {cidadeSalva.fretes.slice(0, 3).map((f, i) => (
+                  <div key={i} className="flex items-center justify-between gap-2">
+                    <span>
+                      <b>{brl(f.frete)}</b> · {f.cliente}{f.pecas ? `, ${f.pecas} peças` : ''}{f.data ? ` (${fmtCurto(f.data)})` : ''}
+                    </span>
+                    {String(f.frete).replace('.', ',') !== frete && (
+                      <button onClick={() => { setFrete(String(f.frete).replace('.', ',')); setCidade(cidadeSalva.nome); }} className="shrink-0 rounded-full bg-sky-500 px-2 py-0.5 font-bold text-white">usar</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
             <Row label="Produtos" value={brl(produtosTotal)} />
             {descontoR > 0 && <Row label={`Desconto${ativacao.trim() ? ` · ${ativacao.trim()}` : ''}`} value={`−${brl(descontoR)}`} />}
             <Row label="Total" value={brl(total)} strong />

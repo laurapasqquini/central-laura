@@ -132,6 +132,23 @@ export function valoresPedido(p) {
   return { produtos: Math.max(0, total - frete), frete, total, desconto: Number(p.desconto) || 0 };
 }
 
+// Cidades já usadas nos pedidos, com os fretes cobrados (o mais recente primeiro).
+// Alimenta a sugestão de cidade e de frete no orçamento.
+export function cidadesConhecidas(pedidos) {
+  const por = {};
+  for (const p of pedidos || []) {
+    const nome = (p.cidade || '').trim();
+    if (!nome) continue;
+    const c = (por[norm(nome)] ||= { nome, fretes: [] });
+    const frete = valoresPedido(p).frete;
+    const pecas = (p.contrato ? p.contrato.itens.reduce((s, i) => s + i.tamanhos.reduce((a, t) => a + (Number(t.qtd) || 0), 0), 0) : 0) || (p.itens || []).reduce((s, i) => s + (Number(i.qtd) || 0), 0);
+    if (frete > 0) c.fretes.push({ frete, cliente: p.cliente, data: p.editadoEm || p.createdAt, pecas });
+  }
+  for (const c of Object.values(por)) c.fretes.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+  return por;
+}
+export const cidadeDe = (conhecidas, cidade) => conhecidas[norm((cidade || '').trim())] || null;
+
 // Resumo por ativação: quantos orçamentos, quantos fecharam, quanto vendeu e quanto de desconto deu
 export function resumoAtivacoes(pedidos) {
   const por = {};
