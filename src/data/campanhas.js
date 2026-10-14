@@ -2,15 +2,16 @@
 // Uma campanha avulsa por etapa, rodada e momento (no backoffice: Programada, repetir a cada 1 dia, início = fim).
 import { CALENDARIOS } from './calendarios';
 
-// Nome da etapa no backoffice (sugestão; a Laura confere/edita na hora de agendar)
+// Etapa(s) no campo "Etapa" do backoffice, com o nome da lista. Duplas e beach de Maringá são duas
+// etapas lá (masculina e feminina): cada campanha vira duas. "(confira)" = nome ainda não visto na lista.
 export const ETAPA_BACKOFFICE = {
-  'mga-tenis-duplas': 'ETAPA LOEDE - TENIS DUPLAS',
-  'mga-tenis-simples-masc': 'ETAPA LOEDE - TENIS MARINGA',
-  'mga-tenis-simples-fem': 'ETAPA LOEDE - TENIS MARINGA',
-  'mga-beach': 'BEACH MASCULINO / BEACH FEMININO - ETAPA 01 - BEACH TENIS MARINGA',
-  'sfe-beach': 'ETAPA 01 - BEACH TENNIS SANTA FE',
-  'sfe-beach-masc': 'Beach Masculino Santa Fé (confira o nome da etapa no backoffice)',
-  'lda-tenis-simples-masc': 'ETAPA GEUM - RANKEN LONDRINA',
+  'mga-tenis-duplas': ['ETAPA LOEDE · TENIS DUPLAS · TENIS DUPLA MASCULINA - 19/07 a 20/12', 'ETAPA LOEDE · TENIS DUPLAS · TENIS DUPLA FEMININA - 19/07 a 20/12'],
+  'mga-tenis-simples-masc': ['ETAPA LOEDE · TENIS MARINGA · TENIS SIMPLES MASCULINO'],
+  'mga-tenis-simples-fem': ['ETAPA LOEDE · TENIS MARINGA · TENIS SIMPLES FEMININO (confira)'],
+  'mga-beach': ['BEACH FEMININO - ETAPA 01 · BEACH TENIS MARINGA · BEACH FEMININO - ETAPA 01', 'BEACH MASCULINO - ETAPA 01 · BEACH TENIS MARINGA · BEACH MASCULINO - ETAPA 01'],
+  'sfe-beach': ['ETAPA 01 · BEACH TENNIS SANTA FE · FEMININO B/C'],
+  'sfe-beach-masc': ['Beach Masculino Santa Fé (confira o nome da etapa na lista)'],
+  'lda-tenis-simples-masc': ['ETAPA GEUM · ETAPA GEUM - RANKEN LONDRINA · TENIS SIMPLES MASCULINO'],
 };
 
 const add = (s, n) => {
@@ -69,34 +70,72 @@ function textos(c, rd, tipo) {
   };
 }
 
-// Todas as campanhas a partir de uma data (inclusive)
+// Textos das campanhas que se repetem (servem para qualquer rodada, sem o número)
+const GENERICO = {
+  inicio: { titulo: '🎾 Rodada nova no ar!', mensagem: 'Seus jogos da nova rodada já estão no app. Chame seu adversário em até 48h e combinem dia e horário.' },
+  meio: { titulo: '📅 Já marcou o jogo da rodada?', mensagem: 'Se ainda não combinou, chame seu adversário hoje. Sem resposta em 24h? Manda o print pra gente que a gente ajuda.' },
+  fim: { titulo: '⏰ Último dia da rodada', mensagem: 'Jogou? Lance o resultado no app. Não vai poder jogar a próxima? Licencie-se até 19h59. Sorteio da próxima rodada às 20h.' },
+};
+const HORA = { inicio: '09:00', meio: '18:00', fim: '10:00' };
+const diasEntre = (a, b) => Math.round((new Date(`${b}T12:00`) - new Date(`${a}T12:00`)) / 864e5);
+const rotulo = (rds) => (rds.length === 1 ? `R${rds[0].nome || rds[0].n}` : `R${rds[0].nome || rds[0].n} a R${rds.at(-1).n}`);
+
+// Campanhas para criar no backoffice a partir de uma data. Cada tipo de aviso vira UMA campanha
+// "Programada · Repetir a cada N dias · Início → Fim" enquanto as rodadas mantêm o mesmo intervalo;
+// a última rodada (texto próprio) sai como campanha de um dia.
 export function gerarCampanhas(desde) {
   const out = [];
   for (const c of CALENDARIOS) {
-    for (const rd of c.rodadas) {
-      const momentos = [
-        ['inicio', rd.inicio, '09:00'],
-        ['meio', add(rd.inicio, 3), '18:00'],
-        ['fim', rd.fim, '10:00'],
-      ];
-      for (const [tipo, data, hora] of momentos) {
-        if (data < desde) continue;
-        // rodada de 1 semana: "já marcou?" no 3º dia ainda faz sentido; se cair no último dia, pula
-        if (tipo === 'meio' && data >= rd.fim) continue;
-        out.push({
-          id: `${c.id}:R${rd.n}:${tipo}`,
-          calId: c.id,
-          cidade: c.cidade,
-          categoria: c.nome,
-          etapa: ETAPA_BACKOFFICE[c.id] || c.nome,
-          rodada: rd.n,
-          tipo,
-          data,
-          hora,
-          ...textos(c, rd, tipo),
+    const ultimaN = c.rodadas[c.rodadas.length - 1].n;
+    for (const tipo of ['inicio', 'meio', 'fim']) {
+      const itens = c.rodadas
+        .map((rd) => ({ rd, data: tipo === 'inicio' ? rd.inicio : tipo === 'meio' ? add(rd.inicio, 3) : rd.fim }))
+        .filter(({ rd, data }) => !(tipo === 'meio' && data >= rd.fim)) // rodada de 1 semana: o "já marcou?" cairia no último dia
+        .map((x) => ({
+          ...x,
+          // só a última rodada tem texto próprio (fica no fim, não quebra a repetição das outras)
+          especial: tipo !== 'meio' && x.rd.n === ultimaN,
+        }));
+
+      const grupos = [];
+      for (const x of itens) {
+        const g = grupos.at(-1);
+        if (x.especial) grupos.push({ itens: [x], especial: true });
+        else if (g && !g.especial && (g.itens.length === 1 || diasEntre(g.itens.at(-1).data, x.data) === g.passo) && diasEntre(g.itens.at(-1).data, x.data) > 0) {
+          g.passo = diasEntre(g.itens.at(-1).data, x.data);
+          g.itens.push(x);
+        } else grupos.push({ itens: [x], especial: false });
+      }
+
+      for (const g of grupos) {
+        // grupo montado com a etapa inteira (o id não muda com os dias); mostra só o que ainda vai ser enviado
+        const futuros = g.itens.filter((x) => x.data >= desde);
+        if (!futuros.length) continue;
+        const rds = futuros.map((x) => x.rd);
+        const texto = g.especial ? textos(c, rds[0], tipo) : GENERICO[tipo];
+        const inicio = futuros[0].data;
+        const fim = futuros.at(-1).data;
+        const original = g.itens[0].data;
+        (ETAPA_BACKOFFICE[c.id] || [c.nome]).forEach((etapa, k) => {
+          out.push({
+            id: `${c.id}:${k}:${tipo}:${original}`,
+            calId: c.id,
+            cidade: c.cidade,
+            categoria: c.nome,
+            etapa,
+            rodadas: rotulo(rds),
+            envios: futuros.length,
+            tipo,
+            data: inicio, // primeiro envio (para saber o que está para vencer)
+            inicio,
+            fim,
+            repetir: futuros.length > 1 ? g.passo : 1,
+            hora: HORA[tipo],
+            ...texto,
+          });
         });
       }
     }
   }
-  return out.sort((a, b) => a.data.localeCompare(b.data) || a.hora.localeCompare(b.hora) || a.cidade.localeCompare(b.cidade));
+  return out.sort((a, b) => a.data.localeCompare(b.data) || a.cidade.localeCompare(b.cidade) || a.categoria.localeCompare(b.categoria) || a.hora.localeCompare(b.hora));
 }
