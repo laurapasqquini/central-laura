@@ -2,6 +2,7 @@ import { Component, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { today, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 import { gerarVoucher, modeloVoucher } from '../lib/voucher';
+import { gerarArte6x0, MODELOS_6X0 } from '../lib/arte6x0';
 
 // Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
 // O que ela marca (feito / não consegui + nota) vai para a central da Laura.
@@ -230,6 +231,7 @@ function Dia({ dia, andamento, token }) {
                           <BotaoWhats tel={g.telefone} />
                         </div>
                       ))}
+                      <BotaoArte6x0 cidade={c.cidade} nomes={c.ganhadores.map((g) => `${g.nome} (R${g.rodada})`)} />
                       <Texto rotulo="Nomes para a arte do Instagram" texto={c.ganhadores.map((g) => `${g.nome} (R${g.rodada})`).join('\n')} />
                     </div>
                   ) : (
@@ -494,6 +496,28 @@ function Tarefa({ t, feito, marca, onMarcar }) {
 }
 
 // Voucher pronto em PDF (Burgo, Jacaré): modelo do Canva + nome do ganhador + data do sorteio
+// Arte do 6x0 6x0 da cidade, já com os nomes (PNG para o Instagram)
+function BotaoArte6x0({ cidade, nomes }) {
+  const [gerando, setGerando] = useState(false);
+  if (!MODELOS_6X0[cidade] || !nomes.length) return null;
+  return (
+    <button
+      disabled={gerando}
+      onClick={async () => {
+        setGerando(true);
+        try {
+          await gerarArte6x0(cidade, nomes);
+        } finally {
+          setGerando(false);
+        }
+      }}
+      className="inline-flex items-center gap-1 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-violet-700 disabled:opacity-40"
+    >
+      {gerando ? 'Gerando…' : `🎨 Baixar a arte de ${cidade} com os nomes (PNG)`}
+    </button>
+  );
+}
+
 function BotaoVoucher({ patrocinador, nome, data }) {
   const [gerando, setGerando] = useState(false);
   const semNome = !nome.trim();
