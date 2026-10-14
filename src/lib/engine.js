@@ -811,7 +811,8 @@ export function dadosPaginaLolis(state, ref = today()) {
       .filter((x) => x.kind !== 'marco')
       .sort((a, b) => ordem(a) - ordem(b))
       .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title), detalhe: detalheTarefa(x), mensagem: x.kind === 'task' ? x.mensagem || '' : '', telefone: x.telefone || '' }));
-    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x), mensagem: x.mensagem || '', telefone: x.telefone || '' })) : [];
+    // atrasadas: tarefas e o que vem do calendário das etapas (melhores da rodada etc.); rotina comum não acumula
+    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task' || x.freq === 'calendario').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x), mensagem: x.mensagem || '', telefone: x.telefone || '' })) : [];
     const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto, sorteio, prazo, telefone }) => ({ key, tipo, linha, texto, sorteio, prazo, telefone, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
     const posts = postsSorteio(state, d);
     dias.push({ date: d, tarefas, atrasadas, brindes, posts });
