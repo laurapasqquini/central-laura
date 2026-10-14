@@ -29,7 +29,7 @@ export default function ListaDoDia({ area }) {
   const { state } = useStore();
   const [filter, setFilter] = useState({ area, who: 'all' });
   const [editing, setEditing] = useState(null);
-  const [verRotinas, setVerRotinas] = useState(false);
+  const [verFeitos, setVerFeitos] = useState(false);
   const [verDicas, setVerDicas] = useState(false);
   const ref = today();
 
@@ -42,8 +42,8 @@ export default function ListaDoDia({ area }) {
   const idsPrioridade = new Set(prioridades.map((x) => x.key));
   const tarefas = hoje.filter((x) => ehTarefa(x) && !idsPrioridade.has(x.key));
   const rotinas = hoje.filter((x) => x.kind === 'routine' && !ehTarefa(x));
-  const rotinasAbertas = rotinas.filter((x) => !x.done);
-  const rotinasFeitas = rotinas.length - rotinasAbertas.length;
+  const paraFazer = [...tarefas, ...rotinas];
+  const feitosLista = paraFazer.filter((x) => x.done);
 
   const doable = hoje.filter((x) => x.kind !== 'marco');
   const feitos = doable.filter((x) => x.done).length;
@@ -97,23 +97,24 @@ export default function ListaDoDia({ area }) {
             </Grupo>
           )}
 
-          <Grupo icone="📝" titulo="Tarefas de hoje" conta={tarefas.filter((x) => !x.done).length}>
-            {tarefas.length ? tarefas.map((x) => <ItemRow key={x.key} item={x} onEdit={setEditing} />) : <Empty>{folgaHoje ? 'Dia de folga. Aproveite! 🌴' : 'Nenhuma tarefa avulsa para hoje.'}</Empty>}
+          {/* uma lista só: tarefas avulsas, depois rotinas (com a etiqueta ↻ rotina); as feitas descem pro fim */}
+          <Grupo icone="📝" titulo="Para fazer" conta={paraFazer.filter((x) => !x.done).length}>
+            {paraFazer.length ? (
+              <>
+                {paraFazer.filter((x) => !x.done).map((x) => (
+                  <ItemRow key={x.key} item={x} onEdit={setEditing} />
+                ))}
+                {feitosLista.length > 0 && (
+                  <button onClick={() => setVerFeitos(!verFeitos)} className="w-full rounded-xl px-3 py-1.5 text-left text-xs font-semibold text-emerald-600 hover:bg-slate-50">
+                    ✓ {feitosLista.length} {feitosLista.length === 1 ? 'feita' : 'feitas'} hoje {verFeitos ? '· esconder' : '· ver'}
+                  </button>
+                )}
+                {verFeitos && feitosLista.map((x) => <ItemRow key={x.key} item={x} onEdit={setEditing} />)}
+              </>
+            ) : (
+              <Empty>{folgaHoje ? 'Dia de folga. Aproveite! 🌴' : 'Nada para hoje.'}</Empty>
+            )}
           </Grupo>
-
-          {rotinas.length > 0 && (
-            <Grupo icone="↻" titulo="Rotinas do dia" conta={`${rotinasFeitas}/${rotinas.length}`} cor="text-slate-500">
-              {(verRotinas ? rotinasAbertas : rotinasAbertas.slice(0, 4)).map((x) => (
-                <ItemRow key={x.key} item={x} onEdit={setEditing} />
-              ))}
-              {rotinasAbertas.length > 4 && (
-                <button onClick={() => setVerRotinas(!verRotinas)} className="w-full rounded-xl px-3 py-1.5 text-left text-xs font-semibold text-slate-500 hover:bg-slate-50">
-                  {verRotinas ? 'mostrar menos' : `+ ${rotinasAbertas.length - 4} rotinas`}
-                </button>
-              )}
-              {rotinasAbertas.length === 0 && <p className="px-1 text-sm font-medium text-emerald-600">Todas as rotinas de hoje feitas ✓</p>}
-            </Grupo>
-          )}
 
           {semData.length > 0 && (
             <Grupo icone="🗂️" titulo="Sem data" conta={semData.length} cor="text-slate-500">
