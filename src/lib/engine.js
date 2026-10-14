@@ -83,7 +83,7 @@ const fromTask = (t, projects, state) => ({
 // Tarefa de Pix que vem do Hub ("Cobrar mensalidade Pix — Nome (Esporte) — vence em 08/10"):
 // ganha a mensagem padrão de cobrança com o primeiro nome da atleta (e o WhatsApp, se estiver na descrição)
 function cobrancaPix(t) {
-  const m = (t.title || '').match(/^Cobrar (mensalidade|renova[cç][aã]o) Pix\s*[—-]\s*([^—]+?)\s*(?:\([^)]*\))?\s*(?:[—-]\s*venc(?:e|eu) em (\d{2})\/(\d{2}))?\s*$/i);
+  const m = (t.title || '').match(/^Cobrar (mensalidade|renova[cç][aã]o) Pix\s*[—-]\s*([^—]+?)\s*(?:\([^)]*\))?\s*(?:[—-]\s*venc(?:e|eu) em (\d{2})\/(\d{2}))?\s*(?:·[^—]*)?$/i); // "· (44) 9…" no fim: o Hub passou a pôr o telefone no título
   if (!m) return {};
   const primeiro = m[2].trim().split(/\s+/)[0];
   const nome = primeiro[0].toUpperCase() + primeiro.slice(1).toLowerCase();
