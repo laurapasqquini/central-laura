@@ -336,86 +336,39 @@ async function rodarAutoTel() {
 }
 if (AUTO_TEL) rodarAutoTel();
 
-// ── 6x0 6x0 (Torneios › 6x0 6x0): ganhadores com jogo NO PRAZO que ainda não receberam o brinde ──
-// Só troca filtros/abas da tela e abre os cartões e o 📨 para ler (fecha em Cancelar); no fim volta os filtros.
+// ── 6x0 6x0 (Torneios › 6x0 6x0): os da arte da semana = jogo NO PRAZO, etapa em andamento,
+// ainda sem o 📷 (não saiu no Instagram). Lê a mesma API que a tela do Hub usa (só leitura, sem cliques).
 const AUTO_6X0 = new URLSearchParams(location.search).get('central') === '6x0';
-async function rodarAuto6x0() {
-  const w = (ms) => new Promise((r) => setTimeout(r, ms));
-  const main = () => document.querySelector('main');
-  const botao = (re) => [...(main()?.querySelectorAll('button') || [])].find((b) => re.test(b.textContent.trim()));
-  const ligado = (b) => b && getComputedStyle(b).backgroundColor === 'rgb(0, 0, 0)';
-  // da semana = lançado desde a quarta anterior (inclusive): a central tira quem já saiu na arte passada
-  const hoje = new Date();
-  const daSemana = (datas) => {
-    const m = (datas || '').match(/lançado (\d{2})\/(\d{2})/);
-    if (!m) return false;
-    let d = new Date(hoje.getFullYear(), +m[2] - 1, +m[1]);
-    if (d - hoje > 60 * 864e5) d = new Date(hoje.getFullYear() - 1, +m[2] - 1, +m[1]); // virada de ano
-    const dias = Math.floor((new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()) - d) / 864e5);
-    return dias >= 0 && dias <= 7;
+async function ler6x0() {
+  const r = await fetch('/api/torneios/6x0', { credentials: 'include' });
+  if (!r.ok) return null;
+  const j = await r.json();
+  const CIDADE = { 'maringá': 'Maringá', maringa: 'Maringá', londrina: 'Londrina' };
+  const ddmm = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+  const tel = (nome) => {
+    const i = (j.inscritos || []).find((x) => x.nome === nome || (x.nome_dupla && `${x.nome} / ${x.nome_dupla}` === nome) || nome.startsWith(`${x.nome} /`));
+    return i?.whatsapp || '';
   };
-  for (let i = 0; i < 40 && !botao(/^6x0 6x0$/); i++) await w(500);
-  botao(/^6x0 6x0$/)?.click();
-  for (let i = 0; i < 40 && !botao(/^Em andamento/); i++) await w(500);
-  const antes = { todas: ligado(botao(/^Todas \(/)), cidade: ['Maringá', 'Londrina'].find((c) => ligado(botao(new RegExp(`^${c}`)))) };
-  if (!ligado(botao(/^Em andamento/))) botao(/^Em andamento/)?.click();
-  await w(1200);
-  const ganhadores = [];
-  for (const cidade of ['Maringá', 'Londrina']) {
-    if (!ligado(botao(new RegExp(`^${cidade}`)))) botao(new RegExp(`^${cidade}`))?.click();
-    await w(800);
-    if (!ligado(botao(/^Tênis$/))) botao(/^Tênis$/)?.click();
-    await w(1500);
-    // espera a lista de cartões parar de mudar (a tela recarrega ao trocar os filtros)
-    const cartoesAgora = () => [...main().querySelectorAll('button')].filter((b) => /6x0 6x0/.test(b.innerText) && /🎁/.test(b.innerText) && !/Prêmios/.test(b.innerText));
-    let assinatura = '';
-    for (let i = 0; i < 10; i++) {
-      await w(700);
-      const a = cartoesAgora().map((b) => b.innerText).join('|');
-      if (a && a === assinatura) break;
-      assinatura = a;
-    }
-    const nomes = cartoesAgora().map((b) => b.innerText.split('\n')[0].trim()); // todos: a arte leva todos os 6x0 da semana
-    for (const nome of nomes) {
-      const c = cartoesAgora().find((b) => b.innerText.split('\n')[0].trim() === nome); // sempre o botão atual
-      if (!c) continue;
-      c.click(); // mostra os jogos do cartão
-      for (let i = 0; i < 10 && !main().innerText.includes(`🏆${nome}`); i++) await w(300);
-      await w(300);
-      const txt = main().innerText;
-      const re = /🏆([^\n]+?)vs([^\n]+)\n+📨\n+([^\n]+)\n+([^\n]+)\n+([^\n]+)(?:\n+([^\n]*voucher[^\n]*))?/g;
-      const jogos = [];
-      let m;
-      while ((m = re.exec(txt))) jogos.push({ venc: m[1].trim(), info: m[3], prazo: m[4].trim(), datas: m[5], voucher: (m[6] || '').trim() });
-      const envelopes = [...main().querySelectorAll('button')].filter((b) => b.textContent.trim() === '📨');
-      for (const [k, j] of jogos.entries()) {
-        if (j.prazo !== 'no prazo' || j.venc !== nome || !daSemana(j.datas)) continue;
-        // telefone do ganhador: abre o 📨 (só leitura) e fecha em Cancelar
-        let telefone = '';
-        if (envelopes[k]) {
-          envelopes[k].click();
-          await w(900);
-          const caixa = [...document.querySelectorAll('[role=dialog], .fixed')].find((d) => /Enviar mensagem do jogo/.test(d.innerText));
-          const linhas = (caixa?.innerText || '').split('\n').map((s) => s.trim());
-          const i = linhas.findIndex((l) => l === nome.split(' / ')[0]);
-          telefone = ((linhas.slice(i + 1, i + 4).find((l) => /^📱/.test(l)) || '').match(/[\d()\s+-]{10,}/) || [''])[0].trim();
-          [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Cancelar')?.click();
-          await w(400);
-        }
-        const [rodada, classe] = j.info.split(' · ');
-        ganhadores.push({ nome, cidade, rodada: (rodada.match(/\d+/) || [''])[0], classe: (classe || '').replace(/^Classe\s*/, ''), info: j.info, lancado: (j.datas.match(/lançado (\d{2}\/\d{2})/) || [])[1] || '', brinde: !!j.voucher, telefone });
-      }
-      cartoesAgora().find((b) => b.innerText.split('\n')[0].trim() === nome)?.click(); // fecha o cartão
-      await w(400);
-    }
+  const ganhadores = (j.itens || [])
+    .filter((i) => i.etapa_status !== 'finished' && i.esporte === 'tenis' && CIDADE[i.cidade])
+    .filter((i) => i.resultado_em && i.resultado_em.slice(0, 10) <= i.rodada_fim) // no prazo (verde)
+    .filter((i) => !i.instagram_em) // ainda não saiu na arte do Instagram
+    .map((i) => ({ nome: i.vencedor, cidade: CIDADE[i.cidade], rodada: String(i.rodada), classe: (i.classe || '').replace(/^Classe\s*/, ''), lancado: ddmm(i.resultado_em), brinde: !!i.voucher_em, telefone: tel(i.vencedor) }))
+    .sort((x, y) => x.cidade.localeCompare(y.cidade) || x.nome.localeCompare(y.nome));
+  return { dia: new Date().toLocaleDateString('sv-SE'), ganhadores };
+}
+async function rodarAuto6x0() {
+  let dados = null;
+  try {
+    dados = await ler6x0();
+  } catch {
+    /* sem dados */
   }
-  // volta os filtros como estavam
-  if (antes.cidade) botao(new RegExp(`^${antes.cidade}`))?.click();
-  if (antes.todas) botao(/^Todas \(/)?.click();
-  await w(500);
-  chrome.runtime.sendMessage({ tipo: 'seiszero', dados: { dia: new Date().toLocaleDateString('sv-SE'), ganhadores } }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
+  if (dados) chrome.runtime.sendMessage({ tipo: 'seiszero', dados }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
+  else chrome.runtime.sendMessage({ tipo: 'fechar-aba' });
 }
 if (AUTO_6X0) rodarAuto6x0();
+let ultimo6x0 = 0;
 
 // ── Atividades (lista da Laura): o que está em aberto com ela vira tarefa dela na Central ──
 // (de 2 em 2 horas a extensão abre esta tela numa aba em segundo plano; também lê quando a Laura abre)
@@ -519,6 +472,12 @@ if (AUTO_EQUIPE) rodarAutoEquipe();
 
 async function tentar() {
   if (enviando || AUTO || AUTO_EQUIPE || AUTO_LAURA || AUTO_TEL || AUTO_6X0) return;
+  // quarta à tarde: os 6x0 da semana vão para a Central ao abrir qualquer página do Hub (no máx. a cada 20 min)
+  const agora = new Date();
+  if (agora.getDay() === 3 && agora.getHours() >= 13 && Date.now() - ultimo6x0 > 20 * 60e3) {
+    ultimo6x0 = Date.now();
+    ler6x0().then((d) => d && mandar('seiszero', d, 'ultimo6x0', `✓ ${d.ganhadores.length} ganhadores do 6x0 na Central`), () => {});
+  }
   if (location.pathname === '/atividades') {
     const n = lerAtividadesLaura();
     if (n) comDescricaoLaura(n, false).then(comTelefonePix).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));

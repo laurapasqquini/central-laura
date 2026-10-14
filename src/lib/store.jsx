@@ -524,14 +524,8 @@ export function StoreProvider({ user, children }) {
           } catch {
             /* ignora */
           }
-          if (!Array.isArray(d?.ganhadores)) continue;
-          // a leitura pega desde a quarta anterior: quem já saiu na arte da semana passada não entra de novo
-          const chave = (g) => `${g.cidade}|${g.nome}|${g.rodada}|${g.lancado}`;
-          const hist = { ...(s.seisZeroHist || {}) };
-          if (s.seisZero?.dia && s.seisZero.dia !== d.dia) hist[s.seisZero.dia] = s.seisZero.ganhadores.map(chave);
-          const anteriores = new Set(Object.entries(hist).filter(([dia]) => dia < d.dia).flatMap(([, ks]) => ks));
-          for (const k of Object.keys(hist)) if (k < addDays(d.dia, -60)) delete hist[k]; // guarda só 2 meses
-          s = { ...s, seisZeroHist: hist, seisZero: { dia: d.dia, ganhadores: d.ganhadores.filter((g) => !anteriores.has(chave(g))) } };
+          // a extensão já manda só quem ainda não saiu na arte (sem o 📷 no Hub)
+          if (Array.isArray(d?.ganhadores)) s = { ...s, seisZero: { dia: d.dia, ganhadores: d.ganhadores } };
         }
         // telefones das cobranças Pix (achados em Cadastros do Hub): { "Nome da atleta": "5544999999999" }
         for (const r of rows.filter((x) => x.conta === 'telefones')) {

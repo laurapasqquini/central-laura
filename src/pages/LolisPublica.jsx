@@ -211,7 +211,7 @@ function Dia({ dia, andamento, token }) {
             <Secao titulo="🏆 6x0 6x0 da semana">
               <p className="px-1 text-xs text-slate-500">
                 {dia.seisZero[0].lidoEm
-                  ? <>Ganhadores da semana lidos do Hub (Torneios › 6x0 6x0) em {fmtCurto(dia.seisZero[0].lidoEm)}: todos os jogos <b>no prazo</b> lançados nos últimos 7 dias. Todos vão na arte; mande a mensagem a quem ainda não recebeu e marque o 🎁 no Hub.</>
+                  ? <>Lidos do Hub (Torneios › 6x0 6x0) em {fmtCurto(dia.seisZero[0].lidoEm)}: todos os jogos <b>no prazo</b> que ainda não saíram na arte. Depois de postar, marque o 📷 no Hub (senão o nome volta na próxima quarta); depois de mandar a mensagem, marque o 🎁.</>
                   : <>Os ganhadores chegam do Hub na quarta à tarde (Torneios › 6x0 6x0, só os jogos <b>no prazo</b>).</>}
               </p>
               {dia.seisZero.map((c) => (
