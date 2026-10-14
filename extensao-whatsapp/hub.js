@@ -344,6 +344,16 @@ async function rodarAuto6x0() {
   const main = () => document.querySelector('main');
   const botao = (re) => [...(main()?.querySelectorAll('button') || [])].find((b) => re.test(b.textContent.trim()));
   const ligado = (b) => b && getComputedStyle(b).backgroundColor === 'rgb(0, 0, 0)';
+  // da semana = resultado lançado nos últimos 7 dias (de quinta a quarta)
+  const hoje = new Date();
+  const daSemana = (datas) => {
+    const m = (datas || '').match(/lançado (\d{2})\/(\d{2})/);
+    if (!m) return false;
+    let d = new Date(hoje.getFullYear(), +m[2] - 1, +m[1]);
+    if (d - hoje > 60 * 864e5) d = new Date(hoje.getFullYear() - 1, +m[2] - 1, +m[1]); // virada de ano
+    const dias = Math.floor((new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()) - d) / 864e5);
+    return dias >= 0 && dias < 7;
+  };
   for (let i = 0; i < 40 && !botao(/^6x0 6x0$/); i++) await w(500);
   botao(/^6x0 6x0$/)?.click();
   for (let i = 0; i < 40 && !botao(/^Em andamento/); i++) await w(500);
@@ -365,7 +375,7 @@ async function rodarAuto6x0() {
       if (a && a === assinatura) break;
       assinatura = a;
     }
-    const nomes = cartoesAgora().filter((b) => !/🎁\s*✓/.test(b.innerText)).map((b) => b.innerText.split('\n')[0].trim());
+    const nomes = cartoesAgora().map((b) => b.innerText.split('\n')[0].trim()); // todos: a arte leva todos os 6x0 da semana
     for (const nome of nomes) {
       const c = cartoesAgora().find((b) => b.innerText.split('\n')[0].trim() === nome); // sempre o botão atual
       if (!c) continue;
@@ -379,7 +389,7 @@ async function rodarAuto6x0() {
       while ((m = re.exec(txt))) jogos.push({ venc: m[1].trim(), info: m[3], prazo: m[4].trim(), datas: m[5], voucher: (m[6] || '').trim() });
       const envelopes = [...main().querySelectorAll('button')].filter((b) => b.textContent.trim() === '📨');
       for (const [k, j] of jogos.entries()) {
-        if (j.prazo !== 'no prazo' || j.voucher || j.venc !== nome) continue;
+        if (j.prazo !== 'no prazo' || j.venc !== nome || !daSemana(j.datas)) continue;
         // telefone do ganhador: abre o 📨 (só leitura) e fecha em Cancelar
         let telefone = '';
         if (envelopes[k]) {
@@ -393,7 +403,7 @@ async function rodarAuto6x0() {
           await w(400);
         }
         const [rodada, classe] = j.info.split(' · ');
-        ganhadores.push({ nome, cidade, rodada: (rodada.match(/\d+/) || [''])[0], classe: (classe || '').replace(/^Classe\s*/, ''), info: j.info, lancado: (j.datas.match(/lançado (\d{2}\/\d{2})/) || [])[1] || '', telefone });
+        ganhadores.push({ nome, cidade, rodada: (rodada.match(/\d+/) || [''])[0], classe: (classe || '').replace(/^Classe\s*/, ''), info: j.info, lancado: (j.datas.match(/lançado (\d{2}\/\d{2})/) || [])[1] || '', brinde: !!j.voucher, telefone });
       }
       cartoesAgora().find((b) => b.innerText.split('\n')[0].trim() === nome)?.click(); // fecha o cartão
       await w(400);

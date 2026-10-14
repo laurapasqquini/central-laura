@@ -97,9 +97,9 @@ chrome.alarms.onAlarm.addListener(async (a) => {
   const minutos = agora.getHours() * 60 + agora.getMinutes();
   // 6x0 6x0: toda quarta a partir das 13h (antes da Lolis entrar), uma vez no dia
   if (agora.getDay() === 3 && minutos >= 13 * 60) {
-    const { sessao: s6, auto6x0 } = await chrome.storage.local.get(['sessao', 'auto6x0']);
-    if (s6 && auto6x0 !== dia) {
-      await chrome.storage.local.set({ auto6x0: dia });
+    const { sessao: s6, auto6x0v2 } = await chrome.storage.local.get(['sessao', 'auto6x0v2']);
+    if (s6 && auto6x0v2 !== dia) {
+      await chrome.storage.local.set({ auto6x0v2: dia });
       chrome.tabs.create({ url: `${HUB}/torneios?central=6x0`, active: false });
     }
   }

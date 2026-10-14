@@ -211,7 +211,7 @@ function Dia({ dia, andamento, token }) {
             <Secao titulo="🏆 6x0 6x0 da semana">
               <p className="px-1 text-xs text-slate-500">
                 {dia.seisZero[0].lidoEm
-                  ? <>Ganhadores lidos do Hub (Torneios › 6x0 6x0) em {fmtCurto(dia.seisZero[0].lidoEm)}: só jogos <b>no prazo</b> e sem brinde marcado. Depois de mandar, marque o 🎁 no Hub.</>
+                  ? <>Ganhadores da semana lidos do Hub (Torneios › 6x0 6x0) em {fmtCurto(dia.seisZero[0].lidoEm)}: todos os jogos <b>no prazo</b> lançados nos últimos 7 dias. Todos vão na arte; mande a mensagem a quem ainda não recebeu e marque o 🎁 no Hub.</>
                   : <>Os ganhadores chegam do Hub na quarta à tarde (Torneios › 6x0 6x0, só os jogos <b>no prazo</b>).</>}
               </p>
               {dia.seisZero.map((c) => (
@@ -226,7 +226,7 @@ function Dia({ dia, andamento, token }) {
                           <Marca feito={feitos.includes(g.key)} marca={marcas[g.key]} onClick={() => marcar(g.key)} />
                           <span className="min-w-0 flex-1 text-sm text-slate-800">
                             <b>{g.nome}</b> <span className="text-slate-500">(R{g.rodada}) · classe {g.classe}{g.lancado ? ` · lançado ${g.lancado}` : ''}</span>
-                            {g.novo && <span className="ml-1 rounded-full bg-emerald-100 px-1.5 text-[11px] font-bold text-emerald-700">novo</span>}
+                            {g.brinde && <span className="ml-1 rounded-full bg-slate-100 px-1.5 text-[11px] font-bold text-slate-500">🎁 brinde já marcado no Hub</span>}
                           </span>
                           <BotaoWhats tel={g.telefone} />
                         </div>
