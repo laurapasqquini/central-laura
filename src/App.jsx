@@ -14,7 +14,7 @@ import { House, Trophy, ShoppingBag, Heart, Repeat, PanelLeftClose, PanelLeftOpe
 
 const TABS = [
   { id: 'home', label: 'Início', Icon: House, C: Inicio },
-  { id: 'ranken', label: 'RANKEN', Icon: Trophy, C: Ranken },
+  { id: 'ranken', label: 'Ranken', Icon: Trophy, C: Ranken },
   { id: 'gralha', label: 'Gralha', Icon: ShoppingBag, C: Gralha },
   { id: 'pessoal', label: 'Pessoal', Icon: Heart, C: Pessoal },
   { id: 'routines', label: 'Rotinas', Icon: Repeat, C: Routines },

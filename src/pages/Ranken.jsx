@@ -19,7 +19,7 @@ export default function Ranken({ sub = 'tarefas', setSub, go }) {
       <header className="space-y-3">
         <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
           <span className="mr-2 inline-block h-3 w-3 rounded-full bg-emerald-500 align-middle" />
-          RANKEN
+          Ranken
         </h1>
         <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
           {SUBABAS_RANKEN.map((s) => (
