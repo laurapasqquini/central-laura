@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica } from '../lib/engine';
-import { today, addDays } from '../lib/dates';
+import { today, addDays, fmtCurto } from '../lib/dates';
+import { supabase } from '../lib/supabase';
 import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../components/ui';
 import LolisPublica from './LolisPublica';
 
@@ -60,6 +61,7 @@ export default function Lolis() {
       ) : (
         <>
       <HojeComLolis />
+      <FeitasRecentes />
       <LinkLolis />
       <FrasesSorteio />
 
@@ -85,6 +87,56 @@ export default function Lolis() {
 
       {editing && <TaskModal id={editing} onClose={() => setEditing(null)} />}
     </div>
+  );
+}
+
+// O que ficou como feito nos últimos 7 dias, com "Desfazer" (marcou sem querer, ou ainda não foi feito de verdade).
+// Desfaz na central e também a marca da página da Lolis (senão a central marca de novo sozinha).
+function FeitasRecentes() {
+  const { state, toggleTask, toggleRoutine } = useStore();
+  const [aberto, setAberto] = useState(false);
+  const ref = today();
+  const f = { area: 'all', who: 'lolis' };
+  const vistos = new Set();
+  const feitas = Array.from({ length: 7 }, (_, i) => addDays(ref, -i))
+    .flatMap((d) => buildDay(state, d, f).filter((x) => x.kind !== 'marco' && x.done))
+    .filter((x) => !vistos.has(x.key) && vistos.add(x.key));
+  if (!feitas.length) return null;
+
+  const desfazer = async (x) => {
+    if (!confirm(`Desfazer "${x.title}"? Volta a ficar pendente para a Lolis.`)) return;
+    // primeiro tira a marca que a Lolis fez na página dela (em qualquer dia da última semana),
+    // senão a central lê de novo e marca outra vez
+    const token = state.lolisToken;
+    if (token) {
+      const chaves = [x.key, `r:${x.id}:${x.date}`, `t:${x.id}`];
+      const { data } = await supabase.from('lolis_feitos').select('dia, chave').eq('token', token).in('chave', chaves).gte('dia', addDays(ref, -8));
+      for (const r of data || []) await supabase.rpc('lolis_marcar', { p_token: token, p_dia: r.dia, p_chave: r.chave, p_feito: false });
+    }
+    if (x.kind === 'task') toggleTask(x.id);
+    else toggleRoutine(x.id, x.date, null);
+  };
+
+  return (
+    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-emerald-700">✓ Feitas nos últimos 7 dias <span className="text-slate-400">{feitas.length}</span></h2>
+        <span className="text-xs font-semibold text-slate-400">{aberto ? 'esconder' : 'ver'}</span>
+      </button>
+      {aberto && (
+        <div className="space-y-1">
+          {feitas.map((x) => (
+            <div key={x.key} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-50">
+              <span className="w-14 shrink-0 text-xs text-slate-400">{fmtCurto(x.date).replace(/^\w+, /, '')}</span>
+              <span className="min-w-0 flex-1 truncate text-slate-700">{x.title}</span>
+              <button onClick={() => desfazer(x)} className="shrink-0 rounded-lg px-2 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200 hover:bg-amber-50">
+                ↩ Desfazer
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
