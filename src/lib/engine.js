@@ -800,6 +800,34 @@ const canvaPara = (state, texto) => {
 // texto da tarefa para a Lolis (sem a linha de origem que a central acrescenta)
 const detalheTarefa = (x) => (x.kind === 'task' && x.notes ? x.notes.replace(/\n*Veio do Hub \(Atividades[^)]*\)$/, '').trim() : '');
 
+// ── 6x0 6x0 (conferido às quartas): o que cada cidade ganha e a mensagem do privado ──
+// Prêmios das artes de cada cidade; o contato da Bonna vem da Programação do Hub (sorteio diário).
+function contatoPatrocinador(state, re) {
+  for (const p of Object.values(state.programacao || {}))
+    for (const d of Object.values(p.dias || {})) for (const x of d.patrocinadores || []) if (re.test(x.nome) && x.telefone) return { nome: (x.contato || '').trim().split(/\s+/)[0], telefone: x.telefone };
+  return null;
+}
+export function mensagens6x0(state) {
+  const bonna = contatoPatrocinador(state, /bonna/i);
+  const acai = '01 açaí de 500ml com 3 acompanhamentos (Gela Boca: peça pelo app ou pelo cardápio digital https://app.gelaboca.com.br/ · o cupom é o seu nome)';
+  const cidades = [
+    {
+      cidade: 'Maringá',
+      premios: ['01 açaí', '01 pizza brotinho', '01 chopp'],
+      itens: [acai, `01 pizza brotinho (Bonna Pizza: ${bonna ? `fale com ${capitaliza(bonna.nome) || 'a Bonna'} no ${bonna.telefone}` : 'chame a Bonna Pizza'} para combinar a retirada)`, '01 chopp (é só retirar na Craft Sports Bar)'],
+    },
+    {
+      cidade: 'Londrina',
+      premios: ['01 açaí', '02 packs de água com gás Cristal'],
+      itens: [acai, '02 packs de água com gás Cristal (retirada na R. Araguaia, 725 - Jardim Agari)'],
+    },
+  ];
+  return cidades.map((c) => ({
+    ...c,
+    mensagem: ['Que partida! 🎾', 'Você ganhou com um *6x0 6x0* impecável, domínio total do início ao fim! 🔥', '', '*Seu prêmio:*', ...c.itens.map((x) => `• ${x}`), '', 'Segue esse ritmo na próxima rodada. Bora! 💚', '_Prazo de 7 dias para retirada/consumo._'].join('\n'),
+  }));
+}
+
 export function dadosPaginaLolis(state, ref = today()) {
   const f = { area: 'all', who: 'lolis' };
   const dias = [];
@@ -815,7 +843,9 @@ export function dadosPaginaLolis(state, ref = today()) {
     const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task' || x.freq === 'calendario').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x), mensagem: x.mensagem || '', telefone: x.telefone || '' })) : [];
     const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto, sorteio, prazo, telefone }) => ({ key, tipo, linha, texto, sorteio, prazo, telefone, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
     const posts = postsSorteio(state, d);
-    dias.push({ date: d, tarefas, atrasadas, brindes, posts });
+    // quarta: dia de conferir os 6x0 6x0
+    const seisZero = weekday(d) === 3 ? mensagens6x0(state) : [];
+    dias.push({ date: d, tarefas, atrasadas, brindes, posts, seisZero });
   }
   return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title) };
 }

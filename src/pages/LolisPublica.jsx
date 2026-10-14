@@ -206,6 +206,22 @@ function Dia({ dia, andamento, token }) {
             {!tarefas.length && !itensSorteio.length && <Caixa>Nenhuma tarefa.</Caixa>}
           </Secao>
 
+          {(dia.seisZero || []).length > 0 && (
+            <Secao titulo="🏆 6x0 6x0 da semana">
+              <p className="px-1 text-xs text-slate-500">
+                Quem ganha: no Hub, Torneios › <b>6x0 6x0</b>. Só valem os jogos <b>no prazo</b> (em verde). Mande a mensagem da cidade no privado de cada ganhador e poste a arte no Instagram com os nomes (ex.: Roger Seiti (R4)).
+              </p>
+              {dia.seisZero.map((c) => (
+                <div key={c.cidade} className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+                  <div className="text-sm font-bold text-slate-800">
+                    {c.cidade} <span className="font-normal text-slate-500">· {c.premios.join(' + ')}</span>
+                  </div>
+                  <Texto rotulo="Mensagem no privado do ganhador" texto={c.mensagem} />
+                </div>
+              ))}
+            </Secao>
+          )}
+
           {andamento.length > 0 && (
             <Secao titulo="🗂️ Em andamento">
               {andamento.map((t) => (
