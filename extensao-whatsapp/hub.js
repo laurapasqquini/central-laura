@@ -344,7 +344,7 @@ async function rodarAuto6x0() {
   const main = () => document.querySelector('main');
   const botao = (re) => [...(main()?.querySelectorAll('button') || [])].find((b) => re.test(b.textContent.trim()));
   const ligado = (b) => b && getComputedStyle(b).backgroundColor === 'rgb(0, 0, 0)';
-  // da semana = resultado lançado nos últimos 7 dias (de quinta a quarta)
+  // da semana = lançado desde a quarta anterior (inclusive): a central tira quem já saiu na arte passada
   const hoje = new Date();
   const daSemana = (datas) => {
     const m = (datas || '').match(/lançado (\d{2})\/(\d{2})/);
@@ -352,7 +352,7 @@ async function rodarAuto6x0() {
     let d = new Date(hoje.getFullYear(), +m[2] - 1, +m[1]);
     if (d - hoje > 60 * 864e5) d = new Date(hoje.getFullYear() - 1, +m[2] - 1, +m[1]); // virada de ano
     const dias = Math.floor((new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()) - d) / 864e5);
-    return dias >= 0 && dias < 7;
+    return dias >= 0 && dias <= 7;
   };
   for (let i = 0; i < 40 && !botao(/^6x0 6x0$/); i++) await w(500);
   botao(/^6x0 6x0$/)?.click();
