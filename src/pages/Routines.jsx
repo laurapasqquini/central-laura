@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
 import { useStore } from '../lib/store';
 import { AREAS, FREQ_LABEL } from '../lib/engine';
 import { DIAS } from '../lib/dates';
@@ -9,7 +10,7 @@ import { FolgasCard } from '../components/Folgas';
 const when = (r) => (r.freq === 'daily' ? 'seg a sex' : r.freq === 'weekly' ? `toda ${DIAS[r.weekday]}` : `dia ${r.monthday}`) + (r.hora ? ` às ${r.hora}` : '');
 
 export default function Routines() {
-  const { state, updateRoutine, setMelhoresWho } = useStore();
+  const { state, updateRoutine, deleteRoutine, setMelhoresWho } = useStore();
   const [editing, setEditing] = useState(null);
 
   return (
@@ -50,6 +51,14 @@ export default function Routines() {
                     aria-label={r.active ? 'Desligar' : 'Ligar'}
                   >
                     <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${r.active ? 'left-[22px]' : 'left-0.5'}`} />
+                  </button>
+                  <button
+                    onClick={() => confirm(`Excluir a rotina "${r.title}"? Ela some de vez (para só pausar, use o botão ao lado).`) && deleteRoutine(r.id)}
+                    title="Excluir rotina"
+                    aria-label="Excluir rotina"
+                    className="shrink-0 rounded-lg p-1.5 text-slate-300 hover:bg-red-50 hover:text-red-500"
+                  >
+                    <Trash2 size={17} />
                   </button>
                 </div>
               ))}
