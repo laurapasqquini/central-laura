@@ -87,9 +87,16 @@ function Card({ c, ref0 }) {
   const passou = atual ? diffDays(ref0, atual.inicio) : 0;
   const pct = Math.min(100, Math.round((passou / durRodada) * 100));
   const faltam = atual ? diffDays(atual.fim, ref0) : null;
+  const [aberto, setAberto] = useState(false);
 
   return (
-    <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => setAberto(!aberto)}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setAberto(!aberto))}
+      className={`cursor-pointer space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 transition hover:ring-slate-300 ${aberto ? 'ring-indigo-300 sm:col-span-2' : 'ring-slate-200'}`}
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="font-bold text-ink">{c.nome}</div>
@@ -126,6 +133,42 @@ function Card({ c, ref0 }) {
           📌 Próximo sorteio: <b>R{rotuloRodada(prox)}</b> · {fmtCurto(prox.sorteio)} às {prox.hora}
           {['hoje', 'amanhã'].includes(relativo(prox.sorteio, ref0)) || relativo(prox.sorteio, ref0).startsWith('em ') ? ` (${relativo(prox.sorteio, ref0)})` : ''}
         </div>
+      )}
+
+      {/* calendário completo da categoria (abre e fecha clicando no cartão) */}
+      {aberto ? (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-slate-400">
+                <th className="py-1 pr-3 font-semibold">Rodada</th>
+                <th className="py-1 pr-3 font-semibold">Sorteio</th>
+                <th className="py-1 pr-3 font-semibold">Jogos</th>
+                <th className="py-1 font-semibold" />
+              </tr>
+            </thead>
+            <tbody>
+              {c.rodadas.map((rd) => {
+                const agora = atual && rd.n === atual.n;
+                const passou = rd.fim < ref0;
+                const proxima = prox && rd.n === prox.n && !agora;
+                return (
+                  <tr key={rd.n} className={`border-t border-slate-100 ${agora ? 'bg-emerald-50 font-semibold text-ink' : passou ? 'text-slate-400' : 'text-slate-700'}`}>
+                    <td className="py-1.5 pr-3">R{rotuloRodada(rd)}</td>
+                    <td className="py-1.5 pr-3">{fmtCurto(rd.sorteio)} · {rd.hora}</td>
+                    <td className="py-1.5 pr-3">{fmtCurto(rd.inicio)} → {fmtCurto(rd.fim)}</td>
+                    <td className="py-1.5 text-right text-xs">
+                      {agora ? <span className="text-emerald-700">em andamento</span> : proxima ? <span className="text-indigo-600">próximo sorteio</span> : passou ? 'feita' : ''}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <p className="pt-2 text-xs text-slate-400">Clique no cartão para fechar.</p>
+        </div>
+      ) : (
+        <p className="text-xs font-semibold text-indigo-500">📅 Ver calendário da etapa</p>
       )}
     </div>
   );
