@@ -516,6 +516,16 @@ export function StoreProvider({ user, children }) {
           tasks = [...novas, ...tasks];
           s = { ...s, tasks, hubLauraEm: dia };
         }
+        // 6x0 6x0 (Hub › Torneios, às quartas): ganhadores no prazo que ainda não receberam o brinde
+        for (const r of rows.filter((x) => x.conta === 'seiszero')) {
+          let d = null;
+          try {
+            d = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (Array.isArray(d?.ganhadores)) s = { ...s, seisZero: { dia: d.dia, ganhadores: d.ganhadores } };
+        }
         // telefones das cobranças Pix (achados em Cadastros do Hub): { "Nome da atleta": "5544999999999" }
         for (const r of rows.filter((x) => x.conta === 'telefones')) {
           let mapa = null;
@@ -538,7 +548,7 @@ export function StoreProvider({ user, children }) {
         }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {

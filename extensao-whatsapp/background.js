@@ -57,6 +57,7 @@ chrome.runtime.onMessage.addListener((msg, sender, responder) => {
     : msg.tipo === 'ganhadores' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Sorteio Diário' }, 'ganhadores')
     : msg.tipo === 'programacao' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Programação' }, 'programacao')
     : msg.tipo === 'hub-lolis' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Equipe (Lolis)' }, 'hub-lolis')
+    : msg.tipo === 'seiszero' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · 6x0 6x0' }, 'seiszero')
     : msg.tipo === 'telefones' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Cadastros' }, 'telefones')
     : msg.tipo === 'hub-laura' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Atividades (Laura)' }, 'hub-laura')
     : Promise.resolve();
@@ -94,6 +95,14 @@ chrome.alarms.onAlarm.addListener(async (a) => {
   const agora = new Date();
   const dia = agora.toLocaleDateString('sv-SE');
   const minutos = agora.getHours() * 60 + agora.getMinutes();
+  // 6x0 6x0: toda quarta a partir das 13h (antes da Lolis entrar), uma vez no dia
+  if (agora.getDay() === 3 && minutos >= 13 * 60) {
+    const { sessao: s6, auto6x0 } = await chrome.storage.local.get(['sessao', 'auto6x0']);
+    if (s6 && auto6x0 !== dia) {
+      await chrome.storage.local.set({ auto6x0: dia });
+      chrome.tabs.create({ url: `${HUB}/torneios?central=6x0`, active: false });
+    }
+  }
   // Atividades da Laura: de 2 em 2 horas, das 8h às 19h, em dia útil
   if (![0, 6].includes(agora.getDay()) && minutos >= 8 * 60 && minutos < 19 * 60) {
     const { sessao: s, autoLaura = 0 } = await chrome.storage.local.get(['sessao', 'autoLaura']);

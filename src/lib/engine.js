@@ -822,8 +822,16 @@ export function mensagens6x0(state) {
       itens: [acai, '02 packs de água com gás Cristal (retirada na R. Araguaia, 725 - Jardim Agari)'],
     },
   ];
+  // ganhadores lidos do Hub (quarta): novo = resultado lançado depois da quarta anterior
+  const sz = state.seisZero || { ganhadores: [] };
+  const quartaAnterior = sz.dia ? addDays(sz.dia, -7) : null;
+  const iso = (ddmm) => (ddmm && sz.dia ? `${sz.dia.slice(0, 4)}-${ddmm.slice(3, 5)}-${ddmm.slice(0, 2)}` : '');
   return cidades.map((c) => ({
     ...c,
+    lidoEm: sz.dia || null,
+    ganhadores: sz.ganhadores
+      .filter((g) => g.cidade === c.cidade)
+      .map((g) => ({ ...g, key: `6x0:${g.nome}:R${g.rodada}`, novo: !!quartaAnterior && iso(g.lancado) > quartaAnterior })),
     mensagem: ['Que partida! 🎾', 'Você ganhou com um *6x0 6x0* impecável, domínio total do início ao fim! 🔥', '', '*Seu prêmio:*', ...c.itens.map((x) => `• ${x}`), '', 'Segue esse ritmo na próxima rodada. Bora! 💚', '_Prazo de 7 dias para retirada/consumo._'].join('\n'),
   }));
 }

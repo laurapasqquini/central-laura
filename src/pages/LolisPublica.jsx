@@ -209,13 +209,32 @@ function Dia({ dia, andamento, token }) {
           {(dia.seisZero || []).length > 0 && (
             <Secao titulo="🏆 6x0 6x0 da semana">
               <p className="px-1 text-xs text-slate-500">
-                Quem ganha: no Hub, Torneios › <b>6x0 6x0</b>. Só valem os jogos <b>no prazo</b> (em verde). Mande a mensagem da cidade no privado de cada ganhador e poste a arte no Instagram com os nomes (ex.: Roger Seiti (R4)).
+                {dia.seisZero[0].lidoEm
+                  ? <>Ganhadores lidos do Hub (Torneios › 6x0 6x0) em {fmtCurto(dia.seisZero[0].lidoEm)}: só jogos <b>no prazo</b> e sem brinde marcado. Depois de mandar, marque o 🎁 no Hub.</>
+                  : <>Os ganhadores chegam do Hub na quarta à tarde (Torneios › 6x0 6x0, só os jogos <b>no prazo</b>).</>}
               </p>
               {dia.seisZero.map((c) => (
                 <div key={c.cidade} className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
                   <div className="text-sm font-bold text-slate-800">
                     {c.cidade} <span className="font-normal text-slate-500">· {c.premios.join(' + ')}</span>
                   </div>
+                  {c.ganhadores.length > 0 ? (
+                    <div className="space-y-1.5">
+                      {c.ganhadores.map((g) => (
+                        <div key={g.key} className={`flex flex-wrap items-center gap-2 rounded-xl px-2 py-1.5 ring-1 ring-slate-100 ${feitos.includes(g.key) ? 'opacity-50' : ''}`}>
+                          <Marca feito={feitos.includes(g.key)} marca={marcas[g.key]} onClick={() => marcar(g.key)} />
+                          <span className="min-w-0 flex-1 text-sm text-slate-800">
+                            <b>{g.nome}</b> <span className="text-slate-500">(R{g.rodada}) · classe {g.classe}{g.lancado ? ` · lançado ${g.lancado}` : ''}</span>
+                            {g.novo && <span className="ml-1 rounded-full bg-emerald-100 px-1.5 text-[11px] font-bold text-emerald-700">novo</span>}
+                          </span>
+                          <BotaoWhats tel={g.telefone} />
+                        </div>
+                      ))}
+                      <Texto rotulo="Nomes para a arte do Instagram" texto={c.ganhadores.map((g) => `${g.nome} (R${g.rodada})`).join('\n')} />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">{c.lidoEm ? 'Nenhum ganhador pendente nesta cidade.' : 'Aguardando a leitura do Hub.'}</p>
+                  )}
                   <Texto rotulo="Mensagem no privado do ganhador" texto={c.mensagem} />
                 </div>
               ))}
