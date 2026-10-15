@@ -8,6 +8,7 @@ const numBR = (s) => Number(String(s).replace(/\s/g, '').replace(/\./g, '').repl
 export const CATEGORIAS = {
   // entradas
   salario: { nome: 'RANKEN (salário)', tipo: 'entrada', icone: '🎾' },
+  vt: { nome: 'Vale-transporte', tipo: 'entrada', icone: '🚌' },
   gralha: { nome: 'Gralha (comissão)', tipo: 'entrada', icone: '🐦' },
   recebido: { nome: 'Pix recebido', tipo: 'entrada', icone: '📥' },
   outras_entradas: { nome: 'Outras entradas', tipo: 'entrada', icone: '➕' },
@@ -57,6 +58,8 @@ export function chaveDe(desc = '') {
 
 export function categoriaAuto(desc, valor) {
   const d = semAcento(desc);
+  // RANKEN: o Pix pequeno é o vale-transporte; o salário (líquido do holerite) é o grande
+  if (/yotha ranking/.test(d) && valor > 0 && valor < 1000) return 'vt';
   for (const [re, cat] of REGRAS) if (re.test(d)) return cat;
   if (valor > 0) return /recebid/.test(d) ? 'recebido' : 'outras_entradas';
   if (/transferencia enviada|pix/.test(d)) return 'pix_pessoas';
