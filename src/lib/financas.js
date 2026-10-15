@@ -27,12 +27,18 @@ export const CATEGORIAS = {
   pix_pessoas: { nome: 'Pix para pessoas', tipo: 'gasto', icone: '👤' },
   outros: { nome: 'Outros', tipo: 'gasto', icone: '❔' },
   // não contam
-  ignorar: { nome: 'Não conta (fatura, entre contas, investimento)', tipo: 'ignorar', icone: '↔️' },
+  // guardar: não é gasto nem entrada (PicPay e caixinhas do Nubank)
+  guardou: { nome: 'Guardou (PicPay, caixinha)', tipo: 'guardar', icone: '🐷' },
+  resgatou: { nome: 'Tirou do guardado', tipo: 'guardar', icone: '🔓' },
+  ignorar: { nome: 'Não conta (fatura, entre contas)', tipo: 'ignorar', icone: '↔️' },
 };
 
 // Palavra-chave → categoria (a primeira que bater)
 const REGRAS = [
-  [/pagamento de fatura|pagamento recebido|valor adicionado na conta por cartao|resgate rdb|aplicacao rdb|rdb\b|caixinha|guardado/, 'ignorar'],
+  [/pagamento de fatura|pagamento recebido|valor adicionado na conta por cartao/, 'ignorar'],
+  // caixinhas do Nubank (RDB): aplicação = guardou; resgate = tirou
+  [/resgate rdb|resgate.*caixinha|dinheiro resgatado|resgatad/, 'resgatou'],
+  [/aplicacao rdb|rdb\b|caixinha|dinheiro guardado|guardado/, 'guardou'],
   [/yotha ranking/, 'salario'],
   [/julia maria ferreira ricobello/, 'gralha'],
   [/uber|99 ride|\b99\b|\*99|taxi|posto|combustiv|shell|ipiranga/, 'transporte'],
@@ -214,7 +220,9 @@ export function jaExiste(t, existentes) {
 // categoria final: a escolhida na mão > a regra aprendida > a automática
 // Pix entre contas da própria titular (ex.: para outro banco dela) não conta como gasto nem entrada
 const entreContas = (t, meuNome) => !!meuNome && semAcento(t.desc).includes(semAcento(meuNome));
-export const categoriaDe = (t, regras = {}, meuNome = '') => t.catManual || t.cat || regras[chaveDe(t.desc)] || (entreContas(t, meuNome) ? 'ignorar' : categoriaAuto(t.desc, t.valor));
+// Pix para a própria conta no PicPay = guardou (e o que volta de lá = tirou); outras contas dela = não conta
+const entreContasCat = (t) => (/picpay/i.test(t.desc) ? (t.valor < 0 ? 'guardou' : 'resgatou') : 'ignorar');
+export const categoriaDe = (t, regras = {}, meuNome = '') => t.catManual || t.cat || regras[chaveDe(t.desc)] || (entreContas(t, meuNome) ? entreContasCat(t) : categoriaAuto(t.desc, t.valor));
 
 export function resumoMes(fin, mes) {
   const regras = fin.regras || {};
@@ -236,5 +244,9 @@ export function resumoMes(fin, mes) {
       .map(([cat, total]) => ({ cat, total: Math.round(total * 100) / 100, itens: conta.filter((t) => t.categoria === cat) }))
       .filter((x) => Math.abs(x.total) >= 0.01)
       .sort((a, b) => b.total - a.total);
-  return { lista, entrou, saiu, sobrou: entrou - saiu, gastosPorCat: porCat('gasto'), entradasPorCat: porCat('entrada'), ignoradas: lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'ignorar') };
+  // guardado no mês: o que foi para PicPay/caixinha e o que voltou
+  const guardar = lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'guardar');
+  const guardou = -guardar.filter((t) => t.valor < 0).reduce((s, t) => s + t.valor, 0);
+  const tirou = guardar.filter((t) => t.valor > 0).reduce((s, t) => s + t.valor, 0);
+  return { lista, entrou, saiu, sobrou: entrou - saiu, guardou, tirou, guardadoItens: guardar, gastosPorCat: porCat('gasto'), entradasPorCat: porCat('entrada'), ignoradas: lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'ignorar') };
 }

@@ -78,7 +78,7 @@ export default function Financeiro() {
         </div>
         {aviso && <div className={`rounded-lg px-3 py-2 text-sm ${aviso.startsWith('⚠️') ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-800'}`}>{aviso}</div>}
         <label className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          Seu nome no banco (Pix entre as suas contas não conta como gasto):
+          Seu nome no banco (Pix entre as suas contas não é gasto; para o PicPay conta como guardado):
           <input value={fin.meuNome} onChange={(e) => setMeuNome(e.target.value)} placeholder="como aparece no extrato" className="w-64 rounded-lg border border-slate-200 px-2 py-1 text-sm" />
         </label>
       </section>
@@ -101,6 +101,24 @@ export default function Financeiro() {
             <Numero titulo="Saiu" valor={r.saiu} cor="text-red-600" sub={variacao(r.saiu, antes.saiu)} />
             <Numero titulo="Sobrou" valor={r.sobrou} cor={r.sobrou >= 0 ? 'text-ink' : 'text-red-600'} sub={r.entrou ? `${Math.round((r.sobrou / r.entrou) * 100)}% do que entrou` : null} />
           </div>
+
+          {/* guardado: PicPay e caixinhas (não é gasto nem entrada) */}
+          {(r.guardou > 0 || r.tirou > 0) && (
+            <section className="space-y-1.5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-sm font-bold uppercase tracking-wide text-violet-700">🐷 Guardado (PicPay e caixinhas)</h2>
+                <b className={r.guardou - r.tirou >= 0 ? 'text-violet-700' : 'text-amber-600'}>
+                  {r.guardou - r.tirou >= 0 ? '+' : ''}
+                  {brl(r.guardou - r.tirou)} no mês
+                </b>
+              </div>
+              <div className="flex flex-wrap gap-x-6 text-sm text-slate-600">
+                <span>Guardou <b className="text-slate-800">{brl(r.guardou)}</b></span>
+                <span>Tirou <b className="text-slate-800">{brl(r.tirou)}</b></span>
+              </div>
+              <p className="text-xs text-slate-400">Não entra em "Saiu" nem em "Entrou": é dinheiro seu mudando de lugar.</p>
+            </section>
+          )}
 
           {/* entradas */}
           {r.entradasPorCat.length > 0 && (
@@ -161,7 +179,7 @@ export default function Financeiro() {
                 ))}
               </div>
             )}
-            {r.ignoradas.length > 0 && !verTodas && <p className="text-xs text-slate-400">{r.ignoradas.length} não contam no resumo (fatura paga, Pix entre as suas contas, investimento).</p>}
+            {r.ignoradas.length > 0 && !verTodas && <p className="text-xs text-slate-400">{r.ignoradas.length} não contam no resumo (fatura paga, Pix entre as suas contas).</p>}
           </section>
         </>
       )}
