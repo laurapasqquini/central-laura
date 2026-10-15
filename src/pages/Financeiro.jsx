@@ -17,7 +17,7 @@ const mesAntes = (m) => {
 const dm = (d) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
 
 export default function Financeiro() {
-  const { state, importarFinancas, setCategoriaTransacao, addTransacao, deleteTransacao, setMeuNome } = useStore();
+  const { state, importarFinancas, setCategoriaTransacao, addTransacao, deleteTransacao, setMeuNome, setSaldoGuardado } = useStore();
   const fin = { transacoes: {}, regras: {}, meuNome: '', ...(state.financas || {}) };
   const meses = useMemo(() => [...new Set(Object.values(fin.transacoes).map((t) => t.data.slice(0, 7)))].sort().reverse(), [fin.transacoes]);
   const [mes, setMes] = useState(() => meses[0] || today().slice(0, 7));
@@ -39,11 +39,11 @@ export default function Financeiro() {
       const vistos = { ...fin.transacoes };
       let nome = '';
       for (const f of files) {
-        const { itens, nome: n } = await lerArquivo(f);
+        const { itens, nome: n, periodo } = await lerArquivo(f);
         nome ||= n;
         total += itens.length;
         for (const t of itens) if (!jaExiste(t, vistos)) (vistos[t.id] = t), novos++;
-        importarFinancas(itens, n);
+        importarFinancas(itens, n, periodo);
         partes.push(f.name);
       }
       if (nome && !fin.meuNome) setMeuNome(nome);
@@ -68,8 +68,8 @@ export default function Financeiro() {
       <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="font-bold text-ink">📎 Extrato do Nubank</div>
-            <div className="text-xs text-slate-500">CSV da conta, CSV do cartão ou PDF da conta. Pode mandar vários de uma vez; o que já foi lido não duplica.</div>
+            <div className="font-bold text-ink">📎 Extratos (Nubank e PicPay)</div>
+            <div className="text-xs text-slate-500">Nubank: CSV da conta, CSV do cartão ou PDF da conta. PicPay: CSV. Pode mandar vários de uma vez; o que já foi lido não duplica.</div>
           </div>
           <label className="cursor-pointer rounded-xl bg-violet-600 px-4 py-2 text-sm font-bold text-white hover:bg-violet-700">
             Anexar extrato
@@ -102,23 +102,9 @@ export default function Financeiro() {
             <Numero titulo="Sobrou" valor={r.sobrou} cor={r.sobrou >= 0 ? 'text-ink' : 'text-red-600'} sub={r.entrou ? `${Math.round((r.sobrou / r.entrou) * 100)}% do que entrou` : null} />
           </div>
 
-          {/* guardado: PicPay e caixinhas (não é gasto nem entrada) */}
-          {(r.guardou > 0 || r.tirou > 0) && (
-            <section className="space-y-1.5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="text-sm font-bold uppercase tracking-wide text-violet-700">🐷 Guardado (PicPay e caixinhas)</h2>
-                <b className={r.guardou - r.tirou >= 0 ? 'text-violet-700' : 'text-amber-600'}>
-                  {r.guardou - r.tirou >= 0 ? '+' : ''}
-                  {brl(r.guardou - r.tirou)} no mês
-                </b>
-              </div>
-              <div className="flex flex-wrap gap-x-6 text-sm text-slate-600">
-                <span>Guardou <b className="text-slate-800">{brl(r.guardou)}</b></span>
-                <span>Tirou <b className="text-slate-800">{brl(r.tirou)}</b></span>
-              </div>
-              <p className="text-xs text-slate-400">Não entra em "Saiu" nem em "Entrou": é dinheiro seu mudando de lugar.</p>
-            </section>
-          )}
+          {/* guardado: cofrinho do PicPay e caixinhas do Nubank (não é gasto nem entrada) */}
+          <Guardado fin={fin} r={r} setSaldo={setSaldoGuardado} />
+
 
           {/* entradas */}
           {r.entradasPorCat.length > 0 && (
@@ -186,6 +172,64 @@ export default function Financeiro() {
 
       <Manual add={addTransacao} />
     </div>
+  );
+}
+
+// Guardado: saldo de hoje de cada lugar (preenchido à mão, o extrato não traz) e o que entrou/saiu no mês
+const LUGARES = ['Cofrinho PicPay', 'Caixinhas Nubank'];
+function Guardado({ fin, r, setSaldo }) {
+  const saldos = fin.saldos || {};
+  const lugares = [...new Set([...LUGARES, ...Object.keys(saldos)])];
+  const total = Object.values(saldos).reduce((s, x) => s + (Number(x.valor) || 0), 0);
+  const [novo, setNovo] = useState('');
+  const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.')) || 0;
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-violet-700">🐷 Guardado</h2>
+        {total > 0 && (
+          <span className="text-sm text-slate-500">
+            total hoje <b className="text-lg text-violet-700">{brl(total)}</b>
+          </span>
+        )}
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {lugares.map((l) => (
+          <label key={l} className="flex items-center justify-between gap-2 rounded-xl bg-violet-50/60 px-3 py-2 text-sm">
+            <span className="text-slate-700">{l}</span>
+            <span className="flex items-center gap-1">
+              <span className="text-xs text-slate-400">R$</span>
+              <input
+                inputMode="decimal"
+                defaultValue={saldos[l] ? String(saldos[l].valor).replace('.', ',') : ''}
+                onBlur={(e) => (e.target.value.trim() ? setSaldo(l, num(e.target.value)) : saldos[l] && setSaldo(l, null))}
+                placeholder="saldo de hoje"
+                className="w-28 rounded-lg border border-slate-200 px-2 py-1 text-right text-sm"
+              />
+            </span>
+          </label>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+        <input value={novo} onChange={(e) => setNovo(e.target.value)} placeholder="outra caixinha (ex.: Viagem)" className="w-56 rounded-lg border border-slate-200 px-2 py-1 text-sm" />
+        <button onClick={() => novo.trim() && (setSaldo(novo.trim(), 0), setNovo(''))} className="rounded-lg px-2 py-1 font-semibold text-violet-700 ring-1 ring-violet-200">
+          + adicionar
+        </button>
+        {Object.values(saldos)[0] && <span>saldos atualizados em {Object.values(saldos).map((x) => x.em).sort().at(-1).split('-').reverse().join('/')}</span>}
+      </div>
+      <div className="flex flex-wrap gap-x-6 border-t border-slate-100 pt-2 text-sm text-slate-600">
+        <span>
+          Neste mês: guardou <b className="text-slate-800">{brl(r.guardou)}</b>
+        </span>
+        <span>
+          tirou <b className="text-slate-800">{brl(r.tirou)}</b>
+        </span>
+        <span>
+          saldo <b className={r.guardou - r.tirou >= 0 ? 'text-violet-700' : 'text-amber-600'}>{r.guardou - r.tirou >= 0 ? '+' : ''}{brl(r.guardou - r.tirou)}</b>
+        </span>
+      </div>
+      <p className="text-xs text-slate-400">Não entra em "Saiu" nem em "Entrou": é dinheiro seu mudando de lugar. Com o extrato do PicPay, o guardado é o que foi para o cofrinho.</p>
+    </section>
   );
 }
 

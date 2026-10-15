@@ -9,6 +9,7 @@ export const CATEGORIAS = {
   // entradas
   salario: { nome: 'RANKEN (salário)', tipo: 'entrada', icone: '🎾' },
   vt: { nome: 'Vale-transporte', tipo: 'entrada', icone: '🚌' },
+  rendimento: { nome: 'Rendimentos', tipo: 'entrada', icone: '📈' },
   gralha: { nome: 'Gralha (comissão)', tipo: 'entrada', icone: '🐦' },
   recebido: { nome: 'Pix recebido', tipo: 'entrada', icone: '📥' },
   outras_entradas: { nome: 'Outras entradas', tipo: 'entrada', icone: '➕' },
@@ -49,7 +50,7 @@ const REGRAS = [
   [/farmac|drogaria|droga|clinica|fisio|laborat|psico|odonto/, 'saude'],
   [/salao|barbear|estetica|manicure|cabelo/, 'beleza'],
   [/sanepar|copel|telefonica|vivo|claro|\btim\b|internet|condominio|aluguel|energia/, 'casa'],
-  [/apple\.com|google|disney|netflix|spotify|prime video|amazon prime|youtube|bytedance|deezer|hbo|max\b|globoplay/, 'assinaturas'],
+  [/apple\.com|google|disney|netflix|spotify|prime video|amazon prime|youtube|bytedance|deezer|hbo|max\b|globoplay|assinatura/, 'assinaturas'],
   [/shopee|mercado livre|mercadolivre|amazon|shein|magalu|jim\.com|aliexpress|marketplace|renner|riachuelo/, 'compras'],
   [/universidade|faculdade|curso|escola|livraria/, 'educacao'],
 ];
@@ -111,7 +112,16 @@ export function lerCSV(texto) {
     const brutas = linhas.map(([data, valor, id, desc]) => ({ id: `conta:${id}:${Number(valor) > 0 ? 'e' : 's'}`, ident: id, data: data.split('/').reverse().join('-'), desc, valor: Number(valor), origem: 'conta' }));
     return marcarPixNoCredito(brutas);
   }
-  throw new Error('Não reconheci este CSV. Use o extrato da conta ou do cartão exportado pelo app do Nubank.');
+  // PicPay: data,hora,tipo,"origem / destino",valor ("+R$ 0,04" / "−R$ 2.000,00"),"forma de pagamento"
+  if (h[0] === 'data' && h.includes('tipo') && h.some((c) => c.startsWith('origem'))) {
+    return linhas.map(([data, hora, tipo, quem, valor]) => {
+      const v = numBR(valor.replace(/[−–]/g, '-').replace(/[R$+\s]/g, ''));
+      const desc = `${tipo} - ${quem}`;
+      const cat = /^dinheiro guardado/i.test(tipo) ? 'guardou' : /^(dinheiro resgatado|resgate)/i.test(tipo) ? 'resgatou' : /^rendimento/i.test(tipo) ? 'rendimento' : undefined;
+      return { id: `picpay:${data}:${hora}:${semAcento(tipo)}:${v}`, data, desc, valor: v, origem: 'picpay', ...(cat ? { cat } : {}) };
+    });
+  }
+  throw new Error('Não reconheci este CSV. Use o extrato da conta ou do cartão do Nubank, ou o CSV do PicPay.');
 }
 
 // Pix no Crédito: na conta entra "valor adicionado por cartão" e sai o Pix (mesmo identificador);
@@ -204,7 +214,15 @@ export async function lerArquivo(file) {
     const itens = await lerPDF(await file.arrayBuffer());
     return { itens, nome: itens.nome };
   }
-  return { itens: lerCSV(await file.text()), nome: '' };
+  const itens = lerCSV(await file.text());
+  // período do extrato do PicPay pelo nome do arquivo (extrato-2026-05-01-2026-10-14.csv) ou pelas datas
+  let periodo = null;
+  if (itens[0]?.origem === 'picpay') {
+    const m = file.name.match(/(\d{4}-\d{2}-\d{2})-(\d{4}-\d{2}-\d{2})/);
+    const datas = itens.map((t) => t.data).sort();
+    periodo = { de: m ? m[1] : datas[0], ate: m ? m[2] : datas.at(-1) };
+  }
+  return { itens, nome: '', periodo };
 }
 
 // mesma movimentação vinda do PDF e do CSV da conta: data + valor + descrição parecida
@@ -221,20 +239,24 @@ export function jaExiste(t, existentes) {
 // Pix entre contas da própria titular (ex.: para outro banco dela) não conta como gasto nem entrada
 const entreContas = (t, meuNome) => !!meuNome && semAcento(t.desc).includes(semAcento(meuNome));
 // Pix para a própria conta no PicPay = guardou (e o que volta de lá = tirou); outras contas dela = não conta
-const entreContasCat = (t) => (/picpay/i.test(t.desc) ? (t.valor < 0 ? 'guardou' : 'resgatou') : 'ignorar');
-export const categoriaDe = (t, regras = {}, meuNome = '') => t.catManual || t.cat || regras[chaveDe(t.desc)] || (entreContas(t, meuNome) ? entreContasCat(t) : categoriaAuto(t.desc, t.valor));
+// Quando o extrato do PicPay daquele período foi anexado, o guardado é o que vai para o cofrinho
+// (lido do próprio PicPay) e o Pix Nubank ↔ PicPay só muda o dinheiro de bolso (não conta)
+const cobertoPicpay = (t, periodos = []) => periodos.some((p) => t.data >= p.de && t.data <= p.ate);
+const entreContasCat = (t, periodos) => (/picpay/i.test(t.desc) && !cobertoPicpay(t, periodos) ? (t.valor < 0 ? 'guardou' : 'resgatou') : 'ignorar');
+export const categoriaDe = (t, regras = {}, meuNome = '', periodos = []) =>
+  t.catManual || t.cat || regras[chaveDe(t.desc)] || (entreContas(t, meuNome) ? entreContasCat(t, periodos) : categoriaAuto(t.desc, t.valor));
 
 export function resumoMes(fin, mes) {
   const regras = fin.regras || {};
   const lista = Object.values(fin.transacoes || {})
     .filter((t) => t.data.startsWith(mes))
-    .map((t) => ({ ...t, categoria: categoriaDe(t, regras, fin.meuNome) }))
+    .map((t) => ({ ...t, categoria: categoriaDe(t, regras, fin.meuNome, fin.periodosPicpay) }))
     .sort((a, b) => b.data.localeCompare(a.data) || a.desc.localeCompare(b.desc));
   const conta = lista.filter((t) => CATEGORIAS[t.categoria]?.tipo !== 'ignorar');
   const entrou = conta.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'entrada').reduce((s, t) => s + t.valor, 0);
   // gasto = saídas das categorias de gasto (estorno abate)
   const gastos = conta.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'gasto');
-  const saiu = -gastos.reduce((s, t) => s + t.valor, 0);
+  const saiu = -gastos.reduce((s, t) => s + t.valor, 0) || 0; // "|| 0": sem gasto não vira -0
   const porCat = (tipo) =>
     Object.entries(
       conta
@@ -246,7 +268,7 @@ export function resumoMes(fin, mes) {
       .sort((a, b) => b.total - a.total);
   // guardado no mês: o que foi para PicPay/caixinha e o que voltou
   const guardar = lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'guardar');
-  const guardou = -guardar.filter((t) => t.valor < 0).reduce((s, t) => s + t.valor, 0);
+  const guardou = -guardar.filter((t) => t.valor < 0).reduce((s, t) => s + t.valor, 0) || 0;
   const tirou = guardar.filter((t) => t.valor > 0).reduce((s, t) => s + t.valor, 0);
   return { lista, entrou, saiu, sobrou: entrou - saiu, guardou, tirou, guardadoItens: guardar, gastosPorCat: porCat('gasto'), entradasPorCat: porCat('entrada'), ignoradas: lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'ignorar') };
 }

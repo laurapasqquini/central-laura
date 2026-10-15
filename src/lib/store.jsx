@@ -791,12 +791,22 @@ export function StoreProvider({ user, children }) {
       addConta: (c) => setState((s) => ({ ...s, contas: [...(s.contas || []), { id: uid(), ativo: true, ...c }] })),
 
       // Financeiro pessoal (extratos do Nubank e lançamentos à mão)
-      importarFinancas: (itens, nome) =>
+      importarFinancas: (itens, nome, periodo) =>
         setState((s) => {
-          const fin = { transacoes: {}, regras: {}, meuNome: '', ...(s.financas || {}) };
+          const fin = { transacoes: {}, regras: {}, meuNome: '', periodosPicpay: [], ...(s.financas || {}) };
           const transacoes = { ...fin.transacoes };
           for (const t of itens) if (!jaExiste(t, transacoes)) transacoes[t.id] = t;
-          return { ...s, financas: { ...fin, transacoes, meuNome: fin.meuNome || nome || '' } };
+          // períodos cobertos pelo extrato do PicPay (o Pix Nubank ↔ PicPay deixa de contar como guardado)
+          const periodosPicpay = periodo ? [...(fin.periodosPicpay || []).filter((p) => !(p.de === periodo.de && p.ate === periodo.ate)), periodo] : fin.periodosPicpay || [];
+          return { ...s, financas: { ...fin, transacoes, periodosPicpay, meuNome: fin.meuNome || nome || '' } };
+        }),
+      setSaldoGuardado: (lugar, valor) =>
+        setState((s) => {
+          const fin = { transacoes: {}, regras: {}, ...(s.financas || {}) };
+          const saldos = { ...(fin.saldos || {}) };
+          if (valor === null) delete saldos[lugar];
+          else saldos[lugar] = { valor, em: today() };
+          return { ...s, financas: { ...fin, saldos } };
         }),
       setCategoriaTransacao: (id, cat, lembrar) =>
         setState((s) => {
