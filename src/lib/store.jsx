@@ -796,9 +796,11 @@ export function StoreProvider({ user, children }) {
       addConta: (c) => setState((s) => ({ ...s, contas: [...(s.contas || []), { id: uid(), ativo: true, ...c }] })),
 
       // Financeiro pessoal (extratos do Nubank e lançamentos à mão)
-      importarFinancas: (itens, nome, periodo) =>
+      importarFinancas: (itens, nome, periodo, saldo) =>
         setState((s) => {
           const fin = { transacoes: {}, regras: {}, meuNome: '', periodosPicpay: [], ...(s.financas || {}) };
+          // saldo final do PDF da conta: fica o mais recente
+          if (saldo && (!fin.saldoConta || saldo.em >= fin.saldoConta.em)) fin.saldoConta = saldo;
           const transacoes = { ...fin.transacoes };
           for (const t of itens) if (!jaExiste(t, transacoes)) transacoes[t.id] = t;
           // lançamento rápido ("gastei 45 ifood") que agora chegou no extrato: mesmo valor, até 3 dias de diferença → sai o rápido
@@ -844,6 +846,7 @@ export function StoreProvider({ user, children }) {
         delete transacoes[id];
         return { ...s, financas: { ...fin, transacoes } };
       }),
+      setCartao: (patch) => setState((s) => ({ ...s, financas: { transacoes: {}, regras: {}, ...(s.financas || {}), cartao: { fecha: 2, vence: 9, ...(s.financas?.cartao || {}), ...patch } } })),
       setMetaGuardado: (lugar, valor) =>
         setState((s) => {
           const fin = { transacoes: {}, regras: {}, ...(s.financas || {}) };

@@ -2,6 +2,8 @@
 // classifica cada movimentação e resume o mês. Valor com sinal: + entrou, − saiu.
 // Nada aqui guarda o arquivo: só as movimentações lidas vão para a central.
 
+import { FERIADOS } from '../data/feriados.js';
+
 const semAcento = (s = '') => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
 const numBR = (s) => Number(String(s).replace(/\s/g, '').replace(/\./g, '').replace(',', '.'));
 
@@ -226,6 +228,12 @@ export async function lerPDF(arrayBuffer) {
   }
   const lista = marcarPixNoCredito(out);
   lista.nome = nome;
+  // saldo final do período (topo do extrato) e a data em que o período termina
+  const iSaldo = linhas.findIndex((l) => /^Saldo final do período$/.test(l));
+  const vSaldo = iSaldo >= 0 && (linhas[iSaldo + 1] || '').match(/^R\$\s*(-?[\d.]+,\d{2})$/);
+  const per = (linhas.find((l) => /^a \d{2} DE /.test(l)) || '').match(/(\d{2}) DE ([A-ZÇ]+) DE (\d{4})\s+VALORES/);
+  const MES_LONGO = { JANEIRO: '01', FEVEREIRO: '02', MARÇO: '03', ABRIL: '04', MAIO: '05', JUNHO: '06', JULHO: '07', AGOSTO: '08', SETEMBRO: '09', OUTUBRO: '10', NOVEMBRO: '11', DEZEMBRO: '12' };
+  if (vSaldo && per && MES_LONGO[per[2]]) lista.saldo = { valor: numBR(vSaldo[1]), em: `${per[3]}-${MES_LONGO[per[2]]}-${per[1]}` };
   return lista;
 }
 
@@ -233,7 +241,7 @@ export async function lerPDF(arrayBuffer) {
 export async function lerArquivo(file) {
   if (/\.pdf$/i.test(file.name)) {
     const itens = await lerPDF(await file.arrayBuffer());
-    return { itens, nome: itens.nome, custodia: itens.custodia };
+    return { itens, nome: itens.nome, custodia: itens.custodia, saldo: itens.saldo };
   }
   const itens = lerCSV(await file.text());
   // período do extrato do PicPay pelo nome do arquivo (extrato-2026-05-01-2026-10-14.csv) ou pelas datas
@@ -310,4 +318,52 @@ export function avisosMes(r, antes) {
   if (antes.entrou > 0 && r.entrou > 0 && r.sobrou < antes.sobrou - 100) out.push(`sobrou ${brl0(antes.sobrou - r.sobrou)} a menos que no mês anterior`);
   if (r.entrou > 0 && r.sobrou < 0) out.push('saiu mais do que entrou');
   return out;
+}
+
+// ── Ciclo do salário: o salário (5º dia útil) paga a fatura do cartão (fecha dia 2, vence dia 9) ──
+const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const dataDe = (s) => new Date(`${s}T12:00`);
+const diaDoMes = (ano, mes0, dia) => iso(new Date(ano, mes0, Math.min(dia, new Date(ano, mes0 + 1, 0).getDate()), 12));
+// 5º dia útil (seg a sex, sem feriado) de um mês
+export function quintoDiaUtil(ano, mes0) {
+  let n = 0;
+  for (let d = 1; d <= 31; d++) {
+    const dt = new Date(ano, mes0, d, 12);
+    if (dt.getMonth() !== mes0) break;
+    if (dt.getDay() === 0 || dt.getDay() === 6 || FERIADOS[iso(dt)]) continue;
+    if (++n === 5) return iso(dt);
+  }
+  return diaDoMes(ano, mes0, 7);
+}
+
+export function cicloAtual(fin, hoje) {
+  const { fecha = 2, vence = 9 } = fin.cartao || {};
+  const h = dataDe(hoje);
+  const [y, m0] = [h.getFullYear(), h.getMonth()];
+  // fechamento mais recente (inclusive hoje) e o anterior a ele
+  const fechou = h.getDate() >= fecha ? diaDoMes(y, m0, fecha) : diaDoMes(y, m0 - 1, fecha);
+  const fd = dataDe(fechou);
+  const fechouAntes = diaDoMes(fd.getFullYear(), fd.getMonth() - 1, fecha);
+  const proxFecha = diaDoMes(fd.getFullYear(), fd.getMonth() + 1, fecha);
+  const venceAberta = diaDoMes(fd.getFullYear(), fd.getMonth() + 1, vence);
+  const regras = fin.regras || {};
+  const cartao = Object.values(fin.transacoes || {}).filter((t) => t.origem === 'cartao' && categoriaDe(t, regras, fin.meuNome, fin.periodosPicpay) !== 'ignorar');
+  const soma = (de, ate) => -cartao.filter((t) => t.data >= de && t.data < ate).reduce((s, t) => s + t.valor, 0) || 0;
+  const aberta = soma(fechou, proxFecha);
+  const anterior = soma(fechouAntes, fechou);
+  const ultimaCompra = cartao.map((t) => t.data).sort().at(-1) || null;
+
+  // salário: o último que entrou e o próximo (5º dia útil do mês seguinte ao que entrou)
+  const salarios = Object.values(fin.transacoes || {}).filter((t) => t.valor > 0 && categoriaDe(t, regras, fin.meuNome, fin.periodosPicpay) === 'salario').sort((a, b) => a.data.localeCompare(b.data));
+  const ultSal = salarios.at(-1) || null;
+  const quinto = quintoDiaUtil(y, m0);
+  const proxSalario = hoje < quinto ? quinto : quintoDiaUtil(y, m0 + 1);
+  const pd = dataDe(proxSalario);
+  const progresso = ultSal ? Math.min(1, Math.max(0, (h - dataDe(ultSal.data)) / (pd - dataDe(ultSal.data)))) : null;
+
+  // saldo na conta: o do último PDF da conta + o que entrou/saiu na conta depois (CSV mais novo)
+  const s = fin.saldoConta;
+  const depois = s ? Object.values(fin.transacoes || {}).filter((t) => t.data > s.em && t.origem === 'conta' && categoriaDe(t, regras, fin.meuNome, fin.periodosPicpay) !== 'ignorar').reduce((a, t) => a + t.valor, 0) : 0;
+  const saldo = s ? s.valor + depois : null;
+  return { fechou, proxFecha, venceAberta, aberta, anterior, ultimaCompra, ultSal, proxSalario, progresso, saldo, saldoEm: s?.em || null, depois };
 }

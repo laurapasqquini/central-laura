@@ -3,7 +3,8 @@
 // são lidos aqui no navegador: só as movimentações e os saldos ficam guardados (o arquivo não).
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
-import { CATEGORIAS, lerArquivo, resumoMes, jaExiste, avisosMes } from '../lib/financas';
+import { CATEGORIAS, lerArquivo, resumoMes, jaExiste, avisosMes, cicloAtual } from '../lib/financas';
+import { vencimentoConta } from '../lib/engine';
 import { today } from '../lib/dates';
 import { Empty, Segmented, inputCls } from '../components/ui';
 
@@ -57,6 +58,12 @@ export default function Financeiro() {
   const antes = resumoMes(fin, somaMes(mes, -1));
   const revisar = Object.values(fin.transacoes).filter((t) => t.data.startsWith(mes)).length ? r.lista.filter((t) => t.categoria === 'outros').length : 0;
   const totalGuardado = Object.values(fin.saldos || {}).reduce((s, x) => s + (Number(x.valor) || 0), 0);
+  // contas fixas deste mês e do próximo que ainda não foram pagas (para o ciclo do salário)
+  const mesAtual = today().slice(0, 7);
+  const contasProx = (state.contas || [])
+    .filter((c) => c.ativo !== false && Number(c.valor) > 0)
+    .flatMap((c) => [mesAtual, somaMes(mesAtual, 1)].map((m) => ({ data: vencimentoConta(state, c, m), valor: Number(c.valor), id: c.id })))
+    .filter((x) => !state.routineDone?.[`conta:${x.id}:${x.data}`]);
 
   const importar = async (files) => {
     setAviso('Lendo…');
@@ -67,7 +74,7 @@ export default function Financeiro() {
       let nome = '';
       const caixinhas = [];
       for (const f of files) {
-        const { itens, nome: n, periodo, custodia } = await lerArquivo(f);
+        const { itens, nome: n, periodo, custodia, saldo } = await lerArquivo(f);
         if (custodia) {
           nome ||= n;
           for (const c of custodia) setSaldoGuardado(c.lugar, c.valor, { em: c.em, liquido: c.liquido });
@@ -77,7 +84,7 @@ export default function Financeiro() {
         nome ||= n;
         total += itens.length;
         for (const t of itens) if (!jaExiste(t, vistos)) (vistos[t.id] = t), novos++;
-        importarFinancas(itens, n, periodo);
+        importarFinancas(itens, n, periodo, saldo);
       }
       if (nome && !fin.meuNome) setMeuNome(nome);
       const ultimoMes = Object.values(vistos).map((t) => t.data.slice(0, 7)).sort().at(-1);
@@ -139,6 +146,12 @@ export default function Financeiro() {
             Seu nome no banco (Pix entre as suas contas não é gasto):
             <input value={fin.meuNome} onChange={(e) => setMeuNome(e.target.value)} placeholder="como aparece no extrato" className="w-64 rounded-lg border border-slate-200 px-2 py-1 text-sm" />
           </label>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+            Cartão Nubank: fecha dia
+            <input type="number" min="1" max="28" value={fin.cartao?.fecha ?? 2} onChange={(e) => store.setCartao({ fecha: Number(e.target.value) || 2 })} className="w-14 rounded-lg border border-slate-200 px-2 py-1 text-sm" />
+            e vence dia
+            <input type="number" min="1" max="28" value={fin.cartao?.vence ?? 9} onChange={(e) => store.setCartao({ vence: Number(e.target.value) || 9 })} className="w-14 rounded-lg border border-slate-200 px-2 py-1 text-sm" />
+          </div>
         </section>
       )}
 
@@ -152,7 +165,7 @@ export default function Financeiro() {
               <input onBlur={(e) => e.target.value.trim() && setMeuNome(e.target.value.trim())} placeholder="Nome completo" className="w-60 rounded-lg border border-amber-200 bg-white px-2 py-1 text-sm" />
             </label>
           )}
-          <Mes r={r} antes={antes} mes={mes} totalGuardado={totalGuardado} brl={brl} brl0={brl0} irGuardado={() => setAba('guardado')} irMovs={() => setAba('movs')} />
+          <Mes r={r} antes={antes} mes={mes} fin={fin} contas={contasProx} totalGuardado={totalGuardado} brl={brl} brl0={brl0} irGuardado={() => setAba('guardado')} irMovs={() => setAba('movs')} />
         </>
 
       ) : aba === 'ano' ? (
@@ -167,7 +180,7 @@ export default function Financeiro() {
 }
 
 // ── Mês: os 4 números, pra onde foi (barra), de onde veio e um aviso ──
-function Mes({ r, antes, mes, totalGuardado, brl, brl0, irGuardado, irMovs }) {
+function Mes({ r, antes, mes, fin, contas, totalGuardado, brl, brl0, irGuardado, irMovs }) {
   const [verTodas, setVerTodas] = useState(false);
   const [aberta, setAberta] = useState(null);
   // só compara se o mês anterior tem extrato de verdade (senão o % não diz nada)
@@ -186,6 +199,7 @@ function Mes({ r, antes, mes, totalGuardado, brl, brl0, irGuardado, irMovs }) {
         </button>
       </div>
 
+      {mes === today().slice(0, 7) && <Ciclo fin={fin} contas={contas} brl0={brl0} />}
       {mes === today().slice(0, 7) && <Andamento r={r} antes={antes} mes={mes} brl0={brl0} />}
 
       {avisos.length > 0 && (
@@ -239,6 +253,65 @@ function Mes({ r, antes, mes, totalGuardado, brl, brl0, irGuardado, irMovs }) {
         Ver as {r.lista.length} movimentações do mês →
       </button>
     </div>
+  );
+}
+
+// ── Ciclo do salário: o salário paga a fatura; quanto está livre até o próximo salário ──
+function Ciclo({ fin, contas, brl0 }) {
+  const hoje = today();
+  const c = cicloAtual(fin, hoje);
+  const fmt = (d) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+  // contas fixas que ainda vencem antes do próximo salário
+  const pend = contas.filter((x) => x.data >= hoje && x.data < c.proxSalario);
+  const totalContas = pend.reduce((s, x) => s + x.valor, 0);
+  const livre = c.saldo != null ? c.saldo - totalContas : null;
+  const passou = c.anterior > 0 && c.aberta > c.anterior;
+  const salario = c.ultSal?.valor || 0;
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-bold text-slate-700">💳 Ciclo do salário</h2>
+        <span className="text-xs text-slate-400">
+          {c.ultSal ? `salário de ${fmt(c.ultSal.data)} até o próximo, ~${fmt(c.proxSalario)}` : `próximo salário ~${fmt(c.proxSalario)}`}
+        </span>
+      </div>
+      {c.progresso != null && (
+        <div className="space-y-1">
+          <div className="relative h-2 rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-sky-400" style={{ width: `${c.progresso * 100}%` }} />
+          </div>
+          <div className="relative h-4 text-[11px] text-slate-400">
+            <span className="absolute left-0">💰 salário {fmt(c.ultSal.data)}</span>
+            <span className="absolute -translate-x-1/2 font-semibold text-sky-600" style={{ left: `${Math.min(80, Math.max(20, c.progresso * 100))}%` }}>▲ hoje</span>
+            <span className="absolute right-0">✂️ fecha {fmt(c.proxFecha)} · 📅 vence {fmt(c.venceAberta)}</span>
+          </div>
+        </div>
+      )}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-slate-50 p-3">
+          <div className="text-xs text-slate-500">Fatura aberta (vence {fmt(c.venceAberta)})</div>
+          <div className={`text-xl font-bold ${passou ? 'text-red-600' : 'text-ink'}`}>{brl0(c.aberta)}</div>
+          <div className="text-xs text-slate-400">
+            a anterior fechou em {brl0(c.anterior)}
+            {c.ultimaCompra && ` · compras até ${fmt(c.ultimaCompra)}`}
+          </div>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-3">
+          <div className="text-xs text-slate-500">Livre na conta até o próximo salário</div>
+          <div className={`text-xl font-bold ${livre != null && livre < 0 ? 'text-red-600' : 'text-emerald-600'}`}>{livre != null ? brl0(livre) : '—'}</div>
+          <div className="text-xs text-slate-400">
+            {c.saldo != null ? `saldo ${brl0(c.saldo)} (extrato até ${fmt(c.saldoEm)})` : 'anexe o PDF da conta'}
+            {totalContas > 0 && ` − contas fixas ${brl0(totalContas)}`}
+          </div>
+        </div>
+        <div className="rounded-xl bg-slate-50 p-3">
+          <div className="text-xs text-slate-500">Próximo salário − esta fatura</div>
+          <div className="text-xl font-bold text-ink">{salario ? brl0(salario - c.aberta) : '—'}</div>
+          <div className="text-xs text-slate-400">{salario ? `~${brl0(salario)} − ${brl0(c.aberta)}: o que sobra pro ciclo seguinte` : 'aparece quando o salário entrar no extrato'}</div>
+        </div>
+      </div>
+      {passou && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">⚠️ A fatura aberta já passou da anterior, e ainda faltam {Math.max(0, Math.round((new Date(`${c.proxFecha}T12:00`) - new Date(`${hoje}T12:00`)) / 864e5))} dias pra fechar.</div>}
+    </section>
   );
 }
 
