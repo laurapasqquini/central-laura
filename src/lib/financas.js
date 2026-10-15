@@ -43,8 +43,8 @@ const REGRAS = [
   [/yotha ranking/, 'salario'],
   [/julia maria ferreira ricobello/, 'gralha'],
   [/uber|99 ride|\b99\b|\*99|taxi|posto|combustiv|shell|ipiranga/, 'transporte'],
-  [/ifd\*|ifood|restaurante|lanch|lanc\b|petiscaria|pizza|burger|burguer|sushi|acai|lanchonete|vila velha/, 'comida'],
-  [/craft|bar\b|ultra club|pub|choperia|cervej/, 'bares'],
+  [/ifd\*|ifood|restaurante|lanch|lanc\b|petiscaria|pizza|burger|burguer|sushi|acai|lanchonete|vila velha|caldo de cana/, 'comida'],
+  [/craft|bar\b|ultra club|pub|choperia|cervej|bebidas/, 'bares'],
   [/mercado(?! pago| livre)|supermerc|atacad|padaria|panificadora|hortifruti|coronel zacarias/, 'mercado'],
   // esporte: só o que ela paga para jogar/treinar (Toss e Wellhub); arenas e bares de quadra ficam para ela classificar
   [/toss tennis|wellhub|gympass|academia|smart fit/, 'esporte'],
@@ -52,7 +52,7 @@ const REGRAS = [
   [/salao|barbear|estetica|manicure|cabelo/, 'beleza'],
   [/sanepar|copel|telefonica|vivo|claro|\btim\b|internet|condominio|aluguel|energia/, 'casa'],
   [/apple\.com|google|disney|netflix|spotify|prime video|amazon prime|youtube|bytedance|deezer|hbo|max\b|globoplay|assinatura/, 'assinaturas'],
-  [/shopee|mercado livre|mercadolivre|amazon|shein|magalu|jim\.com|aliexpress|marketplace|renner|riachuelo/, 'compras'],
+  [/shopee|mercado livre|mercadolivre|amazon|shein|magalu|jim\.com|aliexpress|marketplace|renner|riachuelo|tiktok/, 'compras'],
   [/universidade|faculdade|curso|escola|livraria/, 'educacao'],
 ];
 
