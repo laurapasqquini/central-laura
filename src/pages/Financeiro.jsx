@@ -62,7 +62,7 @@ export default function Financeiro() {
   const mesAtual = today().slice(0, 7);
   const contasProx = (state.contas || [])
     .filter((c) => c.ativo !== false && Number(c.valor) > 0)
-    .flatMap((c) => [mesAtual, somaMes(mesAtual, 1)].map((m) => ({ data: vencimentoConta(state, c, m), valor: Number(c.valor), id: c.id })))
+    .flatMap((c) => [mesAtual, somaMes(mesAtual, 1)].map((m) => ({ data: vencimentoConta(state, c, m), valor: Number(c.valor), id: c.id, nome: c.nome })))
     .filter((x) => !state.routineDone?.[`conta:${x.id}:${x.data}`]);
 
   const importar = async (files) => {
@@ -283,6 +283,7 @@ function Incomuns({ lista, brl, setTransacao }) {
 
 // ── Ciclo do salário: o salário paga a fatura; quanto está livre até o próximo salário ──
 function Ciclo({ fin, contas, brl0 }) {
+  const [verConta, setVerConta] = useState(false);
   const hoje = today();
   const c = cicloAtual(fin, hoje);
   const fmt = (d) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
@@ -321,20 +322,46 @@ function Ciclo({ fin, contas, brl0 }) {
             {c.ultimaCompra && ` · compras até ${fmt(c.ultimaCompra)}`}
           </div>
         </div>
-        <div className="rounded-xl bg-slate-50 p-3">
-          <div className="text-xs text-slate-500">Livre na conta até o próximo salário</div>
+        <button onClick={() => setVerConta(!verConta)} className="rounded-xl bg-slate-50 p-3 text-left hover:bg-slate-100">
+          <div className="text-xs text-slate-500">Dá pra gastar até o salário ({fmt(c.proxSalario)}) {verConta ? '▴' : '▾'}</div>
           <div className={`text-xl font-bold ${livre != null && livre < 0 ? 'text-red-600' : 'text-emerald-600'}`}>{livre != null ? brl0(livre) : '—'}</div>
           <div className="text-xs text-slate-400">
-            {c.saldo != null ? `saldo ${brl0(c.saldo)} (extrato até ${fmt(c.saldoEm)})` : 'anexe o PDF do extrato da conta (NU_…pdf) pra ler o saldo'}
-            {totalContas > 0 && ` − contas fixas ${brl0(totalContas)}`}
+            {c.saldo != null ? `na conta ${brl0(c.saldo)} (em ${fmt(c.saldoEm)})` : 'anexe o PDF do extrato da conta (NU_…pdf) pra ler o saldo'}
+            {totalContas > 0 && ` − contas que ainda vencem ${brl0(totalContas)}`}
           </div>
-        </div>
+        </button>
         <div className="rounded-xl bg-slate-50 p-3">
           <div className="text-xs text-slate-500">Próximo salário − esta fatura</div>
           <div className="text-xl font-bold text-ink">{salario ? brl0(salario - c.aberta) : '—'}</div>
           <div className="text-xs text-slate-400">{salario ? `~${brl0(salario)} − ${brl0(c.aberta)}: o que sobra pro ciclo seguinte` : 'aparece quando o salário entrar no extrato'}</div>
         </div>
       </div>
+      {verConta && (
+        <div className="space-y-1 rounded-xl bg-slate-50 p-3 text-sm">
+          <div className="text-xs text-slate-500">
+            É o que sobra na conta (débito e Pix) depois das contas fixas que ainda vencem até o salário. A fatura do cartão ({brl0(c.aberta)}) não entra aqui: ela vence em {fmt(c.venceAberta)} e é paga com o próximo salário.
+          </div>
+          {c.saldo != null && (
+            <div className="flex justify-between text-slate-700">
+              <span>Na conta (extrato de {fmt(c.saldoEm)})</span>
+              <b>{brl0(c.saldo)}</b>
+            </div>
+          )}
+          {pend.map((x) => (
+            <div key={`${x.id}${x.data}`} className="flex justify-between text-slate-600">
+              <span>− {x.nome} (vence {fmt(x.data)})</span>
+              <span>{brl0(x.valor)}</span>
+            </div>
+          ))}
+          {!pend.length && <div className="text-slate-400">Nenhuma conta fixa com valor vence antes do salário.</div>}
+          {livre != null && (
+            <div className="flex justify-between border-t border-slate-200 pt-1 font-bold text-ink">
+              <span>= dá pra gastar até {fmt(c.proxSalario)}</span>
+              <span>{brl0(livre)}</span>
+            </div>
+          )}
+        </div>
+      )}
       {passou && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">⚠️ A fatura aberta já passou da anterior, e ainda faltam {Math.max(0, Math.round((new Date(`${c.proxFecha}T12:00`) - new Date(`${hoje}T12:00`)) / 864e5))} dias pra fechar.</div>}
     </section>
   );
