@@ -87,7 +87,7 @@ export function gerarCampanhas(desde) {
   const out = [];
   for (const c of CALENDARIOS) {
     const ultimaN = c.rodadas[c.rodadas.length - 1].n;
-    for (const tipo of ['inicio', 'meio', 'fim']) {
+    for (const tipo of ['inicio', 'fim']) { // 2 avisos por rodada (3 era demais para os atletas)
       const itens = c.rodadas
         .map((rd) => ({ rd, data: tipo === 'inicio' ? rd.inicio : tipo === 'meio' ? add(rd.inicio, 3) : rd.fim }))
         .filter(({ rd, data }) => !(tipo === 'meio' && data >= rd.fim)) // rodada de 1 semana: o "já marcou?" cairia no último dia
