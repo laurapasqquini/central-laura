@@ -89,7 +89,7 @@ export function gerarCampanhas(desde) {
     const ultimaN = c.rodadas[c.rodadas.length - 1].n;
     for (const tipo of ['inicio', 'meio', 'fim']) { // rodada nova, já marcou? (meio da rodada) e último dia
       const itens = c.rodadas
-        .map((rd) => ({ rd, data: tipo === 'inicio' ? rd.inicio : tipo === 'meio' ? add(rd.inicio, 3) : rd.fim }))
+        .map((rd) => ({ rd, data: tipo === 'inicio' ? rd.inicio : tipo === 'meio' ? add(rd.inicio, Math.ceil(diasEntre(rd.inicio, rd.fim) / 2)) /* metade da rodada */ : rd.fim }))
         .filter(({ rd, data }) => !(tipo === 'meio' && data >= rd.fim)) // rodada de 1 semana: o "já marcou?" cairia no último dia
         .map((x) => ({
           ...x,
