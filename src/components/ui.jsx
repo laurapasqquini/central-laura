@@ -158,13 +158,33 @@ export function Section({ title, count, tone = 'slate', children, right }) {
 
 export const Empty = ({ children }) => <div className="rounded-xl border border-dashed border-slate-200 px-4 py-5 text-center text-sm text-slate-400">{children}</div>;
 
+// "gastei 45 ifood" / "paguei 120,50 farmácia" / "recebi 300 pix da mãe": vai para o Financeiro (hoje)
+const GASTO_RAPIDO = /^(gastei|paguei|recebi|ganhei)\s+(?:r\$\s*)?(\d[\d.]*(?:,\d{1,2})?)\s*(?:reais\s*)?(?:(?:no|na|em|de|do|da|com)\s+)?(.*)$/i;
+function gastoRapido(text) {
+  const m = text.trim().match(GASTO_RAPIDO);
+  if (!m) return null;
+  const valor = Number(m[2].replace(/\./g, '').replace(',', '.'));
+  if (!valor) return null;
+  const entrada = /^(recebi|ganhei)$/i.test(m[1]);
+  return { data: today(), desc: m[3].trim() || (entrada ? 'Entrada' : 'Gasto'), valor: entrada ? valor : -valor, rapido: true };
+}
+
 export function QuickAdd({ defaultArea }) {
-  const { addTask } = useStore();
+  const { addTask, addTransacao } = useStore();
   const [text, setText] = useState('');
-  const preview = text.trim() ? parseQuick(text, { area: defaultArea }) : null;
+  const [lancado, setLancado] = useState('');
+  const gasto = text.trim() ? gastoRapido(text) : null;
+  const preview = text.trim() && !gasto ? parseQuick(text, { area: defaultArea }) : null;
 
   const submit = (e) => {
     e.preventDefault();
+    if (gasto) {
+      addTransacao(gasto);
+      setLancado(`✓ ${gasto.valor < 0 ? 'Gasto' : 'Entrada'} de R$ ${Math.abs(gasto.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} lançado no Financeiro`);
+      setTimeout(() => setLancado(''), 2500);
+      setText('');
+      return;
+    }
     if (!preview?.title) return;
     addTask(preview);
     setText('');
@@ -180,10 +200,16 @@ export function QuickAdd({ defaultArea }) {
           placeholder="Anotar… ex.: pedir pra @lolis contar estoque sexta !urgente"
           className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-slate-400"
         />
-        <button className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white disabled:opacity-30" disabled={!preview?.title}>
-          Criar
+        <button className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white disabled:opacity-30" disabled={!preview?.title && !gasto}>
+          {gasto ? 'Lançar' : 'Criar'}
         </button>
       </div>
+      {gasto && (
+        <div className="px-2 pt-1 pb-1 text-xs text-slate-500">
+          vai lançar no 💰 Financeiro (hoje): <b className={gasto.valor < 0 ? 'text-red-600' : 'text-emerald-600'}>{gasto.valor < 0 ? '−' : '+'}R$ {Math.abs(gasto.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b> · {gasto.desc}
+        </div>
+      )}
+      {lancado && <div className="px-2 pt-1 pb-1 text-xs font-semibold text-emerald-600">{lancado}</div>}
       {preview?.title && (
         <div className="flex flex-wrap items-center gap-1.5 px-2 pt-1 pb-1 text-xs text-slate-500">
           <span>vai criar:</span>
@@ -197,7 +223,7 @@ export function QuickAdd({ defaultArea }) {
       )}
       {!text && (
         <div className="hidden px-2 pb-1 text-[11px] text-slate-400 sm:block">
-          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>@lolis</b> delega · <b>!urgente</b> · sem data escrita = hoje · amanhã, sexta, 15/10, em 3 dias · <b>sem data</b> = sem dia
+          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>@lolis</b> delega · <b>!urgente</b> · sem data escrita = hoje · amanhã, sexta, 15/10, em 3 dias · <b>sem data</b> = sem dia · <b>gastei 45 ifood</b> / <b>recebi 300 pix</b> = Financeiro
         </div>
       )}
     </form>

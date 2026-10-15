@@ -69,7 +69,7 @@ export function categoriaAuto(desc, valor) {
   // RANKEN: o Pix pequeno é o vale-transporte; o salário (líquido do holerite) é o grande
   if (/yotha ranking/.test(d) && valor > 0 && valor < 1000) return 'vt';
   for (const [re, cat] of REGRAS) if (re.test(d)) return cat;
-  if (valor > 0) return /recebid/.test(d) ? 'recebido' : 'outras_entradas';
+  if (valor > 0) return /recebid|pix/.test(d) ? 'recebido' : 'outras_entradas';
   if (/transferencia enviada|pix/.test(d)) return 'pix_pessoas';
   return 'outros';
 }

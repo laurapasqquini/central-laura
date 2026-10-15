@@ -16,7 +16,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 23,
+    version: 24,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -238,6 +238,11 @@ function migrate(s) {
   // passam para o formato novo (uma marca por rodada), com o ID do backoffice
   if (s.version < 23) {
     s = { ...s, version: 23, campanhas: migrarCampanhas(s.campanhas || {}) };
+  }
+  // v24: toda segunda, atualizar o financeiro com os extratos (Nubank e PicPay)
+  if (s.version < 24) {
+    const r = { id: uid(), title: '📎 Atualizar o financeiro (extratos do Nubank e do PicPay)', area: 'pessoal', who: 'laura', freq: 'weekly', weekday: 1, active: true, createdAt: today() };
+    s = { ...s, version: 24, routines: s.routines.some((x) => /Atualizar o financeiro/.test(x.title)) ? s.routines : [...s.routines, r] };
   }
   return s;
 }
@@ -796,6 +801,16 @@ export function StoreProvider({ user, children }) {
           const fin = { transacoes: {}, regras: {}, meuNome: '', periodosPicpay: [], ...(s.financas || {}) };
           const transacoes = { ...fin.transacoes };
           for (const t of itens) if (!jaExiste(t, transacoes)) transacoes[t.id] = t;
+          // lançamento rápido ("gastei 45 ifood") que agora chegou no extrato: mesmo valor, até 3 dias de diferença → sai o rápido
+          const dias = (a, b) => Math.abs(new Date(`${a}T12:00`) - new Date(`${b}T12:00`)) / 864e5;
+          for (const r of Object.values(transacoes).filter((x) => x.rapido)) {
+            const igual = itens.find((t) => !t.usado && Math.abs(t.valor - r.valor) < 0.01 && dias(t.data, r.data) <= 3);
+            if (igual) {
+              igual.usado = true;
+              delete transacoes[r.id];
+            }
+          }
+          for (const t of itens) delete t.usado;
           // períodos cobertos pelo extrato do PicPay (o Pix Nubank ↔ PicPay deixa de contar como guardado)
           const periodosPicpay = periodo ? [...(fin.periodosPicpay || []).filter((p) => !(p.de === periodo.de && p.ate === periodo.ate)), periodo] : fin.periodosPicpay || [];
           return { ...s, financas: { ...fin, transacoes, periodosPicpay, meuNome: fin.meuNome || nome || '' } };

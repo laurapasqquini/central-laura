@@ -186,6 +186,8 @@ function Mes({ r, antes, mes, totalGuardado, brl, brl0, irGuardado, irMovs }) {
         </button>
       </div>
 
+      {mes === today().slice(0, 7) && <Andamento r={r} antes={antes} mes={mes} brl0={brl0} />}
+
       {avisos.length > 0 && (
         <div className="rounded-xl bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900 ring-1 ring-amber-100">💡 {avisos.join(' · ')}</div>
       )}
@@ -236,6 +238,37 @@ function Mes({ r, antes, mes, totalGuardado, brl, brl0, irGuardado, irMovs }) {
       <button onClick={irMovs} className="text-xs font-semibold text-slate-500 hover:text-ink">
         Ver as {r.lista.length} movimentações do mês →
       </button>
+    </div>
+  );
+}
+
+// ── Mês em andamento: até hoje, previsão do gasto no ritmo atual e o que ainda deve entrar ──
+function Andamento({ r, antes, mes, brl0 }) {
+  const dia = Number(today().slice(8, 10));
+  const [y, m] = mes.split('-').map(Number);
+  const nDias = new Date(y, m, 0).getDate();
+  const previsto = dia >= 3 ? (r.saiu / dia) * nDias : null; // nos 2 primeiros dias o ritmo ainda não diz nada
+  // entradas fixas do mês anterior (salário, Gralha, VT) que ainda não chegaram neste mês
+  const fixas = ['salario', 'gralha', 'vt'];
+  const veio = new Set(r.entradasPorCat.map((x) => x.cat));
+  const falta = antes.entradasPorCat.filter((x) => fixas.includes(x.cat) && !veio.has(x.cat));
+  const ultima = r.lista.length ? r.lista.map((t) => t.data).sort().at(-1) : null;
+  return (
+    <div className="space-y-1 rounded-xl bg-sky-50 px-3.5 py-2.5 text-sm text-sky-900 ring-1 ring-sky-100">
+      <div>
+        📆 <b>Mês em andamento</b> (dia {dia} de {nDias})
+        {ultima && <span className="text-sky-700"> · última movimentação lançada em {ultima.slice(8, 10)}/{ultima.slice(5, 7)}</span>}
+      </div>
+      {previsto != null && r.saiu > 0 && (
+        <div>
+          No ritmo de agora, o mês fecha com uns <b>{brl0(previsto)}</b> de gasto
+          {antes.saiu > 0 && <span className="text-sky-700"> (o anterior fechou com {brl0(antes.saiu)})</span>}.
+        </div>
+      )}
+      {falta.length > 0 && <div>Ainda deve entrar: {falta.map((x) => `${CATEGORIAS[x.cat].nome} (~${brl0(x.total)})`).join(' · ')}.</div>}
+      <div className="text-xs text-sky-700">
+        Pra ficar em dia: anexe o extrato de agora, ou lance na hora escrevendo na anotação rápida <b>gastei 45 ifood</b> / <b>recebi 300 pix</b>.
+      </div>
     </div>
   );
 }
