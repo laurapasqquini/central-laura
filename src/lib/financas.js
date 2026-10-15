@@ -46,7 +46,8 @@ const REGRAS = [
   [/ifd\*|ifood|restaurante|lanch|lanc\b|petiscaria|pizza|burger|burguer|sushi|acai|lanchonete|vila velha/, 'comida'],
   [/craft|bar\b|ultra club|pub|choperia|cervej/, 'bares'],
   [/mercado(?! pago| livre)|supermerc|atacad|padaria|panificadora|hortifruti|coronel zacarias/, 'mercado'],
-  [/tennis|tenis|beach|arena|esporte|wellhub|gympass|academia|mauatenisclub|complexo|sports/, 'esporte'],
+  // esporte: só o que ela paga para jogar/treinar (Toss e Wellhub); arenas e bares de quadra ficam para ela classificar
+  [/toss tennis|wellhub|gympass|academia|smart fit/, 'esporte'],
   [/farmac|drogaria|droga|clinica|fisio|laborat|psico|odonto/, 'saude'],
   [/salao|barbear|estetica|manicure|cabelo/, 'beleza'],
   [/sanepar|copel|telefonica|vivo|claro|\btim\b|internet|condominio|aluguel|energia/, 'casa'],
