@@ -78,11 +78,36 @@ const GENERICO = {
 };
 const HORA = { inicio: '09:00', meio: '18:00', fim: '10:00' };
 const diasEntre = (a, b) => Math.round((new Date(`${b}T12:00`) - new Date(`${a}T12:00`)) / 864e5);
-const rotulo = (rds) => (rds.length === 1 ? `R${rds[0].nome || rds[0].n}` : `R${rds[0].nome || rds[0].n} a R${rds.at(-1).n}`);
 
-// Campanhas para criar no backoffice a partir de uma data. Cada tipo de aviso vira UMA campanha
-// "Programada · Repetir a cada N dias · Início → Fim" enquanto as rodadas mantêm o mesmo intervalo;
-// a última rodada (texto próprio) sai como campanha de um dia.
+// Divide as datas em sequências que se repetem no mesmo intervalo, com o menor número de campanhas:
+// pega a primeira data livre e escolhe o intervalo que cobre mais datas seguidas (ex.: rodadas que
+// alternam 7 e 14 dias viram duas campanhas de 21 em 21 dias).
+function sequencias(itens) {
+  const livres = [...itens];
+  const grupos = [];
+  while (livres.length) {
+    const primeiro = livres[0];
+    let melhor = { itens: [primeiro], passo: 1 };
+    for (const x of livres.slice(1)) {
+      const passo = diasEntre(primeiro.data, x.data);
+      if (passo <= 0) continue;
+      const seq = [primeiro];
+      for (let d = add(primeiro.data, passo); ; d = add(d, passo)) {
+        const prox = livres.find((y) => y.data === d);
+        if (!prox) break;
+        seq.push(prox);
+      }
+      if (seq.length > melhor.itens.length || (seq.length === melhor.itens.length && passo < melhor.passo)) melhor = { itens: seq, passo };
+    }
+    grupos.push(melhor);
+    for (const x of melhor.itens) livres.splice(livres.indexOf(x), 1);
+  }
+  return grupos;
+}
+
+// Campanhas para criar no backoffice a partir de uma data. Cada aviso vira o menor número possível de
+// campanhas "Programada · Repetir a cada N dias · Início → Fim"; a última rodada (texto próprio) sai à parte.
+// O "criada" é guardado por rodada (instancias), então nada se perde se o agrupamento mudar com os dias.
 export function gerarCampanhas(desde) {
   const out = [];
   for (const c of CALENDARIOS) {
@@ -90,46 +115,31 @@ export function gerarCampanhas(desde) {
     for (const tipo of ['inicio', 'meio', 'fim']) { // rodada nova, já marcou? (meio da rodada) e último dia
       const itens = c.rodadas
         .map((rd) => ({ rd, data: tipo === 'inicio' ? rd.inicio : tipo === 'meio' ? add(rd.inicio, Math.ceil(diasEntre(rd.inicio, rd.fim) / 2)) /* metade da rodada */ : rd.fim }))
-        .filter(({ rd, data }) => !(tipo === 'meio' && data >= rd.fim)) // rodada de 1 semana: o "já marcou?" cairia no último dia
-        .map((x) => ({
-          ...x,
-          // só a última rodada tem texto próprio (fica no fim, não quebra a repetição das outras)
-          especial: tipo !== 'meio' && x.rd.n === ultimaN,
-        }));
-
-      const grupos = [];
-      for (const x of itens) {
-        const g = grupos.at(-1);
-        if (x.especial) grupos.push({ itens: [x], especial: true });
-        else if (g && !g.especial && (g.itens.length === 1 || diasEntre(g.itens.at(-1).data, x.data) === g.passo) && diasEntre(g.itens.at(-1).data, x.data) > 0) {
-          g.passo = diasEntre(g.itens.at(-1).data, x.data);
-          g.itens.push(x);
-        } else grupos.push({ itens: [x], especial: false });
-      }
+        .filter(({ rd, data }) => data >= desde && !(tipo === 'meio' && data >= rd.fim)); // rodada de 1 semana: o "já marcou?" cairia no último dia
+      // só a última rodada tem texto próprio
+      const especiais = itens.filter((x) => tipo !== 'meio' && x.rd.n === ultimaN).map((x) => ({ itens: [x], passo: 1, especial: true }));
+      const grupos = [...sequencias(itens.filter((x) => !(tipo !== 'meio' && x.rd.n === ultimaN))), ...especiais];
 
       for (const g of grupos) {
-        // grupo montado com a etapa inteira (o id não muda com os dias); mostra só o que ainda vai ser enviado
-        const futuros = g.itens.filter((x) => x.data >= desde);
-        if (!futuros.length) continue;
-        const rds = futuros.map((x) => x.rd);
+        const rds = g.itens.map((x) => x.rd);
         const texto = g.especial ? textos(c, rds[0], tipo) : GENERICO[tipo];
-        const inicio = futuros[0].data;
-        const fim = futuros.at(-1).data;
-        const original = g.itens[0].data;
+        const inicio = g.itens[0].data;
+        const fim = g.itens.at(-1).data;
         (ETAPA_BACKOFFICE[c.id] || [c.nome]).forEach((etapa, k) => {
           out.push({
-            id: `${c.id}:${k}:${tipo}:${original}`,
+            id: `${c.id}:${k}:${tipo}:${inicio}:${g.passo}`,
+            instancias: rds.map((rd) => `${c.id}:${k}:${tipo}:R${rd.n}`),
             calId: c.id,
             cidade: c.cidade,
             categoria: c.nome,
             etapa,
-            rodadas: rotulo(rds),
-            envios: futuros.length,
+            rodadas: rds.length === 1 ? `R${rds[0].nome || rds[0].n}` : rds.map((rd) => `R${rd.nome || rd.n}`).join(', '),
+            envios: g.itens.length,
             tipo,
             data: inicio, // primeiro envio (para saber o que está para vencer)
             inicio,
             fim,
-            repetir: futuros.length > 1 ? g.passo : 1,
+            repetir: g.itens.length > 1 ? g.passo : 1,
             hora: HORA[tipo],
             ...texto,
           });
@@ -139,3 +149,12 @@ export function gerarCampanhas(desde) {
   }
   return out.sort((a, b) => a.data.localeCompare(b.data) || a.cidade.localeCompare(b.cidade) || a.categoria.localeCompare(b.categoria) || a.hora.localeCompare(b.hora));
 }
+
+// Situação de uma campanha a partir do que foi marcado em cada rodada dela
+export function statusCampanha(ov, c) {
+  const st = c.instancias.map((i) => ov[i]?.status || 'pendente');
+  if (st.some((s) => s === 'pendente')) return 'pendente';
+  return st.every((s) => s === 'pulada') ? 'pulada' : 'agendada';
+}
+// textos, horário e ID ajustados: guardados na primeira rodada da campanha
+export const ajustesCampanha = (ov, c) => ov[c.instancias[0]] || {};

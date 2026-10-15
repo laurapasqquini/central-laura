@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../lib/store';
-import { gerarCampanhas, TIPOS } from '../data/campanhas';
+import { gerarCampanhas, TIPOS, statusCampanha, ajustesCampanha } from '../data/campanhas';
 import { today, fmtCurto } from '../lib/dates';
 import { limiteDiasUteis } from '../lib/engine';
 import { Empty, Pill, Segmented, inputCls } from '../components/ui';
@@ -19,7 +19,7 @@ export default function Campanhas() {
   const todas = useMemo(() => gerarCampanhas(ref), [ref]);
   const cidades = [...new Set(todas.map((c) => c.cidade))];
   const ov = state.campanhas || {};
-  const status = (c) => ov[c.id]?.status || 'pendente';
+  const status = (c) => statusCampanha(ov, c);
 
   const lista = todas.filter((c) => cidade === 'all' || c.cidade === cidade).filter((c) => (ver === 'criar' ? status(c) === 'pendente' : true));
   const urgentes = todas.filter((c) => status(c) === 'pendente' && c.data <= limiteDiasUteis(state, ref, 3)).length;
@@ -62,7 +62,7 @@ export default function Campanhas() {
         <section key={cat} className="space-y-2">
           <div className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">{cat}</div>
           {cs.map((c) => (
-            <Card key={c.id} c={c} st={status(c)} ov={ov[c.id] || {}} aberta={aberta === c.id} onToggle={() => setAberta(aberta === c.id ? null : c.id)} set={(p) => setCampanha(c.id, p)} ref0={ref} />
+            <Card key={c.id} c={c} st={status(c)} ov={ajustesCampanha(ov, c)} aberta={aberta === c.id} onToggle={() => setAberta(aberta === c.id ? null : c.id)} set={(p) => ('status' in p ? c.instancias.forEach((i) => setCampanha(i, p)) : setCampanha(c.instancias[0], p))} ref0={ref} />
           ))}
         </section>
       ))}

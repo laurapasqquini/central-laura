@@ -1,5 +1,5 @@
 import { marcosDoDia, rotinasDoDia } from '../data/calendarios';
-import { gerarCampanhas } from '../data/campanhas';
+import { gerarCampanhas, statusCampanha } from '../data/campanhas';
 import { FERIADOS } from '../data/feriados';
 import { today, addDays, weekday, fromStr, lastDayOfMonth, diffDays, fmtCurto, relativo } from './dates';
 
@@ -182,7 +182,7 @@ export const noDate = (state, filter) =>
 export function campanhasPendentes(state, ref = today(), dias = 3) {
   const ov = state.campanhas || {};
   const limite = limiteDiasUteis(state, ref, dias);
-  return gerarCampanhas(ref).filter((c) => c.data <= limite && !(ov[c.id]?.status && ov[c.id].status !== 'pendente'));
+  return gerarCampanhas(ref).filter((c) => c.data <= limite && statusCampanha(ov, c) === 'pendente');
 }
 
 // Sugestões: regras simples que olham para os seus dados e apontam gargalos.
