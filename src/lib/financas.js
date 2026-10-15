@@ -158,6 +158,7 @@ function lerCustodia(linhas) {
   if (!saldos.length) throw new Error('Não achei caixinhas neste extrato de custódia.');
   const lista = [];
   lista.custodia = saldos;
+  lista.nome = linhas[linhas.findIndex((l) => /^Pessoa física titular/.test(l)) + 1] || ''; // titular (Pix entre contas dela)
   return lista;
 }
 
@@ -290,4 +291,22 @@ export function resumoMes(fin, mes) {
   const guardou = -guardar.filter((t) => t.valor < 0).reduce((s, t) => s + t.valor, 0) || 0;
   const tirou = guardar.filter((t) => t.valor > 0).reduce((s, t) => s + t.valor, 0);
   return { lista, entrou, saiu, sobrou: entrou - saiu, guardou, tirou, guardadoItens: guardar, gastosPorCat: porCat('gasto'), entradasPorCat: porCat('entrada'), ignoradas: lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'ignorar') };
+}
+
+// Avisos do mês (comparando com o anterior): categoria que mais subiu, assinaturas, sobra
+export function avisosMes(r, antes) {
+  const out = [];
+  const brl0 = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  if (antes.saiu > 0) {
+    const ant = Object.fromEntries(antes.gastosPorCat.map((x) => [x.cat, x.total]));
+    const subiu = r.gastosPorCat
+      .filter((x) => ant[x.cat] > 0 && x.total - ant[x.cat] >= 50 && x.total / ant[x.cat] >= 1.25)
+      .sort((a, b) => b.total - ant[b.cat] - (a.total - ant[a.cat]))[0];
+    if (subiu) out.push(`${CATEGORIAS[subiu.cat].nome} subiu ${Math.round((subiu.total / ant[subiu.cat] - 1) * 100)}% (+${brl0(subiu.total - ant[subiu.cat])})`);
+  }
+  const ass = r.gastosPorCat.find((x) => x.cat === 'assinaturas');
+  if (ass) out.push(`assinaturas somam ${brl0(ass.total)} no mês`);
+  if (antes.entrou > 0 && r.entrou > 0 && r.sobrou < antes.sobrou - 100) out.push(`sobrou ${brl0(antes.sobrou - r.sobrou)} a menos que no mês anterior`);
+  if (r.entrou > 0 && r.sobrou < 0) out.push('saiu mais do que entrou');
+  return out;
 }

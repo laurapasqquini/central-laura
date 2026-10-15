@@ -829,6 +829,14 @@ export function StoreProvider({ user, children }) {
         delete transacoes[id];
         return { ...s, financas: { ...fin, transacoes } };
       }),
+      setMetaGuardado: (lugar, valor) =>
+        setState((s) => {
+          const fin = { transacoes: {}, regras: {}, ...(s.financas || {}) };
+          const metas = { ...(fin.metas || {}) };
+          if (!valor) delete metas[lugar];
+          else metas[lugar] = valor;
+          return { ...s, financas: { ...fin, metas } };
+        }),
       setMeuNome: (meuNome) => setState((s) => ({ ...s, financas: { transacoes: {}, regras: {}, ...(s.financas || {}), meuNome } })),
       updateConta: (id, patch) => setState((s) => ({ ...s, contas: (s.contas || []).map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
       deleteConta: (id) => setState((s) => ({ ...s, contas: (s.contas || []).filter((c) => c.id !== id) })),
