@@ -4,6 +4,7 @@ import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 import { buildAgenda, dadosPaginaLolis, postsSorteio } from './engine';
 import { INDICADORES_PADRAO } from './chefes';
+import { CALENDARIOS } from '../data/calendarios';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
 // Tudo é salvo como um único documento por usuária, sincronizado entre PC e iPhone.
@@ -14,7 +15,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 22,
+    version: 23,
     createdAt: hoje,
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -232,7 +233,57 @@ function migrate(s) {
   if (s.version < 22) {
     s = { ...s, version: 22, routines: s.routines.filter((r) => !/^Avisar ganhadores dos brindes/.test(r.title)) };
   }
+  // v23: campanhas marcadas como criadas na versão anterior da tela (id = calendário:etapa:tipo:1ª data do grupo)
+  // passam para o formato novo (uma marca por rodada), com o ID do backoffice
+  if (s.version < 23) {
+    s = { ...s, version: 23, campanhas: migrarCampanhas(s.campanhas || {}) };
+  }
   return s;
+}
+
+export function migrarCampanhas(ov) {
+  const novo = { ...ov };
+  const dias = (a, b) => Math.round((new Date(`${b}T12:00`) - new Date(`${a}T12:00`)) / 864e5);
+  for (const [chave, v] of Object.entries(ov)) {
+    // 1ª versão: uma campanha por rodada (calendário:R5:tipo) e uma etapa só
+    const v1 = chave.match(/^(.+):R(\d+):(inicio|meio|fim)$/);
+    if (v1 && v?.status && v.status !== 'pendente') {
+      for (const k of [0, 1]) {
+        const inst = `${v1[1]}:${k}:${v1[3]}:R${v1[2]}`;
+        if (!novo[inst]?.status) novo[inst] = { status: v.status, em: v.em };
+      }
+      continue;
+    }
+    const m = chave.match(/^(.+):(\d+):(inicio|meio|fim):(\d{4}-\d{2}-\d{2})$/);
+    if (!m || !v?.status || v.status === 'pendente') continue;
+    const [, calId, k, tipo, original] = m;
+    const c = CALENDARIOS.find((x) => x.id === calId);
+    if (!c) continue;
+    const ultimaN = c.rodadas[c.rodadas.length - 1].n;
+    // o "já marcou?" já caiu 3 dias depois do início e depois na metade da rodada: tenta os dois
+    const formulas = tipo === 'meio' ? [(rd) => addDays(rd.inicio, 3), (rd) => addDays(rd.inicio, Math.ceil(dias(rd.inicio, rd.fim) / 2))] : [(rd) => (tipo === 'inicio' ? rd.inicio : rd.fim)];
+    for (const data of formulas) {
+      const itens = c.rodadas.map((rd) => ({ rd, data: data(rd) })).filter((x) => !(tipo === 'meio' && x.data >= x.rd.fim));
+      const i = itens.findIndex((x) => x.data === original);
+      if (i < 0) continue;
+      // o grupo antigo: a partir dessa data, enquanto o intervalo se mantém (a última rodada era à parte)
+      const grupo = [itens[i]];
+      const especial = (x) => tipo !== 'meio' && x.rd.n === ultimaN;
+      if (!especial(itens[i])) {
+        for (let j = i + 1; j < itens.length && !especial(itens[j]); j++) {
+          const passo = dias(grupo.at(-1).data, itens[j].data);
+          if (grupo.length > 1 && passo !== dias(grupo[0].data, grupo[1].data)) break;
+          grupo.push(itens[j]);
+        }
+      }
+      for (const x of grupo) {
+        const inst = `${calId}:${k}:${tipo}:R${x.rd.n}`;
+        if (!novo[inst]?.status) novo[inst] = { ...(novo[inst] || {}), status: v.status, em: v.em, ...(v.idBackoffice ? { idBackoffice: v.idBackoffice } : {}) };
+      }
+      break;
+    }
+  }
+  return novo;
 }
 
 function load() {
