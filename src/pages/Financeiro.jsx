@@ -325,7 +325,7 @@ function Ciclo({ fin, contas, brl0 }) {
           <div className="text-xs text-slate-500">Livre na conta até o próximo salário</div>
           <div className={`text-xl font-bold ${livre != null && livre < 0 ? 'text-red-600' : 'text-emerald-600'}`}>{livre != null ? brl0(livre) : '—'}</div>
           <div className="text-xs text-slate-400">
-            {c.saldo != null ? `saldo ${brl0(c.saldo)} (extrato até ${fmt(c.saldoEm)})` : 'anexe o PDF da conta'}
+            {c.saldo != null ? `saldo ${brl0(c.saldo)} (extrato até ${fmt(c.saldoEm)})` : 'anexe o PDF do extrato da conta (NU_…pdf) pra ler o saldo'}
             {totalContas > 0 && ` − contas fixas ${brl0(totalContas)}`}
           </div>
         </div>
