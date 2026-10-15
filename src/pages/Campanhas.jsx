@@ -123,7 +123,7 @@ function Card({ c, st, ov, aberta, onToggle, set, ref0 }) {
             {/MASCULINA|FEMININA|MASCULINO -|FEMININO -/.test(etapa) && (
               <Pill className="bg-violet-50 text-violet-700 ring-violet-200">{/MASCULIN/.test(etapa) ? 'masculino' : 'feminino'}</Pill>
             )}
-            {st === 'agendada' && <Pill className="bg-emerald-50 text-emerald-700 ring-emerald-200">✓ criada</Pill>}
+            {st === 'agendada' && <Pill className="bg-emerald-50 text-emerald-700 ring-emerald-200">✓ criada{ov.idBackoffice ? ` · ID ${ov.idBackoffice}` : ''}</Pill>}
             {st === 'pulada' && <Pill className="bg-slate-50 text-slate-400 ring-slate-200">pulada</Pill>}
             {c.data <= ref0 && st === 'pendente' && <Pill className="bg-red-50 text-red-600 ring-red-200">começa hoje</Pill>}
           </div>
@@ -161,6 +161,17 @@ function Card({ c, st, ov, aberta, onToggle, set, ref0 }) {
               Mensagem <span className="flex items-center gap-2 normal-case">{mensagem.length}/500 <Copiar texto={mensagem} /></span>
             </span>
             <textarea rows={3} className={inputCls} value={mensagem} onChange={(e) => set({ mensagem: e.target.value })} />
+          </label>
+          <label className="flex items-center gap-2 pt-1">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">ID no backoffice</span>
+            <input
+              inputMode="numeric"
+              placeholder="ex.: 12"
+              value={ov.idBackoffice || ''}
+              onChange={(e) => set({ idBackoffice: e.target.value.trim() })}
+              className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-sm"
+            />
+            <span className="text-xs text-slate-400">a coluna ID da lista de campanhas (para achar e excluir depois)</span>
           </label>
           <div className="flex flex-wrap gap-2 pt-1">
             {st !== 'agendada' && (
