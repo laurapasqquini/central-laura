@@ -1,76 +1,96 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../lib/store';
 import { gerarCampanhas, TIPOS, statusCampanha, ajustesCampanha } from '../data/campanhas';
-import { today, fmtCurto } from '../lib/dates';
+import { today, fmtCurto, relativo } from '../lib/dates';
 import { limiteDiasUteis } from '../lib/engine';
-import { Empty, Pill, Segmented, inputCls } from '../components/ui';
+import { Empty, Segmented, inputCls } from '../components/ui';
 
 const brData = (s) => s.split('-').reverse().join('/');
+const quando = (c) => (c.envios === 1 ? `${fmtCurto(c.inicio)} · ${c.hora.replace(':00', 'h')} · envio único` : `${fmtCurto(c.inicio)} → ${fmtCurto(c.fim)} · a cada ${c.repetir} dias · ${c.hora.replace(':00', 'h')} · ${c.envios} envios`);
 
-// Campanhas push da etapa: cada uma é criada UMA vez no backoffice (Programada, repetindo a cada N dias,
-// do início ao fim). A lista vem dos calendários; aqui a Laura copia os campos e marca o que já criou.
+// Campanhas push: cada uma é criada UMA vez no backoffice e se repete sozinha até o fim.
+// Para criar → Criadas (com o ID do backoffice) → Não vou usar.
 export default function Campanhas() {
   const { state, setCampanha } = useStore();
   const ref = today();
-  const [ver, setVer] = useState('criar'); // criar | todas
+  const [ver, setVer] = useState('criar'); // criar | criadas | puladas
   const [cidade, setCidade] = useState('all');
   const [aberta, setAberta] = useState(null);
 
   const todas = useMemo(() => gerarCampanhas(ref), [ref]);
-  const cidades = [...new Set(todas.map((c) => c.cidade))];
   const ov = state.campanhas || {};
-  const status = (c) => statusCampanha(ov, c);
+  const st = (c) => statusCampanha(ov, c);
+  const n = { criar: todas.filter((c) => st(c) === 'pendente').length, criadas: todas.filter((c) => st(c) === 'agendada').length, puladas: todas.filter((c) => st(c) === 'pulada').length };
+  const limite = limiteDiasUteis(state, ref, 3);
+  const cidades = [...new Set(todas.map((c) => c.cidade))];
+  const alvo = { criar: 'pendente', criadas: 'agendada', puladas: 'pulada' }[ver];
+  const lista = todas.filter((c) => st(c) === alvo && (cidade === 'all' || c.cidade === cidade));
 
-  const lista = todas.filter((c) => cidade === 'all' || c.cidade === cidade).filter((c) => (ver === 'criar' ? status(c) === 'pendente' : true));
-  const urgentes = todas.filter((c) => status(c) === 'pendente' && c.data <= limiteDiasUteis(state, ref, 3)).length;
-  const criadas = todas.filter((c) => status(c) === 'agendada').length;
-
-  // agrupadas por categoria (cidade · categoria)
-  const porCategoria = lista.reduce((acc, c) => ((acc[`${c.cidade} · ${c.categoria}`] ||= []).push(c), acc), {});
+  // agrupadas pela etapa do backoffice (é o que se escolhe primeiro lá)
+  const grupos = lista.reduce((acc, c) => ((acc[c.etapa] ||= { cidade: c.cidade, categoria: c.categoria, itens: [] }).itens.push(c), acc), {});
+  const feitas = n.criadas + n.puladas;
+  const pct = todas.length ? Math.round((feitas / todas.length) * 100) : 100;
+  const set = (c, p) => ('status' in p ? c.instancias.forEach((i) => setCampanha(i, p)) : setCampanha(c.instancias[0], p));
 
   return (
     <div className="space-y-5">
+      <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="font-bold text-ink">
+            {n.criadas} de {todas.length} campanhas criadas
+          </div>
+          <div className="text-xs text-slate-500">{n.criar ? `faltam ${n.criar}` : 'tudo criado 🎉'}</div>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+          <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${pct}%` }} />
+        </div>
+        <p className="text-xs text-slate-500">
+          Cada campanha é criada <b>uma vez</b> no backoffice e se repete sozinha até o fim da etapa. Abra uma, siga os passos na ordem do formulário, cole o ID e clique em <b>Criei</b>.
+        </p>
+      </div>
+
       <div className="flex flex-wrap items-center gap-2">
         <Segmented
           value={ver}
           onChange={setVer}
           options={[
-            ['criar', `Para criar (${todas.length - criadas})`],
-            ['todas', 'Todas'],
+            ['criar', `Para criar (${n.criar})`],
+            ['criadas', `✓ Criadas (${n.criadas})`],
+            ...(n.puladas ? [['puladas', `Não vou usar (${n.puladas})`]] : []),
           ]}
         />
-        <Segmented value={cidade} onChange={setCidade} options={[['all', 'Todas as cidades'], ...cidades.map((c) => [c, c])]} />
-      </div>
-
-      <div className="space-y-1 rounded-2xl bg-indigo-50 px-4 py-3 text-sm text-indigo-900 ring-1 ring-indigo-100">
-        <div className="font-bold">Como criar no backoffice</div>
-        <div>
-          Cada campanha daqui é criada <b>uma vez só</b> e se repete sozinha até o fim. Os campos abaixo estão na mesma ordem do backoffice, cada um com o seu
-          <b> copiar</b>. Duplas e Beach de Maringá aparecem duas vezes porque lá são duas etapas (masculina e feminina).
-        </div>
-      </div>
-
-      {urgentes > 0 && (
-        <div className="rounded-xl bg-red-50 px-3.5 py-2.5 text-sm font-medium text-red-800 ring-1 ring-red-100">
-          📣 {urgentes} {urgentes === 1 ? 'campanha começa' : 'campanhas começam'} nos próximos 3 dias úteis e ainda não {urgentes === 1 ? 'foi criada' : 'foram criadas'}.
-        </div>
-      )}
-
-      {!lista.length && <Empty>Todas as campanhas da etapa já foram criadas. 🎉</Empty>}
-
-      {Object.entries(porCategoria).map(([cat, cs]) => (
-        <section key={cat} className="space-y-2">
-          <div className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">{cat}</div>
-          {cs.map((c) => (
-            <Card key={c.id} c={c} st={status(c)} ov={ajustesCampanha(ov, c)} aberta={aberta === c.id} onToggle={() => setAberta(aberta === c.id ? null : c.id)} set={(p) => ('status' in p ? c.instancias.forEach((i) => setCampanha(i, p)) : setCampanha(c.instancias[0], p))} ref0={ref} />
+        <select value={cidade} onChange={(e) => setCidade(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600">
+          <option value="all">Todas as cidades</option>
+          {cidades.map((c) => (
+            <option key={c} value={c}>{c}</option>
           ))}
+        </select>
+      </div>
+
+      {!lista.length && <Empty>{ver === 'criar' ? 'Nada para criar aqui. 🎉' : ver === 'criadas' ? 'Nenhuma campanha marcada como criada ainda.' : 'Nada aqui.'}</Empty>}
+
+      {Object.entries(grupos).map(([etapa, g]) => (
+        <section key={etapa} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+          <div className="border-b border-slate-100 bg-slate-50 px-4 py-2.5">
+            <div className="text-sm font-bold text-slate-800">
+              {g.cidade} · {g.categoria}
+              {/MASCULIN/.test(etapa) && g.categoria.includes('Duplas') ? ' · masculino' : /FEMININ/.test(etapa) && g.categoria.includes('Duplas') ? ' · feminino' : ''}
+              {/BEACH MASCULINO -/.test(etapa) ? ' · masculino' : /BEACH FEMININO -/.test(etapa) ? ' · feminino' : ''}
+            </div>
+            <div className="text-[11px] text-slate-400">Etapa no backoffice: {etapa}</div>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {g.itens.map((c) => (
+              <Linha key={c.id} c={c} st={st(c)} ov={ajustesCampanha(ov, c)} urgente={st(c) === 'pendente' && c.data <= limite} ref0={ref} aberta={aberta === c.id} onToggle={() => setAberta(aberta === c.id ? null : c.id)} set={(p) => set(c, p)} />
+            ))}
+          </div>
         </section>
       ))}
     </div>
   );
 }
 
-function Copiar({ texto, rotulo = 'copiar' }) {
+function Copiar({ texto }) {
   const [ok, setOk] = useState(false);
   return (
     <button
@@ -83,110 +103,113 @@ function Copiar({ texto, rotulo = 'copiar' }) {
           prompt('Copie:', texto);
         }
       }}
-      className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold text-indigo-600 ring-1 ring-indigo-200 hover:bg-indigo-50"
+      className={`shrink-0 rounded-lg px-2.5 py-1 text-xs font-bold ring-1 ${ok ? 'bg-emerald-600 text-white ring-emerald-600' : 'text-indigo-600 ring-indigo-200 hover:bg-indigo-50'}`}
     >
-      {ok ? '✓ copiado' : rotulo}
+      {ok ? '✓ copiado' : 'copiar'}
     </button>
   );
 }
 
-function Campo({ nome, valor, dica, copiar = true }) {
+// Um passo do formulário do backoffice
+function Passo({ n, nome, valor, copiar = true, dica, children }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5">
-      <div className="min-w-0">
+    <div className="flex items-start gap-3 py-2">
+      <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-indigo-100 text-[11px] font-bold text-indigo-700">{n}</span>
+      <div className="min-w-0 flex-1">
         <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{nome}</div>
-        <div className="text-sm text-slate-800">{valor}</div>
+        {children || <div className="break-words text-sm text-slate-800">{valor}</div>}
         {dica && <div className="text-xs text-slate-400">{dica}</div>}
       </div>
-      {copiar && <Copiar texto={valor} />}
+      {copiar && !children && <Copiar texto={valor} />}
     </div>
   );
 }
 
-function Card({ c, st, ov, aberta, onToggle, set, ref0 }) {
+function Linha({ c, st, ov, urgente, ref0, aberta, onToggle, set }) {
   const titulo = ov.titulo ?? c.titulo;
   const mensagem = ov.mensagem ?? c.mensagem;
-  const etapa = ov.etapa ?? c.etapa;
   const hora = ov.hora ?? c.hora;
-  const feito = st !== 'pendente';
-  const confira = /confira/i.test(etapa);
-  const unica = c.envios === 1;
+  const confira = /confira/i.test(c.etapa);
+  const [id, setId] = useState(ov.idBackoffice || '');
 
   return (
-    <div className={`rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 ${feito ? 'opacity-60' : ''}`}>
-      <button onClick={onToggle} className="flex w-full items-start gap-3 p-3.5 text-left">
+    <div className={st === 'pulada' ? 'opacity-60' : ''}>
+      <button onClick={onToggle} className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50">
         <span className="text-xl">{TIPOS[c.tipo].icone}</span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="font-bold text-slate-800">{TIPOS[c.tipo].nome}</span>
-            <Pill className="bg-slate-50 text-slate-500 ring-slate-200">{c.rodadas}</Pill>
-            {/MASCULINA|FEMININA|MASCULINO -|FEMININO -/.test(etapa) && (
-              <Pill className="bg-violet-50 text-violet-700 ring-violet-200">{/MASCULIN/.test(etapa) ? 'masculino' : 'feminino'}</Pill>
-            )}
-            {st === 'agendada' && <Pill className="bg-emerald-50 text-emerald-700 ring-emerald-200">✓ criada{ov.idBackoffice ? ` · ID ${ov.idBackoffice}` : ''}</Pill>}
-            {st === 'pulada' && <Pill className="bg-slate-50 text-slate-400 ring-slate-200">pulada</Pill>}
-            {c.data <= ref0 && st === 'pendente' && <Pill className="bg-red-50 text-red-600 ring-red-200">começa hoje</Pill>}
+          <div className="flex flex-wrap items-center gap-x-2 text-[15px] font-semibold text-slate-800">
+            {TIPOS[c.tipo].nome}
+            <span className="text-xs font-medium text-slate-400">{c.rodadas}</span>
           </div>
-          <div className="mt-0.5 text-sm text-slate-500">
-            {unica ? `${fmtCurto(c.inicio)} · ${hora.replace(':00', 'h')} (uma vez)` : `${fmtCurto(c.inicio)} → ${fmtCurto(c.fim)} · a cada ${c.repetir} dias · ${hora.replace(':00', 'h')} · ${c.envios} envios`}
-          </div>
+          <div className="text-sm text-slate-500">{quando({ ...c, hora })}</div>
         </div>
+        {st === 'agendada' ? (
+          <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">✓ ID {ov.idBackoffice || '—'}</span>
+        ) : urgente ? (
+          <span className="shrink-0 rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-600 ring-1 ring-red-200">começa {relativo(c.data, ref0)}</span>
+        ) : (
+          <span className="shrink-0 text-xs text-slate-400">começa {relativo(c.data, ref0)}</span>
+        )}
+        <span className="shrink-0 text-slate-300">{aberta ? '▴' : '▾'}</span>
       </button>
 
       {aberta && (
-        <div className="space-y-3 border-t border-slate-100 px-3.5 pb-3.5 pt-2">
-          <div className="divide-y divide-slate-100">
-            <Campo nome="Alcance" valor="Jogadores de uma etapa" copiar={false} />
-            <Campo nome="Gatilho" valor="Programada" copiar={false} />
-            <Campo nome="Etapa" valor={etapa} dica={confira ? 'Nome ainda não conferido: escolha na lista do backoffice a etapa desta categoria.' : 'Procure este nome na lista do backoffice.'} />
-            <Campo nome="Repetir a cada (dias)" valor={String(c.repetir)} dica={unica ? 'Envio único: início e fim no mesmo dia.' : undefined} />
-            <Campo nome="Início" valor={brData(c.inicio)} />
-            <Campo nome="Fim" valor={brData(c.fim)} dica={unica ? undefined : `O último envio é nesse dia (${c.rodadas}).`} />
-            <div className="flex items-center justify-between gap-3 py-1.5">
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Horário de envio</div>
+        <div className="space-y-3 bg-slate-50/60 px-4 pb-4">
+          <div className="text-xs font-semibold text-slate-500">Preencha assim no backoffice (Campanhas › Nova):</div>
+          <div className="divide-y divide-slate-100 rounded-xl bg-white px-3 ring-1 ring-slate-200">
+            <Passo n={1} nome="Alcance" valor="Jogadores de uma etapa" copiar={false} />
+            <Passo n={2} nome="Gatilho" valor="Programada" copiar={false} />
+            <Passo n={3} nome="Etapa" valor={c.etapa} dica={confira ? 'Nome ainda não conferido: escolha a etapa desta categoria na lista.' : 'Procure este nome na lista.'} />
+            <Passo n={4} nome="Repetir a cada (dias)" valor={String(c.repetir)} dica={c.envios === 1 ? 'Envio único: início e fim no mesmo dia.' : undefined} />
+            <Passo n={5} nome="Início" valor={brData(c.inicio)} />
+            <Passo n={6} nome="Fim" valor={brData(c.fim)} />
+            <Passo n={7} nome="Horário de envio">
+              <div className="flex items-center gap-2">
                 <input type="time" step="900" value={hora} onChange={(e) => set({ hora: e.target.value })} className="rounded-lg border border-slate-200 px-2 py-1 text-sm" />
+                <Copiar texto={hora} />
               </div>
-              <Copiar texto={hora} />
-            </div>
+            </Passo>
+            <Passo n={8} nome="Título">
+              <div className="flex items-center gap-2">
+                <input className={`${inputCls} py-1.5`} value={titulo} onChange={(e) => set({ titulo: e.target.value })} />
+                <Copiar texto={titulo} />
+              </div>
+            </Passo>
+            <Passo n={9} nome={`Mensagem (${mensagem.length}/500)`}>
+              <div className="flex items-start gap-2">
+                <textarea rows={3} className={`${inputCls} py-1.5`} value={mensagem} onChange={(e) => set({ mensagem: e.target.value })} />
+                <Copiar texto={mensagem} />
+              </div>
+            </Passo>
           </div>
-          <label className="block space-y-1">
-            <span className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              Título <Copiar texto={titulo} />
-            </span>
-            <input className={inputCls} value={titulo} onChange={(e) => set({ titulo: e.target.value })} />
-          </label>
-          <label className="block space-y-1">
-            <span className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              Mensagem <span className="flex items-center gap-2 normal-case">{mensagem.length}/500 <Copiar texto={mensagem} /></span>
-            </span>
-            <textarea rows={3} className={inputCls} value={mensagem} onChange={(e) => set({ mensagem: e.target.value })} />
-          </label>
-          <label className="flex items-center gap-2 pt-1">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">ID no backoffice</span>
+
+          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white p-3 ring-1 ring-slate-200">
+            <span className="text-sm font-semibold text-slate-700">Depois de salvar lá:</span>
             <input
               inputMode="numeric"
-              placeholder="ex.: 12"
-              value={ov.idBackoffice || ''}
-              onChange={(e) => set({ idBackoffice: e.target.value.trim() })}
-              className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-sm"
+              placeholder="ID da campanha"
+              value={id}
+              onChange={(e) => setId(e.target.value.trim())}
+              onBlur={() => id !== (ov.idBackoffice || '') && set({ idBackoffice: id })}
+              className="w-36 rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
             />
-            <span className="text-xs text-slate-400">a coluna ID da lista de campanhas (para achar e excluir depois)</span>
-          </label>
-          <div className="flex flex-wrap gap-2 pt-1">
-            {st !== 'agendada' && (
-              <button onClick={() => set({ status: 'agendada', em: today() })} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">
-                ✓ Criei no backoffice
+            {st !== 'agendada' ? (
+              <button onClick={() => set({ status: 'agendada', em: today(), idBackoffice: id })} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">
+                ✓ Criei
+              </button>
+            ) : (
+              <button onClick={() => set({ status: 'pendente' })} className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-500 ring-1 ring-slate-200">
+                ↩ Voltar para criar
               </button>
             )}
             {st === 'pendente' && (
-              <button onClick={() => set({ status: 'pulada' })} className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 ring-1 ring-slate-200">
+              <button onClick={() => set({ status: 'pulada' })} className="ml-auto text-xs font-semibold text-slate-400 hover:text-slate-600">
                 Não vou usar
               </button>
             )}
-            {st !== 'pendente' && (
-              <button onClick={() => set({ status: 'pendente' })} className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-500 ring-1 ring-slate-200">
-                Voltar para criar
+            {st === 'pulada' && (
+              <button onClick={() => set({ status: 'pendente' })} className="ml-auto text-xs font-semibold text-slate-500">
+                ↩ Voltar para criar
               </button>
             )}
           </div>

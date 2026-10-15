@@ -4,13 +4,13 @@ import { useState } from 'react';
 import { Pill, Segmented } from '../components/ui';
 import Campanhas from './Campanhas';
 import { useStore } from '../lib/store';
-import { campanhasPendentes } from '../lib/engine';
+import { gerarCampanhas, statusCampanha } from '../data/campanhas';
 
 export default function Etapas() {
   const { state } = useStore();
   const [aba, setAba] = useState('rodadas');
   const ref = today();
-  const pend = campanhasPendentes(state, ref, 14).length;
+  const pend = gerarCampanhas(ref).filter((c) => statusCampanha(state.campanhas || {}, c) === 'pendente').length; // mesma conta de "Para criar"
   const cidades = [...new Set(CALENDARIOS.map((c) => c.cidade))];
 
   // Próximos domingos com sorteio (todas as cidades)
@@ -32,7 +32,7 @@ export default function Etapas() {
         onChange={setAba}
         options={[
           ['rodadas', 'Rodadas'],
-          ['campanhas', `📣 Campanhas${pend ? ` (${pend})` : ''}`],
+          ['campanhas', `📣 Campanhas${pend ? ` (${pend} para criar)` : ' ✓'}`],
         ]}
       />
 
