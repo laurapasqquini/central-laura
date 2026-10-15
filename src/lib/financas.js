@@ -299,7 +299,9 @@ export function resumoMes(fin, mes) {
   const guardar = lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'guardar');
   const guardou = -guardar.filter((t) => t.valor < 0).reduce((s, t) => s + t.valor, 0) || 0;
   const tirou = guardar.filter((t) => t.valor > 0).reduce((s, t) => s + t.valor, 0);
-  return { lista, entrou, saiu, sobrou: entrou - saiu, guardou, tirou, guardadoItens: guardar, gastosPorCat: porCat('gasto'), entradasPorCat: porCat('entrada'), ignoradas: lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'ignorar') };
+  // gastos marcados como fora do comum (ex.: o celular): contam no mês, mas não na média nem na previsão
+  const extra = -gastos.filter((t) => t.extra).reduce((s, t) => s + t.valor, 0) || 0;
+  return { lista, entrou, saiu, extra, saiuNormal: saiu - extra, sobrou: entrou - saiu, guardou, tirou, guardadoItens: guardar, gastosPorCat: porCat('gasto'), entradasPorCat: porCat('entrada'), ignoradas: lista.filter((t) => CATEGORIAS[t.categoria]?.tipo === 'ignorar') };
 }
 
 // Avisos do mês (comparando com o anterior): categoria que mais subiu, assinaturas, sobra
@@ -366,4 +368,25 @@ export function cicloAtual(fin, hoje) {
   const depois = s ? Object.values(fin.transacoes || {}).filter((t) => t.data > s.em && t.origem === 'conta' && categoriaDe(t, regras, fin.meuNome, fin.periodosPicpay) !== 'ignorar').reduce((a, t) => a + t.valor, 0) : 0;
   const saldo = s ? s.valor + depois : null;
   return { fechou, proxFecha, venceAberta, aberta, anterior, ultimaCompra, ultSal, proxSalario, progresso, saldo, saldoEm: s?.em || null, depois };
+}
+
+// Gastos fora do comum pra ela avaliar: muito acima do que costuma gastar numa compra só
+// (≥ R$ 300 e ≥ 4× a mediana dos gastos dos últimos 3 meses), ainda sem resposta (fora do comum / é normal)
+export function gastosIncomuns(fin, mes) {
+  const regras = fin.regras || {};
+  const todos = Object.values(fin.transacoes || {}).map((t) => ({ ...t, categoria: categoriaDe(t, regras, fin.meuNome, fin.periodosPicpay) }));
+  const gasto = (t) => CATEGORIAS[t.categoria]?.tipo === 'gasto' && t.valor < 0;
+  const [y, m] = mes.split('-').map(Number);
+  const inicio = `${m <= 3 ? y - 1 : y}-${String(((m - 4 + 12) % 12) + 1).padStart(2, '0')}-01`;
+  const base = todos.filter((t) => gasto(t) && t.data >= inicio && t.data < `${mes}-32`).map((t) => -t.valor).sort((a, b) => a - b);
+  if (base.length < 10) return [];
+  const mediana = base[Math.floor(base.length / 2)];
+  const limite = Math.max(300, mediana * 4);
+  // o que se repete (mesma pessoa/loja, valor parecido, em outros 2+ meses) é conta fixa, não susto
+  const recorrente = (t) => {
+    const k = chaveDe(t.desc);
+    const meses = new Set(todos.filter((x) => x !== t && gasto(x) && x.data.slice(0, 7) !== mes && chaveDe(x.desc) === k && Math.abs(x.valor - t.valor) <= Math.abs(t.valor) * 0.2).map((x) => x.data.slice(0, 7)));
+    return meses.size >= 2;
+  };
+  return todos.filter((t) => t.data.startsWith(mes) && gasto(t) && -t.valor >= limite && !t.extra && !t.normal && !recorrente(t)).sort((a, b) => a.valor - b.valor);
 }

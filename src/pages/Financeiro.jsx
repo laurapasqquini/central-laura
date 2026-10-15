@@ -3,7 +3,7 @@
 // são lidos aqui no navegador: só as movimentações e os saldos ficam guardados (o arquivo não).
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
-import { CATEGORIAS, lerArquivo, resumoMes, jaExiste, avisosMes, cicloAtual } from '../lib/financas';
+import { CATEGORIAS, lerArquivo, resumoMes, jaExiste, avisosMes, cicloAtual, gastosIncomuns } from '../lib/financas';
 import { vencimentoConta } from '../lib/engine';
 import { today } from '../lib/dates';
 import { Empty, Segmented, inputCls } from '../components/ui';
@@ -165,7 +165,7 @@ export default function Financeiro() {
               <input onBlur={(e) => e.target.value.trim() && setMeuNome(e.target.value.trim())} placeholder="Nome completo" className="w-60 rounded-lg border border-amber-200 bg-white px-2 py-1 text-sm" />
             </label>
           )}
-          <Mes r={r} antes={antes} mes={mes} fin={fin} contas={contasProx} totalGuardado={totalGuardado} brl={brl} brl0={brl0} irGuardado={() => setAba('guardado')} irMovs={() => setAba('movs')} />
+          <Mes r={r} antes={antes} mes={mes} fin={fin} store={store} contas={contasProx} totalGuardado={totalGuardado} brl={brl} brl0={brl0} irGuardado={() => setAba('guardado')} irMovs={() => setAba('movs')} />
         </>
 
       ) : aba === 'ano' ? (
@@ -180,7 +180,8 @@ export default function Financeiro() {
 }
 
 // ── Mês: os 4 números, pra onde foi (barra), de onde veio e um aviso ──
-function Mes({ r, antes, mes, fin, contas, totalGuardado, brl, brl0, irGuardado, irMovs }) {
+function Mes({ r, antes, mes, fin, store, contas, totalGuardado, brl, brl0, irGuardado, irMovs }) {
+  const incomuns = gastosIncomuns(fin, mes);
   const [verTodas, setVerTodas] = useState(false);
   const [aberta, setAberta] = useState(null);
   // só compara se o mês anterior tem extrato de verdade (senão o % não diz nada)
@@ -192,13 +193,14 @@ function Mes({ r, antes, mes, fin, contas, totalGuardado, brl, brl0, irGuardado,
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Numero titulo="Entrou" valor={brl0(r.entrou)} cor="text-emerald-600" sub={variacao(r.entrou, antes.entrou)} />
-        <Numero titulo="Saiu" valor={brl0(r.saiu)} cor="text-red-600" sub={variacao(r.saiu, antes.saiu)} />
+        <Numero titulo="Saiu" valor={brl0(r.saiu)} cor="text-red-600" sub={r.extra > 0 ? `${brl0(r.saiuNormal)} sem os fora do comum` : variacao(r.saiu, antes.saiu)} />
         <Numero titulo="Sobrou" valor={brl0(r.sobrou)} cor={r.sobrou >= 0 ? 'text-ink' : 'text-red-600'} sub={r.entrou ? `${Math.round((r.sobrou / r.entrou) * 100)}% do que entrou` : null} />
         <button onClick={irGuardado} className="text-left">
           <Numero titulo="Guardado →" valor={totalGuardado ? brl0(totalGuardado) : '—'} cor="text-violet-700" sub={r.guardou || r.tirou ? `${r.guardou - r.tirou >= 0 ? '+' : '−'}${brl0(Math.abs(r.guardou - r.tirou))} no mês` : 'saldos em Guardado'} />
         </button>
       </div>
 
+      {incomuns.length > 0 && <Incomuns lista={incomuns} brl={brl} setTransacao={store.setTransacao} />}
       {mes === today().slice(0, 7) && <Ciclo fin={fin} contas={contas} brl0={brl0} />}
       {mes === today().slice(0, 7) && <Andamento r={r} antes={antes} mes={mes} brl0={brl0} />}
 
@@ -253,6 +255,29 @@ function Mes({ r, antes, mes, fin, contas, totalGuardado, brl, brl0, irGuardado,
         Ver as {r.lista.length} movimentações do mês →
       </button>
     </div>
+  );
+}
+
+// ── Gastos muito acima do comum, pra ela avaliar: "fora do comum" (sai da média) ou "é normal" ──
+function Incomuns({ lista, brl, setTransacao }) {
+  return (
+    <section className="space-y-2 rounded-2xl bg-orange-50 p-4 ring-1 ring-orange-100">
+      <h2 className="text-sm font-bold text-orange-800">🔎 Gasto{lista.length > 1 ? 's' : ''} fora do comum pra avaliar</h2>
+      {lista.map((t) => (
+        <div key={t.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-orange-100">
+          <span className="text-xs text-slate-400">{dm(t.data)}</span>
+          <span className="min-w-0 flex-1 truncate text-slate-700" title={t.desc}>{limpa(t.desc)}</span>
+          <b className="text-slate-800">{brl(Math.abs(t.valor))}</b>
+          <button onClick={() => setTransacao(t.id, { extra: true })} className="rounded-lg bg-orange-500 px-2.5 py-1 text-xs font-bold text-white hover:bg-orange-600">
+            ⭐ Fora do comum
+          </button>
+          <button onClick={() => setTransacao(t.id, { normal: true })} className="rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50">
+            É normal
+          </button>
+        </div>
+      ))}
+      <p className="text-xs text-orange-700">"Fora do comum" continua contando no mês, mas sai da média do ano e da previsão (ex.: o celular). "É normal" só tira o aviso.</p>
+    </section>
   );
 }
 
@@ -320,7 +345,8 @@ function Andamento({ r, antes, mes, brl0 }) {
   const dia = Number(today().slice(8, 10));
   const [y, m] = mes.split('-').map(Number);
   const nDias = new Date(y, m, 0).getDate();
-  const previsto = dia >= 3 ? (r.saiu / dia) * nDias : null; // nos 2 primeiros dias o ritmo ainda não diz nada
+  // ritmo sem os gastos fora do comum (eles entram uma vez só, não se repetem até o fim do mês)
+  const previsto = dia >= 3 ? (r.saiuNormal / dia) * nDias + r.extra : null; // nos 2 primeiros dias o ritmo ainda não diz nada
   // entradas fixas do mês anterior (salário, Gralha, VT) que ainda não chegaram neste mês
   const fixas = ['salario', 'gralha', 'vt'];
   const veio = new Set(r.entradasPorCat.map((x) => x.cat));
@@ -360,7 +386,7 @@ function Ano({ fin, ano, brl0, oculto, onMes }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Numero titulo={`Entrou em ${ano}`} valor={brl0(soma('entrou'))} cor="text-emerald-600" />
-        <Numero titulo={`Saiu em ${ano}`} valor={brl0(soma('saiu'))} cor="text-red-600" sub={`média ${brl0(soma('saiu') / res.length)}/mês`} />
+        <Numero titulo={`Saiu em ${ano}`} valor={brl0(soma('saiu'))} cor="text-red-600" sub={`média ${brl0(soma('saiuNormal') / res.length)}/mês${soma('extra') > 0 ? ' (sem os fora do comum)' : ''}`} />
         <Numero titulo="Sobrou" valor={brl0(soma('sobrou'))} cor="text-ink" />
         <Numero titulo="Guardou (líquido)" valor={brl0(soma('guardou') - soma('tirou'))} cor="text-violet-700" />
       </div>
@@ -512,7 +538,7 @@ function EditaLugar({ s, meta, salvar, remover }) {
 
 // ── Movimentações: busca, filtro, "a revisar" e lançar à mão ──
 function Movimentacoes({ r, brl, store }) {
-  const { setCategoriaTransacao, deleteTransacao, addTransacao } = store;
+  const { setCategoriaTransacao, deleteTransacao, addTransacao, setTransacao } = store;
   const [busca, setBusca] = useState('');
   const [filtro, setFiltro] = useState('todas'); // todas | revisar | categoria
   const norm = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -540,7 +566,7 @@ function Movimentacoes({ r, brl, store }) {
       )}
       <div className="space-y-1">
         {lista.map((t) => (
-          <Mov key={t.id} t={t} brl={brl} setCat={setCategoriaTransacao} apagar={deleteTransacao} />
+          <Mov key={t.id} t={t} brl={brl} setCat={setCategoriaTransacao} apagar={deleteTransacao} setTransacao={setTransacao} />
         ))}
         {!lista.length && <p className="text-sm text-slate-400">Nada encontrado.</p>}
       </div>
@@ -562,7 +588,7 @@ function Numero({ titulo, valor, cor, sub }) {
 }
 
 // Uma movimentação, com a troca de categoria
-function Mov({ t, brl, setCat, apagar }) {
+function Mov({ t, brl, setCat, apagar, setTransacao }) {
   const [lembrar, setLembrar] = useState(true);
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-lg bg-white px-2.5 py-1.5 text-sm ring-1 ring-slate-100">
@@ -572,6 +598,15 @@ function Mov({ t, brl, setCat, apagar }) {
         <span className="ml-1 text-[10px] uppercase text-slate-300">{t.origem}</span>
       </span>
       <b className={`shrink-0 ${t.valor > 0 ? 'text-emerald-600' : 'text-slate-800'}`}>{t.valor > 0 ? '+' : ''}{brl(t.valor)}</b>
+      {t.valor < 0 && (
+        <button
+          onClick={() => setTransacao(t.id, { extra: !t.extra })}
+          title={t.extra ? 'Fora do comum: não entra na média nem na previsão (clique para desfazer)' : 'Marcar como fora do comum (ex.: compra grande que não se repete)'}
+          className={`shrink-0 rounded-lg px-1.5 py-0.5 text-xs ${t.extra ? 'bg-orange-100 font-bold text-orange-700' : 'text-slate-300 hover:text-orange-500'}`}
+        >
+          ⭐{t.extra ? ' fora do comum' : ''}
+        </button>
+      )}
       <select value={t.categoria} onChange={(e) => setCat(t.id, e.target.value, lembrar)} className="shrink-0 rounded-lg border border-slate-200 bg-white px-1.5 py-1 text-xs">
         {Object.entries(CATEGORIAS).map(([k, c]) => (
           <option key={k} value={k}>{c.icone} {c.nome}</option>

@@ -840,6 +840,13 @@ export function StoreProvider({ user, children }) {
         const id = `manual:${uid()}`;
         return { ...s, financas: { ...fin, transacoes: { ...fin.transacoes, [id]: { id, origem: 'manual', ...t } } } };
       }),
+      // marcas numa movimentação: { extra: true } (fora do comum) ou { normal: true } (avaliou: é normal)
+      setTransacao: (id, patch) =>
+        setState((s) => {
+          const fin = { transacoes: {}, ...(s.financas || {}) };
+          if (!fin.transacoes[id]) return s;
+          return { ...s, financas: { ...fin, transacoes: { ...fin.transacoes, [id]: { ...fin.transacoes[id], ...patch } } } };
+        }),
       deleteTransacao: (id) => setState((s) => {
         const fin = { transacoes: {}, ...(s.financas || {}) };
         const transacoes = { ...fin.transacoes };
