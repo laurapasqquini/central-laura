@@ -143,6 +143,24 @@ function marcarPixNoCredito(lista) {
 
 const MESES = { JAN: '01', FEV: '02', MAR: '03', ABR: '04', MAI: '05', JUN: '06', JUL: '07', AGO: '08', SET: '09', OUT: '10', NOV: '11', DEZ: '12' };
 // PDF do extrato da conta: datas "02 SET 2026", blocos "Total de entradas/saídas", descrição em 1+ linhas e o valor no fim
+// Extrato de Custódia do Nubank: saldo de cada caixinha na data ("Caixinha "Turbo"" → linha "RDB … bruto IR IOF líquido")
+function lerCustodia(linhas) {
+  const data = ((linhas.find((l) => /^Custódia em:/.test(l)) || '').match(/(\d{2})\/(\d{2})\/(\d{4})/) || []).slice(1).reverse().join('-');
+  const saldos = [];
+  linhas.forEach((l, i) => {
+    const m = l.match(/^Caixinha ["“](.+?)["”]$/);
+    if (!m) return;
+    const total = linhas.slice(i + 1, i + 8).find((x) => /^Total [\d.,]+ [\d.,]+ [\d.,]+ [\d.,]+/.test(x));
+    if (!total) return;
+    const [bruto, , , liquido] = total.match(/[\d.]+,\d{2}/g).map(numBR);
+    saldos.push({ lugar: `Caixinha ${m[1]}`, valor: bruto, liquido, em: data });
+  });
+  if (!saldos.length) throw new Error('Não achei caixinhas neste extrato de custódia.');
+  const lista = [];
+  lista.custodia = saldos;
+  return lista;
+}
+
 export async function lerPDF(arrayBuffer) {
   const pdfjs = await import('pdfjs-dist');
   pdfjs.GlobalWorkerOptions.workerSrc = (await import('pdfjs-dist/build/pdf.worker.min.mjs?url')).default;
@@ -163,6 +181,7 @@ export async function lerPDF(arrayBuffer) {
     }
     linhas.push(atual.join(' ').trim());
   }
+  if (linhas.some((l) => /^Extrato de Custódia/.test(l))) return lerCustodia(linhas);
   if (!linhas.some((l) => /^Movimenta/.test(l))) throw new Error('Não reconheci este PDF. Use o extrato da conta do Nubank (ou o CSV).');
   const nome = linhas.find(Boolean) || ''; // 1ª linha do extrato: o nome da titular
   const out = [];
@@ -212,7 +231,7 @@ export async function lerPDF(arrayBuffer) {
 export async function lerArquivo(file) {
   if (/\.pdf$/i.test(file.name)) {
     const itens = await lerPDF(await file.arrayBuffer());
-    return { itens, nome: itens.nome };
+    return { itens, nome: itens.nome, custodia: itens.custodia };
   }
   const itens = lerCSV(await file.text());
   // período do extrato do PicPay pelo nome do arquivo (extrato-2026-05-01-2026-10-14.csv) ou pelas datas

@@ -38,8 +38,15 @@ export default function Financeiro() {
       let novos = 0;
       const vistos = { ...fin.transacoes };
       let nome = '';
+      const caixinhas = [];
       for (const f of files) {
-        const { itens, nome: n, periodo } = await lerArquivo(f);
+        const { itens, nome: n, periodo, custodia } = await lerArquivo(f);
+        // extrato de custódia: só atualiza o saldo de cada caixinha
+        if (custodia) {
+          for (const c of custodia) setSaldoGuardado(c.lugar, c.valor, { em: c.em, liquido: c.liquido });
+          caixinhas.push(...custodia.map((c) => `${c.lugar} ${brl(c.valor)}`));
+          continue;
+        }
         nome ||= n;
         total += itens.length;
         for (const t of itens) if (!jaExiste(t, vistos)) (vistos[t.id] = t), novos++;
@@ -49,7 +56,10 @@ export default function Financeiro() {
       if (nome && !fin.meuNome) setMeuNome(nome);
       const ultimoMes = Object.values(vistos).map((t) => t.data.slice(0, 7)).sort().at(-1);
       if (ultimoMes) setMes(ultimoMes);
-      setAviso(`✓ ${novos} movimentações novas (de ${total} ${files.length > 1 ? 'nos arquivos' : 'no arquivo'}; as que já estavam não entram de novo).`);
+      const msgs = [];
+      if (total) msgs.push(`${novos} movimentações novas (de ${total} lidas; as que já estavam não entram de novo)`);
+      if (caixinhas.length) msgs.push(`saldo das caixinhas atualizado: ${caixinhas.join(' · ')}`);
+      setAviso(`✓ ${msgs.join('. ')}.`);
     } catch (e) {
       setAviso(`⚠️ ${e.message}`);
     }
@@ -179,7 +189,9 @@ export default function Financeiro() {
 const LUGARES = ['Cofrinho PicPay', 'Caixinhas Nubank'];
 function Guardado({ fin, r, setSaldo }) {
   const saldos = fin.saldos || {};
-  const lugares = [...new Set([...LUGARES, ...Object.keys(saldos)])];
+  // com as caixinhas do extrato de custódia (Caixinha Turbo…), o campo genérico "Caixinhas Nubank" sai
+  const temCaixinhas = Object.keys(saldos).some((k) => /^Caixinha /.test(k));
+  const lugares = [...new Set([...LUGARES.filter((l) => !(temCaixinhas && l === 'Caixinhas Nubank' && !saldos[l])), ...Object.keys(saldos)])];
   const total = Object.values(saldos).reduce((s, x) => s + (Number(x.valor) || 0), 0);
   const [novo, setNovo] = useState('');
   const num = (s) => Number(String(s).replace(/\./g, '').replace(',', '.')) || 0;
@@ -195,8 +207,11 @@ function Guardado({ fin, r, setSaldo }) {
       </div>
       <div className="grid gap-2 sm:grid-cols-2">
         {lugares.map((l) => (
-          <label key={l} className="flex items-center justify-between gap-2 rounded-xl bg-violet-50/60 px-3 py-2 text-sm">
-            <span className="text-slate-700">{l}</span>
+          <label key={`${l}:${saldos[l]?.valor ?? ''}`} className="flex items-center justify-between gap-2 rounded-xl bg-violet-50/60 px-3 py-2 text-sm">
+            <span className="text-slate-700">
+              {l}
+              {saldos[l]?.liquido != null && <span className="block text-[11px] text-slate-400">líquido (sem IR/IOF) {brl(saldos[l].liquido)}</span>}
+            </span>
             <span className="flex items-center gap-1">
               <span className="text-xs text-slate-400">R$</span>
               <input

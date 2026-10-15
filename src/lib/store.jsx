@@ -800,12 +800,13 @@ export function StoreProvider({ user, children }) {
           const periodosPicpay = periodo ? [...(fin.periodosPicpay || []).filter((p) => !(p.de === periodo.de && p.ate === periodo.ate)), periodo] : fin.periodosPicpay || [];
           return { ...s, financas: { ...fin, transacoes, periodosPicpay, meuNome: fin.meuNome || nome || '' } };
         }),
-      setSaldoGuardado: (lugar, valor) =>
+      // saldo de hoje de cada lugar guardado (à mão, ou pelo extrato de custódia do Nubank: { lugar, valor, liquido, em })
+      setSaldoGuardado: (lugar, valor, extra = {}) =>
         setState((s) => {
           const fin = { transacoes: {}, regras: {}, ...(s.financas || {}) };
           const saldos = { ...(fin.saldos || {}) };
           if (valor === null) delete saldos[lugar];
-          else saldos[lugar] = { valor, em: today() };
+          else saldos[lugar] = { valor, em: today(), ...extra };
           return { ...s, financas: { ...fin, saldos } };
         }),
       setCategoriaTransacao: (id, cat, lembrar) =>
