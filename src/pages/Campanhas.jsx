@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../lib/store';
 import { gerarCampanhas, TIPOS, statusCampanha, ajustesCampanha } from '../data/campanhas';
+import { CALENDARIOS } from '../data/calendarios';
 import { today, fmtCurto, relativo } from '../lib/dates';
 import { limiteDiasUteis } from '../lib/engine';
 import { Empty, Segmented, inputCls } from '../components/ui';
+
+const CIDADES_ORDEM = ['Maringá', 'Londrina', 'Santa Fé'];
 
 const brData = (s) => s.split('-').reverse().join('/');
 const quando = (c) => (c.envios === 1 ? `${fmtCurto(c.inicio)} · ${c.hora.replace(':00', 'h')} · envio único` : `${fmtCurto(c.inicio)} → ${fmtCurto(c.fim)} · a cada ${c.repetir} dias · ${c.hora.replace(':00', 'h')} · ${c.envios} envios`);
@@ -26,8 +29,16 @@ export default function Campanhas() {
   const alvo = { criar: 'pendente', criadas: 'agendada', puladas: 'pulada' }[ver];
   const lista = todas.filter((c) => st(c) === alvo && (cidade === 'all' || c.cidade === cidade));
 
-  // agrupadas pela etapa do backoffice (é o que se escolhe primeiro lá)
-  const grupos = lista.reduce((acc, c) => ((acc[c.etapa] ||= { cidade: c.cidade, categoria: c.categoria, itens: [] }).itens.push(c), acc), {});
+  // agrupadas pela etapa do backoffice (é o que se escolhe primeiro lá), em ordem FIXA:
+  // cidade e categoria na ordem dos calendários; dentro, Rodada nova → Já marcou? → Último dia
+  const ORDEM_TIPO = { inicio: 0, meio: 1, fim: 2 };
+  const ordem = (c) => [CIDADES_ORDEM.indexOf(c.cidade), CALENDARIOS.findIndex((x) => x.id === c.calId), Number(c.id.split(':')[1]), ORDEM_TIPO[c.tipo]];
+  const compara = (a, b) => {
+    const [x, y] = [ordem(a), ordem(b)];
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];
+    return a.inicio.localeCompare(b.inicio);
+  };
+  const grupos = [...lista].sort(compara).reduce((acc, c) => ((acc[c.etapa] ||= { cidade: c.cidade, categoria: c.categoria, itens: [] }).itens.push(c), acc), {});
   const feitas = n.criadas + n.puladas;
   const pct = todas.length ? Math.round((feitas / todas.length) * 100) : 100;
   const set = (c, p) => ('status' in p ? c.instancias.forEach((i) => setCampanha(i, p)) : setCampanha(c.instancias[0], p));
