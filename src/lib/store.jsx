@@ -5,6 +5,7 @@ import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 import { buildAgenda, dadosPaginaLolis, postsSorteio } from './engine';
 import { INDICADORES_PADRAO } from './chefes';
 import { CALENDARIOS } from '../data/calendarios';
+import { jaExiste, chaveDe } from './financas';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
 // Tudo é salvo como um único documento por usuária, sincronizado entre PC e iPhone.
@@ -788,6 +789,36 @@ export function StoreProvider({ user, children }) {
       setPlano: (fn) => setState((s) => ({ ...s, plano: fn({ iniciativas: [], ocultos: [], metas: {}, numeros: {}, ...(s.plano || {}) }) })),
       // contas fixas pessoais (nome, valor, dia do vencimento)
       addConta: (c) => setState((s) => ({ ...s, contas: [...(s.contas || []), { id: uid(), ativo: true, ...c }] })),
+
+      // Financeiro pessoal (extratos do Nubank e lançamentos à mão)
+      importarFinancas: (itens, nome) =>
+        setState((s) => {
+          const fin = { transacoes: {}, regras: {}, meuNome: '', ...(s.financas || {}) };
+          const transacoes = { ...fin.transacoes };
+          for (const t of itens) if (!jaExiste(t, transacoes)) transacoes[t.id] = t;
+          return { ...s, financas: { ...fin, transacoes, meuNome: fin.meuNome || nome || '' } };
+        }),
+      setCategoriaTransacao: (id, cat, lembrar) =>
+        setState((s) => {
+          const fin = { transacoes: {}, regras: {}, ...(s.financas || {}) };
+          const t = fin.transacoes[id];
+          if (!t) return s;
+          // "lembrar": vale para todas desta pessoa/loja (as escolhidas uma a uma continuam)
+          const regras = lembrar ? { ...fin.regras, [chaveDe(t.desc)]: cat } : fin.regras;
+          return { ...s, financas: { ...fin, regras, transacoes: { ...fin.transacoes, [id]: { ...t, catManual: lembrar ? undefined : cat, cat: t.cat === 'ignorar' && cat !== 'ignorar' ? undefined : t.cat } } } };
+        }),
+      addTransacao: (t) => setState((s) => {
+        const fin = { transacoes: {}, regras: {}, ...(s.financas || {}) };
+        const id = `manual:${uid()}`;
+        return { ...s, financas: { ...fin, transacoes: { ...fin.transacoes, [id]: { id, origem: 'manual', ...t } } } };
+      }),
+      deleteTransacao: (id) => setState((s) => {
+        const fin = { transacoes: {}, ...(s.financas || {}) };
+        const transacoes = { ...fin.transacoes };
+        delete transacoes[id];
+        return { ...s, financas: { ...fin, transacoes } };
+      }),
+      setMeuNome: (meuNome) => setState((s) => ({ ...s, financas: { transacoes: {}, regras: {}, ...(s.financas || {}), meuNome } })),
       updateConta: (id, patch) => setState((s) => ({ ...s, contas: (s.contas || []).map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
       deleteConta: (id) => setState((s) => ({ ...s, contas: (s.contas || []).filter((c) => c.id !== id) })),
       // dá baixa de vários itens de uma vez (tarefas e rotinas)
