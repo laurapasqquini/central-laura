@@ -855,13 +855,49 @@ export function dadosPaginaLolis(state, ref = today()) {
     const seisZero = weekday(d) === 3 ? mensagens6x0(state) : [];
     dias.push({ date: d, tarefas, atrasadas, brindes, posts, seisZero });
   }
-  // tarefas com prazo mais pra frente (ex.: pesquisa da Expansão): aparecem já, para ela ir adiantando
+  // tarefas com prazo mais pra frente (fora as da Expansão, que vão em fila no "Acabou? Puxa daqui")
   const ultimo = dias.at(-1)?.date || ref;
   const adiantar = state.tasks
-    .filter((t) => t.who === 'lolis' && !t.done && t.due && dataEfetiva(state, t) > ultimo && dataEfetiva(state, t) <= addDays(ref, 30))
+    .filter((t) => t.who === 'lolis' && !t.done && t.due && !EXPANSAO.test(t.title) && dataEfetiva(state, t) > ultimo && dataEfetiva(state, t) <= addDays(ref, 30))
     .map((t) => ({ key: `t:${t.id}`, titulo: t.title, ate: dataEfetiva(state, t), detalhe: detalheTarefa({ kind: 'task', notes: t.notes }) }))
     .sort((a, b) => a.ate.localeCompare(b.ate));
-  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title), banco: bancoLolis(state), adiantar };
+  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title), banco: bancoLolis(state), adiantar, expansao: expansaoLolis(state, ref) };
+}
+
+// ── Expansão (tarefas do Hub "[Expansão Beach Tennis Cidade] ..."): uma de cada vez, na ordem do prazo,
+// com quanto fazer por dia e onde anotar no Hub. A do dia do prazo também cai nas tarefas do dia.
+const EXPANSAO = /^\[Expansão (Beach Tennis|Tênis|Padel) ([^\]]+)\]\s*/;
+// locais de cada projeto no Hub (Expansão, 16/10)
+const LOCAIS_EXPANSAO = { 'nova esperanca': 3, 'alto parana': 3, paranavai: 18, apucarana: 7, paranacity: 4, colorado: 2 };
+const COMO_EXPANSAO = [
+  [/telefone do respons/i, (c, n) => `Para cada local da aba Locais (Hub › Expansão › ${c}): confira no Google e no Instagram se ainda existe, quantas quadras tem e se aluga. Anote no próprio Hub, no local, o WhatsApp e o nome do dono ou gerente.${n ? ` São ${n} locais.` : ''}`],
+  [/professores/i, (c) => `Os professores costumam aparecer no Instagram das arenas da aba Locais. Cadastre cada um no Hub › Expansão › ${c} › aba Professores, com WhatsApp e onde dá aula.`],
+  [/apoiadores/i, (c) => `Mínimo de 8: açaí, hamburgueria, restaurante, loja de esporte, fisioterapia, de preferência perto das arenas. Cadastre no Hub › Expansão › ${c} › aba Apoiadores, com Instagram e contato.`],
+];
+export function expansaoLolis(state, ref = today()) {
+  const fila = state.tasks
+    .filter((t) => t.who === 'lolis' && !t.done && t.due && EXPANSAO.test(t.title))
+    .map((t) => ({ t, ate: dataEfetiva(state, t), cidade: t.title.match(EXPANSAO)[2] }))
+    // no dia do prazo (ou atrasada) ela já está nas tarefas do dia: o card mostra a próxima
+    .filter((x) => x.ate > ref)
+    .sort((a, b) => a.ate.localeCompare(b.ate));
+  if (!fila.length) return null;
+  const { t, ate, cidade } = fila[0];
+  const n = LOCAIS_EXPANSAO[semAcento(cidade)];
+  // dias úteis de hoje até o prazo: quanto fazer por dia
+  let uteis = 0;
+  for (let d = ref; d <= ate; d = addDays(d, 1)) if (isWorkday(state, d)) uteis++;
+  const telefone = /telefone do respons/i.test(t.title);
+  const porDia = n ? Math.max(4, Math.ceil(n / Math.max(1, uteis))) : 0; // pelo menos 4 locais por tarde
+  const meta =
+    telefone && n && n <= porDia ? `São só ${n} locais: dá pra fazer numa tarde`
+    : telefone && n ? `Meta: ${porDia} locais por dia (são ${n})`
+    : 'Dá pra fazer numa tarde';
+  const como = COMO_EXPANSAO.find(([re]) => re.test(t.title));
+  return {
+    atual: { key: `t:${t.id}`, titulo: t.title, ate, meta, detalhe: como ? como[1](cidade, n) : '' },
+    depois: fila.slice(1).map((x) => ({ titulo: x.t.title, ate: x.ate })),
+  };
 }
 
 // "Acabou? Puxa daqui": tarefas que nunca faltam, em ordem de prioridade (a Laura organiza em Lolis › Delegado).
