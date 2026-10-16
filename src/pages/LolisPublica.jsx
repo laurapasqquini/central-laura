@@ -82,7 +82,7 @@ export default function LolisPublica({ token, embutida }) {
           </div>
         )}
 
-        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Protecao key={dia.date}><Dia dia={dia} andamento={dados.andamento || []} banco={dia.date === hoje ? dados.banco || [] : []} token={token} /></Protecao>}
+        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Protecao key={dia.date}><Dia dia={dia} andamento={dados.andamento || []} banco={dia.date === hoje ? dados.banco || [] : []} adiantar={dia.date === hoje ? dados.adiantar || [] : []} token={token} /></Protecao>}
       </div>
     </div>
   );
@@ -173,11 +173,13 @@ function CartaoPonto({ token, embutida }) {
 }
 
 // Rotinas de sorteio viram uma tarefa por sorteio do dia (Tênis Maringá, Tênis Londrina, Beach...), conforme a programação
+// "[Expansão Beach Tennis Paranavaí] Listar os professores..." (tarefa do Hub) → "🏖️ Paranavaí · Listar os professores..."
+const tituloExpansao = (s = '') => s.replace(/^\[Expansão (Beach Tennis|Tênis|Padel) ([^\]]+)\]\s*/,(_, e, c) => `${/beach/i.test(e) ? '🏖️' : /padel/i.test(e) ? '🥎' : '🎾'} ${c} · `);
 const ehSorteio = (t) => /sorteio di[aá]rio/i.test(t.titulo);
 const chaveSorteio = (p) => `sorteio:${p.grupo}`;
 const idGrupo = (p) => `sorteio-${p.grupo.replace(/\W+/g, '-')}`;
 
-function Dia({ dia, andamento, banco, token }) {
+function Dia({ dia, andamento, banco, adiantar, token }) {
   const [aba, setAba] = useState('tarefas');
   // marcas: { chave: { status: 'feito' | 'nao', nota } }. Vão para a nuvem: a central da Laura vê e dá baixa no que foi feito.
   const [marcas, setMarcas] = useState(() => lerMarcas(dia.date));
@@ -249,6 +251,7 @@ function Dia({ dia, andamento, banco, token }) {
     ...itensSorteio.map((x) => [x.key, x.titulo]),
     ...dia.posts.map((p) => [chaveSorteio(p), `Sorteio diário · ${p.grupo}`]),
     ...banco.map((t) => [t.key, t.titulo]),
+    ...adiantar.map((t) => [t.key, tituloExpansao(t.titulo)]),
     ...lembretes.map((b) => [b.key, `${b.tipo === 'lembrete' ? 'Lembrete do prazo' : 'Conferir se deu certo'} · ${b.linha}`]),
   ]);
 
@@ -329,6 +332,20 @@ function Dia({ dia, andamento, banco, token }) {
                   )}
                   <Texto rotulo="Mensagem no privado do ganhador" texto={c.mensagem} />
                 </div>
+              ))}
+            </Secao>
+          )}
+
+          {adiantar.length > 0 && (
+            <Secao titulo="📌 Pra ir adiantando" dica="Tarefas com prazo mais pra frente. Vá fazendo aos poucos, na ordem do prazo. Ao terminar, marque aqui e conclua também no Hub.">
+              {adiantar.map((t) => (
+                <Tarefa
+                  key={t.key}
+                  t={{ ...t, titulo: `${tituloExpansao(t.titulo)} · até ${fmtCurto(t.ate)}` }}
+                  feito={feitos.includes(t.key)}
+                  marca={marcas[t.key]}
+                  onMarcar={() => marcar(t.key)}
+                />
               ))}
             </Secao>
           )}
@@ -572,7 +589,7 @@ function Tarefa({ t, feito, marca, onMarcar }) {
       <Marca feito={feito} marca={marca} onClick={onMarcar} />
       <span className="min-w-0 flex-1">
         <span className={`text-[15px] ${feito ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
-          {t.titulo}
+          {tituloExpansao(t.titulo)}
           {t.era && <span className="ml-1 text-xs text-red-500">(era {fmtCurto(t.era)})</span>}
         </span>
         <Nota marca={marca} />

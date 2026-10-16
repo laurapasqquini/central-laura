@@ -855,7 +855,13 @@ export function dadosPaginaLolis(state, ref = today()) {
     const seisZero = weekday(d) === 3 ? mensagens6x0(state) : [];
     dias.push({ date: d, tarefas, atrasadas, brindes, posts, seisZero });
   }
-  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title), banco: bancoLolis(state) };
+  // tarefas com prazo mais pra frente (ex.: pesquisa da Expansão): aparecem já, para ela ir adiantando
+  const ultimo = dias.at(-1)?.date || ref;
+  const adiantar = state.tasks
+    .filter((t) => t.who === 'lolis' && !t.done && t.due && dataEfetiva(state, t) > ultimo && dataEfetiva(state, t) <= addDays(ref, 30))
+    .map((t) => ({ key: `t:${t.id}`, titulo: t.title, ate: dataEfetiva(state, t), detalhe: detalheTarefa({ kind: 'task', notes: t.notes }) }))
+    .sort((a, b) => a.ate.localeCompare(b.ate));
+  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title), banco: bancoLolis(state), adiantar };
 }
 
 // "Acabou? Puxa daqui": tarefas que nunca faltam, em ordem de prioridade (a Laura organiza em Lolis › Delegado).
