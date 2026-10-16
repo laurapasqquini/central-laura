@@ -8,6 +8,7 @@ import { today, addDays, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 import { ItemRow, QuickAdd, TaskModal } from '../components/ui';
 import { NotifBanner } from '../components/Notif';
 import { frenteDoAviso } from '../components/ListaDoDia';
+import { AvisoPontoLolis, LinhaPontoLolis } from '../components/PontoLolis';
 
 const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 const TONE_DOT = { red: 'bg-red-500', amber: 'bg-amber-500', violet: 'bg-violet-500', sky: 'bg-sky-500' };
@@ -84,6 +85,7 @@ export default function Inicio({ go }) {
 
       <NotifBanner onOpen={() => go?.('routines')} />
       <QuickAdd defaultArea="ranken" />
+      <AvisoPontoLolis />
 
       {/* ---------- Foco de agora ---------- */}
       <section className="space-y-2 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
@@ -151,6 +153,7 @@ export default function Inicio({ go }) {
           ) : (
             <div className="text-sm text-slate-400">Nada com ela hoje.</div>
           )}
+          <LinhaPontoLolis />
         </button>
 
         {/* ---------- Próximos dias ---------- */}

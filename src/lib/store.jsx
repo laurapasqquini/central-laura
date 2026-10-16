@@ -16,8 +16,9 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 24,
+    version: 25,
     createdAt: hoje,
+    lolisBanco: bancoInicial(),
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
     routineDone: {},
@@ -244,7 +245,24 @@ function migrate(s) {
     const r = { id: uid(), title: '📎 Atualizar o financeiro (extratos do Nubank e do PicPay)', area: 'pessoal', who: 'laura', freq: 'weekly', weekday: 1, active: true, createdAt: today() };
     s = { ...s, version: 24, routines: s.routines.some((x) => /Atualizar o financeiro/.test(x.title)) ? s.routines : [...s.routines, r] };
   }
+  // v25: lista "Acabou? Puxa daqui" da Lolis (tarefas para quando acabar o do dia)
+  if (s.version < 25) {
+    s = { ...s, version: 25, lolisBanco: s.lolisBanco || bancoInicial() };
+  }
   return s;
+}
+
+// Sugestões para começar (a Laura edita em Lolis › Delegado, link e frases).
+// Cascavel e Cianorte estão sem professores e apoiadores no Hub (Expansão, 16/10).
+function bancoInicial() {
+  const b = (titulo, detalhe, continua = false) => ({ id: uid(), titulo, detalhe, continua, ativo: true });
+  return [
+    b('Cascavel: listar os professores de tênis, com WhatsApp', 'Instagram das academias e clubes, fichas da federação e indicação das próprias academias. Anote nome, onde dá aula e WhatsApp na nota.'),
+    b('Cianorte: listar os professores de tênis, com WhatsApp', 'Instagram das academias e clubes e indicação das próprias academias. Anote nome, onde dá aula e WhatsApp na nota.'),
+    b('Cascavel: levantar 8 possíveis apoiadores para o sorteio diário', 'Restaurantes, hamburguerias, cafés, lojas de esporte, fisioterapia. Nome, Instagram e contato de cada um na nota.'),
+    b('Cianorte: levantar 8 possíveis apoiadores para o sorteio diário', 'Restaurantes, hamburguerias, cafés, lojas de esporte, fisioterapia. Nome, Instagram e contato de cada um na nota.'),
+    b('Pedir para 2 atletas um depoimento em vídeo (30 s) sobre o RANKEN', 'Atletas animados do grupo (Maringá ou Londrina). O que mudou depois que entrou. Servem para captar atletas nas cidades novas.', true),
+  ];
 }
 
 export function migrarCampanhas(ov) {
@@ -352,21 +370,26 @@ function aplicarFeitosLolis(s, rows) {
   const antes = s.lolisFeitos || {};
   const routineDone = { ...s.routineDone };
   const tarefas = new Set();
+  const banco = {};
   for (const [dia, chaves] of Object.entries(porDia)) {
     for (const k of chaves) {
       if ((antes[dia] || []).includes(k)) continue; // já aplicado
-      if (k.startsWith('t:')) tarefas.add(k.slice(2));
+      if (k.startsWith('b:')) banco[k.slice(2)] ||= dia;
+      else if (k.startsWith('t:')) tarefas.add(k.slice(2));
       else if (k.startsWith('r:')) routineDone[k.slice(2)] = true;
       else if (k === 'sorteio' || (k.startsWith('sorteio:') && chaves.filter((c) => c.startsWith('sorteio:')).length >= postsSorteio(s, dia).length))
         // rotina do sorteio do dia: feita quando ela marca todos os sorteios do dia
         for (const r of s.routines) if (r.who === 'lolis' && /sorteio di[aá]rio/i.test(r.title)) routineDone[`${r.id}:${dia}`] = true;
     }
   }
-  if (JSON.stringify(antes) === JSON.stringify(porDia) && JSON.stringify(s.lolisNotas || {}) === JSON.stringify(notas) && !tarefas.size) return s;
+  const lolisBanco = (s.lolisBanco || []).map((b) => (banco[b.id] && !b.continua && !b.feitoEm ? { ...b, feitoEm: banco[b.id] } : b));
+  const mudouBanco = lolisBanco.some((b, i) => b !== (s.lolisBanco || [])[i]);
+  if (JSON.stringify(antes) === JSON.stringify(porDia) && JSON.stringify(s.lolisNotas || {}) === JSON.stringify(notas) && !tarefas.size && !mudouBanco) return s;
   return {
     ...s,
     lolisFeitos: porDia,
     lolisNotas: notas,
+    lolisBanco,
     routineDone,
     tasks: tarefas.size ? s.tasks.map((t) => (tarefas.has(t.id) && !t.done ? { ...t, done: true, doneAt: today() } : t)) : s.tasks,
   };
@@ -772,6 +795,8 @@ export function StoreProvider({ user, children }) {
       deletePedido: (id) =>
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
+      // lista "Acabou? Puxa daqui" da Lolis
+      setLolisBanco: (fn) => setState((s) => ({ ...s, lolisBanco: fn(s.lolisBanco || []) })),
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
       // Plano: iniciativas, radar descartado, metas do mês e números da semana
       // links dos modelos do Canva da Lolis (6x0, vouchers)

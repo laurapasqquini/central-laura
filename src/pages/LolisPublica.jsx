@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { today, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 import { gerarVoucher, modeloVoucher } from '../lib/voucher';
 import { gerarArte6x0, MODELOS_6X0 } from '../lib/arte6x0';
+import { pontoHoje, baterPonto, resumoDia, hora, duracao, JORNADA_MAX } from '../lib/ponto';
 
 // Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
 // O que ela marca (feito / não consegui + nota) vai para a central da Laura.
@@ -67,6 +68,10 @@ export default function LolisPublica({ token, embutida }) {
           <p className="text-xs text-slate-400">Atualizado {relativo(dados.geradoEm.slice(0, 10), hoje)} às {new Date(dados.geradoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · a página se atualiza sozinha</p>
         </header>
 
+        <Protecao>
+          <CartaoPonto token={token} embutida={embutida} />
+        </Protecao>
+
         {dias.length > 1 && (
           <div className="flex gap-1.5">
             {dias.map((d, i) => (
@@ -77,9 +82,93 @@ export default function LolisPublica({ token, embutida }) {
           </div>
         )}
 
-        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Protecao key={dia.date}><Dia dia={dia} andamento={dados.andamento || []} token={token} /></Protecao>}
+        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Protecao key={dia.date}><Dia dia={dia} andamento={dados.andamento || []} banco={dia.date === hoje ? dados.banco || [] : []} token={token} /></Protecao>}
       </div>
     </div>
+  );
+}
+
+// Ponto: "Cheguei" e "Saí". Chega às 13h30 ou 14h e fica no máximo 4 horas.
+// Na central da Laura (embutida) só mostra, sem os botões.
+function CartaoPonto({ token, embutida }) {
+  const [reg, setReg] = useState(undefined);
+  const [agora, setAgora] = useState(() => new Date());
+  const [batendo, setBatendo] = useState(false);
+  useEffect(() => {
+    let vivo = true;
+    const ler = () => pontoHoje(token).then((r) => vivo && setReg(r));
+    ler();
+    const t = setInterval(() => {
+      setAgora(new Date());
+      ler();
+    }, 60 * 1000);
+    return () => {
+      vivo = false;
+      clearInterval(t);
+    };
+  }, [token]);
+  const dow = agora.getDay();
+  if (reg === undefined || reg === null || dow === 0 || dow === 6) return null; // banco sem o ponto, ou fim de semana
+  const hoje = today();
+  const r = resumoDia(reg, hoje, hoje, true, agora);
+  const bater = async (tipo) => {
+    if (tipo === 'saida' && reg.saida && !confirm('Você já marcou a saída. Marcar de novo com o horário de agora?')) return;
+    if (tipo === 'saida' && !reg.saida && r.minutos < JORNADA_MAX - 30 && !confirm(`Marcar a saída agora? Hoje deu ${duracao(r.minutos)}.`)) return;
+    setBatendo(true);
+    const ok = await baterPonto(token, tipo);
+    setBatendo(false);
+    if (!ok) return alert('Não consegui marcar. Confira a internet e tente de novo.');
+    setAgora(new Date());
+    setReg(await pontoHoje(token));
+  };
+  const deu4h = r.status === 'trabalhando' && r.minutos >= JORNADA_MAX;
+  const falta = r.status === 'trabalhando' ? Math.max(0, JORNADA_MAX - r.minutos) : 0;
+
+  return (
+    <section className={`space-y-2 rounded-2xl p-4 shadow-sm ring-1 ${deu4h ? 'bg-amber-50 ring-amber-300' : 'bg-white ring-slate-200'}`}>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-2xl">⏰</span>
+        <div className="min-w-0 flex-1">
+          {!reg.entrada ? (
+            <>
+              <div className="text-[15px] font-bold text-ink">{embutida ? 'A Lolis ainda não marcou a chegada hoje' : 'Chegou? Marque aqui 👇'}</div>
+              <div className="text-xs text-slate-500">Horário de chegada: 13h30 ou 14h · no máximo 4 horas por dia</div>
+            </>
+          ) : r.status === 'saiu' ? (
+            <>
+              <div className="text-[15px] font-bold text-emerald-700">
+                Hoje: {hora(r.entrada)} → {hora(r.saida)} · {duracao(r.minutos)} {embutida ? '' : '· até amanhã! 💚'}
+              </div>
+              {r.passou > 0 && <div className="text-xs font-semibold text-red-600">Passou {duracao(r.passou)} das 4 horas</div>}
+            </>
+          ) : (
+            <>
+              <div className="text-[15px] font-bold text-ink">
+                Chegou às {hora(r.entrada)} · {deu4h ? 'já deu 4 horas: pode encerrar e marcar a saída 💚' : `horário até ${hora(r.limite)}`}
+              </div>
+              <div className="text-xs text-slate-500">
+                {duracao(r.minutos)} trabalhadas{falta > 0 && ` · faltam ${duracao(falta)}`}
+                {r.atraso > 0 && <span className="text-amber-700"> · chegou {r.atraso} min depois das 14h</span>}
+              </div>
+            </>
+          )}
+        </div>
+        {!embutida && !reg.entrada && (
+          <button disabled={batendo} onClick={() => bater('entrada')} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50">
+            Cheguei 👋
+          </button>
+        )}
+        {!embutida && reg.entrada && (
+          <button
+            disabled={batendo}
+            onClick={() => bater('saida')}
+            className={r.status === 'saiu' ? 'text-xs font-semibold text-slate-400' : 'rounded-xl bg-ink px-5 py-2.5 text-sm font-bold text-white disabled:opacity-50'}
+          >
+            {r.status === 'saiu' ? 'marcar a saída de novo' : 'Saí 👋'}
+          </button>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -88,7 +177,7 @@ const ehSorteio = (t) => /sorteio di[aá]rio/i.test(t.titulo);
 const chaveSorteio = (p) => `sorteio:${p.grupo}`;
 const idGrupo = (p) => `sorteio-${p.grupo.replace(/\W+/g, '-')}`;
 
-function Dia({ dia, andamento, token }) {
+function Dia({ dia, andamento, banco, token }) {
   const [aba, setAba] = useState('tarefas');
   // marcas: { chave: { status: 'feito' | 'nao', nota } }. Vão para a nuvem: a central da Laura vê e dá baixa no que foi feito.
   const [marcas, setMarcas] = useState(() => lerMarcas(dia.date));
@@ -159,6 +248,7 @@ function Dia({ dia, andamento, token }) {
     ...tarefas.map((t) => [t.key, t.titulo]),
     ...itensSorteio.map((x) => [x.key, x.titulo]),
     ...dia.posts.map((p) => [chaveSorteio(p), `Sorteio diário · ${p.grupo}`]),
+    ...banco.map((t) => [t.key, t.titulo]),
     ...lembretes.map((b) => [b.key, `${b.tipo === 'lembrete' ? 'Lembrete do prazo' : 'Conferir se deu certo'} · ${b.linha}`]),
   ]);
 
@@ -238,6 +328,22 @@ function Dia({ dia, andamento, token }) {
                     <p className="text-xs text-slate-400">{c.lidoEm ? 'Nenhum ganhador pendente nesta cidade.' : 'Aguardando a leitura do Hub.'}</p>
                   )}
                   <Texto rotulo="Mensagem no privado do ganhador" texto={c.mensagem} />
+                </div>
+              ))}
+            </Secao>
+          )}
+
+          {banco.length > 0 && (
+            <Secao
+              titulo="🙌 Acabou? Puxa daqui"
+              dica="Terminou as tarefas do dia? Pegue a de cima e vá descendo. Ao marcar, conte na nota o que fez ou até onde chegou (as que não somem continuam amanhã)."
+            >
+              {banco.map((t, i) => (
+                <div key={t.key} className="flex items-start gap-2">
+                  <span className="mt-3 w-5 shrink-0 text-right text-xs font-bold text-slate-400">{i + 1}</span>
+                  <div className="min-w-0 flex-1">
+                    <Tarefa t={{ ...t, titulo: t.continua ? `${t.titulo} 🔁` : t.titulo }} feito={feitos.includes(t.key)} marca={marcas[t.key]} onMarcar={() => marcar(t.key)} />
+                  </div>
                 </div>
               ))}
             </Secao>

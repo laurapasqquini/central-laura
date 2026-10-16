@@ -400,6 +400,7 @@ function mensagemSemanaLolis(state, date, late) {
     ...dias.map((x, i) => (i ? x : '\n' + x)),
     andamento.length ? '\n*Em andamento:* ' + andamento.map((x) => x.title).join(' · ') : '',
     ...sorteioNaMensagem(state, date),
+    bancoLolis(state).length ? '\n🙌 *Acabou o que tinha pra fazer?* Puxa da lista "Acabou? Puxa daqui" na sua página, de cima pra baixo.' : '',
     '\n' + FIM_LOLIS,
   ].filter((x, i) => x !== '' || i === 0).join('\n');
 }
@@ -673,6 +674,7 @@ function mensagemDiaLolis(state, date, late) {
     ...(hoje.length ? ['\n*Hoje:*', ...hoje.map((x) => `• ${x.title}`)] : []),
     ...(andamento.length ? ['\n*Em andamento:*', ...andamento.map((x) => `• ${x.title}`)] : []),
     ...sorteioNaMensagem(state, date),
+    ...(bancoLolis(state).length ? ['\n🙌 Acabou? Puxa da lista "Acabou? Puxa daqui" na sua página.'] : []),
     '\n' + FIM_LOLIS,
   ].join('\n');
 }
@@ -853,5 +855,11 @@ export function dadosPaginaLolis(state, ref = today()) {
     const seisZero = weekday(d) === 3 ? mensagens6x0(state) : [];
     dias.push({ date: d, tarefas, atrasadas, brindes, posts, seisZero });
   }
-  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title) };
+  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title), banco: bancoLolis(state) };
+}
+
+// "Acabou? Puxa daqui": tarefas que nunca faltam, em ordem de prioridade (a Laura organiza em Lolis › Delegado).
+// Contínua = fica sempre na lista; as de uma vez saem quando ela marca como feita.
+export function bancoLolis(state) {
+  return (state.lolisBanco || []).filter((b) => b.ativo !== false && !b.feitoEm).map((b) => ({ key: `b:${b.id}`, titulo: b.titulo, detalhe: b.detalhe || '', continua: !!b.continua }));
 }

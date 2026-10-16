@@ -5,6 +5,8 @@ import { today, addDays, fmtCurto } from '../lib/dates';
 import { supabase } from '../lib/supabase';
 import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../components/ui';
 import LolisPublica from './LolisPublica';
+import PontoLolis from '../components/PontoLolis';
+import BancoLolis from '../components/BancoLolis';
 
 export default function Lolis() {
   const { state } = useStore();
@@ -46,11 +48,17 @@ export default function Lolis() {
         onChange={setVista}
         options={[
           ['pagina', '👀 O que ela vê', 'bg-amber-500 text-white ring-transparent'],
+          ['ponto', '⏰ Ponto', 'bg-amber-500 text-white ring-transparent'],
+          ['banco', '🙌 Acabou? Puxa daqui', 'bg-amber-500 text-white ring-transparent'],
           ['gestao', '⚙️ Delegado, link e frases', 'bg-amber-500 text-white ring-transparent'],
         ]}
       />
 
-      {vista === 'pagina' ? (
+      {vista === 'ponto' ? (
+        <PontoLolis />
+      ) : vista === 'banco' ? (
+        <BancoLolis />
+      ) : vista === 'pagina' ? (
         state.lolisToken ? (
           <div className="rounded-3xl bg-paper p-1 ring-1 ring-amber-200 sm:p-3">
             <LolisPublica token={state.lolisToken} embutida />

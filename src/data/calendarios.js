@@ -181,11 +181,13 @@ export function marcosDoDia(date) {
 }
 
 // Postagem dos melhores da rodada (Hub > Ranking > Histórico de rodadas):
-// tênis e beach na segunda depois do domingo de sorteio (cada um no seu Instagram).
+// tênis e beach depois do domingo em que a rodada termina (cada um no seu Instagram).
 const POSTAGEM = [
-  { esporte: 'tenis', depois: 1, insta: 'Instagram do tênis' },
-  { esporte: 'beach', depois: 1, insta: 'Instagram do beach' },
+  { esporte: 'tenis', insta: 'Instagram do tênis' },
+  { esporte: 'beach', insta: 'Instagram do beach' },
 ];
+const ESPALHAR_DESDE = '2026-10-18';
+const POR_DIA = 2;
 
 // Grupos de WhatsApp: categorias do mesmo grupo saem numa mensagem só.
 const GRUPOS = {
@@ -229,15 +231,22 @@ export function rotinasDoDia(date, addDays) {
     const quais = lista.map(({ c, rd }) => `${c.curto} R${rotuloRodada(rd)}`).join(' + ');
     out.push({ id: `aviso-${g}`, title: `Avisar no grupo · ${GRUPOS[g].nome}: rodada aberta (${quais})`, mensagem: mensagemRodada(g, lista), who: 'laura' });
   }
-  for (const p of POSTAGEM) {
-    const domingo = addDays(date, -p.depois);
-    const terminaram = CALENDARIOS.filter((c) => c.esporte === p.esporte)
-      .map((c) => ({ c, rd: c.rodadas.find((x) => x.fim === domingo) }))
-      .filter((x) => x.rd);
-    // uma tarefa por categoria, para marcar cada post separado
-    for (const { c, rd } of terminaram) {
-      out.push({ id: `melhores-${c.id}`, title: `Melhores da rodada · ${c.curto} ${c.cidade} · R${rotuloRodada(rd)} (${p.insta})`, hubPath: 'ranking' });
-    }
+  // Melhores da rodada: a partir de 18/10, no máximo 2 posts por dia, de segunda a quarta
+  // (antes caía tudo na segunda e o resto da semana da Lolis ficava vazio). Tênis primeiro.
+  for (let k = 1; k <= 3; k++) {
+    const domingo = addDays(date, -k);
+    const todos = POSTAGEM.flatMap((p) =>
+      CALENDARIOS.filter((c) => c.esporte === p.esporte)
+        .map((c) => ({ c, p, rd: c.rodadas.find((x) => x.fim === domingo) }))
+        .filter((x) => x.rd),
+    );
+    const espalhar = domingo >= ESPALHAR_DESDE;
+    if (!espalhar && k > 1) continue;
+    todos.forEach(({ c, p, rd }, i) => {
+      const dia = espalhar ? Math.min(3, Math.floor(i / POR_DIA) + 1) : 1;
+      // uma tarefa por categoria, para marcar cada post separado
+      if (dia === k) out.push({ id: `melhores-${c.id}`, title: `Melhores da rodada · ${c.curto} ${c.cidade} · R${rotuloRodada(rd)} (${p.insta})`, hubPath: 'ranking' });
+    });
   }
   return out;
 }
