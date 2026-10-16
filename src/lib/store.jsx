@@ -16,7 +16,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 25,
+    version: 26,
     createdAt: hoje,
     lolisBanco: bancoInicial(),
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
@@ -249,18 +249,17 @@ function migrate(s) {
   if (s.version < 25) {
     s = { ...s, version: 25, lolisBanco: s.lolisBanco || bancoInicial() };
   }
+  // v26: Cianorte e Cascavel são do Thales e do Yorran: saem da lista da Lolis
+  if (s.version < 26) {
+    s = { ...s, version: 26, lolisBanco: (s.lolisBanco || []).filter((b) => !/^(Cascavel|Cianorte):/.test(b.titulo)) };
+  }
   return s;
 }
 
 // Sugestões para começar (a Laura edita em Lolis › Delegado, link e frases).
-// Cascavel e Cianorte estão sem professores e apoiadores no Hub (Expansão, 16/10).
 function bancoInicial() {
   const b = (titulo, detalhe, continua = false) => ({ id: uid(), titulo, detalhe, continua, ativo: true });
   return [
-    b('Cascavel: listar os professores de tênis, com WhatsApp', 'Instagram das academias e clubes, fichas da federação e indicação das próprias academias. Anote nome, onde dá aula e WhatsApp na nota.'),
-    b('Cianorte: listar os professores de tênis, com WhatsApp', 'Instagram das academias e clubes e indicação das próprias academias. Anote nome, onde dá aula e WhatsApp na nota.'),
-    b('Cascavel: levantar 8 possíveis apoiadores para o sorteio diário', 'Restaurantes, hamburguerias, cafés, lojas de esporte, fisioterapia. Nome, Instagram e contato de cada um na nota.'),
-    b('Cianorte: levantar 8 possíveis apoiadores para o sorteio diário', 'Restaurantes, hamburguerias, cafés, lojas de esporte, fisioterapia. Nome, Instagram e contato de cada um na nota.'),
     b('Pedir para 2 atletas um depoimento em vídeo (30 s) sobre o RANKEN', 'Atletas animados do grupo (Maringá ou Londrina). O que mudou depois que entrou. Servem para captar atletas nas cidades novas.', true),
   ];
 }
