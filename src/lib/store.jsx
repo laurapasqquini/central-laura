@@ -16,7 +16,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 26,
+    version: 27,
     createdAt: hoje,
     lolisBanco: bancoInicial(),
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
@@ -252,6 +252,11 @@ function migrate(s) {
   // v26: Cianorte e Cascavel são do Thales e do Yorran: saem da lista da Lolis
   if (s.version < 26) {
     s = { ...s, version: 26, lolisBanco: (s.lolisBanco || []).filter((b) => !/^(Cascavel|Cianorte):/.test(b.titulo)) };
+  }
+  // v27: uma vez por mês, a Lolis confere quem tem muitos WOs e sugere pedir licença
+  if (s.version < 27) {
+    const t = 'Conferir no Hub (menu WO) quem tem 2 ou mais WOs na etapa e chamar no privado, sugerindo pedir licença';
+    s = { ...s, version: 27, routines: s.routines.some((r) => /WOs na etapa/.test(r.title)) ? s.routines : [...s.routines, nova(t, 'lolis', 'monthly', { monthday: 15 })] };
   }
   return s;
 }
