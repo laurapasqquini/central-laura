@@ -239,7 +239,7 @@ function lerEquipeLolis() {
   const abertas = [];
   bloco.forEach((l, i) => {
     if (/^\d+$/.test(l) || /^prazo /i.test(l) || (l === l.toUpperCase() && /[A-ZÀ-Ú]/.test(l) && !/[a-zà-ú]/.test(l))) return; // contagem, prazo, subtítulo
-    if (/^Nenhuma /.test(l)) return;
+    if (/^(Nenhuma|Nada) /.test(l)) return; // "Nenhuma tarefa…", "Nada pendente pra hoje nem atrasado."
     const p = (bloco[i + 1] || '').match(/^prazo (\d{2})\/(\d{2})/i);
     let prazo = null;
     if (p) {
@@ -250,6 +250,39 @@ function lerEquipeLolis() {
     abertas.push({ titulo: l, prazo });
   });
   return { dia: hoje.toLocaleDateString('sv-SE'), abertas };
+}
+
+// Expansão: os itens dos projetos (Expansão › cidade › Checklist) que estão com a Lolis e ainda não foram feitos.
+// A tela "Ainda em aberto" só mostra o que vence hoje; os projetos trazem tudo, com o prazo. Só leitura.
+const ESPORTE_EXP = { beach_tennis: 'Beach Tennis', tenis: 'Tênis', padel: 'Padel' };
+const cidadeBonita = (s = '') =>
+  s
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w, i) => (i && ['de', 'do', 'da', 'dos', 'das'].includes(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .join(' ');
+async function comExpansao(n) {
+  try {
+    const eq = (await (await fetch('/api/equipe', { cache: 'no-store' })).json()).equipe || [];
+    const lolis = eq.find((p) => /lolis/i.test(p.nome))?.id;
+    if (!lolis) return n;
+    const lista = await (await fetch('/api/match-admin/expansao/projetos', { cache: 'no-store' })).json();
+    const ja = new Set(n.abertas.map((a) => a.titulo.trim().toLowerCase()));
+    const extras = [];
+    for (const p of lista.projetos || lista || []) {
+      const j = await (await fetch(`/api/match-admin/expansao/projetos/${p.id}`, { cache: 'no-store' })).json();
+      const nome = `${ESPORTE_EXP[j.projeto.esporte] || j.projeto.esporte} ${cidadeBonita(j.projeto.cidade)}`;
+      for (const i of j.itens || []) {
+        if (i.feito || i.nao_se_aplica || !(i.responsaveis || []).includes(lolis)) continue;
+        const titulo = `[Expansão ${nome}] ${i.titulo}`;
+        if (ja.has(titulo.toLowerCase())) continue;
+        extras.push({ titulo, prazo: i.prazo ? i.prazo.slice(0, 10) : null, descricao: [i.ajuda, `No Hub: Expansão › ${nome} (marque o item no Checklist quando terminar)`].filter(Boolean).join('\n\n') });
+      }
+    }
+    return { ...n, abertas: [...n.abertas, ...extras] };
+  } catch {
+    return n;
+  }
 }
 
 // Descrição de cada tarefa em aberto: abre "Detalhes da tarefa" (clicando no título), lê o texto e fecha.
@@ -461,7 +494,7 @@ async function rodarAutoEquipe() {
     await new Promise((r) => setTimeout(r, 500));
     const n = lerEquipeLolis();
     if (n) {
-      const completo = await comTelefonePix(await comDetalhes(n));
+      const completo = await comTelefonePix(await comExpansao(await comDetalhes(n)));
       chrome.runtime.sendMessage({ tipo: 'hub-lolis', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
     }
@@ -485,7 +518,7 @@ async function tentar() {
   }
   if (/^\/atividades\/equipe/.test(location.pathname)) {
     const n = lerEquipeLolis();
-    if (n && !lendoDetalhes) comDetalhes(n).then(comTelefonePix).then((c) => mandar('hub-lolis', c, 'ultimoEquipe-v2', `✓ ${n.abertas.length} tarefas em aberto da Lolis na Central`));
+    if (n && !lendoDetalhes) comDetalhes(n).then(comExpansao).then(comTelefonePix).then((c) => mandar('hub-lolis', c, 'ultimoEquipe-v2', `✓ ${c.abertas.length} tarefas em aberto da Lolis na Central`));
     return;
   }
   if (/^\/beach/.test(location.pathname)) {
