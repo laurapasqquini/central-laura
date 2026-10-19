@@ -16,7 +16,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 27,
+    version: 28,
     createdAt: hoje,
     lolisBanco: bancoInicial(),
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
@@ -257,6 +257,11 @@ function migrate(s) {
   if (s.version < 27) {
     const t = 'Conferir no Hub (menu WO) quem tem 2 ou mais WOs na etapa e chamar no privado, sugerindo pedir licença';
     s = { ...s, version: 27, routines: s.routines.some((r) => /WOs na etapa/.test(r.title)) ? s.routines : [...s.routines, nova(t, 'lolis', 'monthly', { monthday: 15 })] };
+  }
+  // v28: Cianorte (tênis simples masc) entrou nas etapas: criar as campanhas push no backoffice
+  if (s.version < 28) {
+    const t = { ...tarefa('Criar no backoffice as campanhas push de Cianorte (Etapas › Campanhas mostra o que e como criar)', '2026-10-19'), urgent: true };
+    s = { ...s, version: 28, tasks: s.tasks.some((x) => /campanhas push de Cianorte/.test(x.title)) ? s.tasks : [t, ...s.tasks] };
   }
   return s;
 }

@@ -11,6 +11,7 @@ export const ETAPA_BACKOFFICE = {
   'mga-beach': ['BEACH FEMININO - ETAPA 01 · BEACH TENIS MARINGA · BEACH FEMININO - ETAPA 01', 'BEACH MASCULINO - ETAPA 01 · BEACH TENIS MARINGA · BEACH MASCULINO - ETAPA 01'],
   'sfe-beach': ['ETAPA 01 · BEACH TENNIS SANTA FE · FEMININO B/C'],
   'sfe-beach-masc': ['Beach Masculino Santa Fé (confira o nome da etapa na lista)'],
+  'cnt-tenis-simples-masc': ['Tênis Simples Masculino Cianorte · etapa de estreia (confira o nome da etapa na lista)'],
   'lda-tenis-simples-masc': ['ETAPA GEUM · ETAPA GEUM - RANKEN LONDRINA · TENIS SIMPLES MASCULINO'],
 };
 

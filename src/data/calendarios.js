@@ -127,6 +127,27 @@ export const CALENDARIOS = [
     ],
   },
   {
+    // cidade nova: etapa de estreia (regulamento de 2026, 7 rodadas; 2ª a 4ª com feriado)
+    id: 'cnt-tenis-simples-masc',
+    grupo: 'tenis-cnt',
+    rotulo: 'SIMPLES MASCULINO',
+    cidade: 'Cianorte',
+    nome: 'Tênis Simples Masculino (estreia)',
+    curto: 'Simples Masc',
+    esporte: 'tenis',
+    etapa: 'Estreia',
+    retaFinal: null,
+    rodadas: [
+      r(1, '2026-10-18', '2026-10-19', '2026-10-25'),
+      r(2, '2026-10-25', '2026-10-26', '2026-11-08'),
+      r(3, '2026-11-08', '2026-11-09', '2026-11-15'),
+      r(4, '2026-11-15', '2026-11-16', '2026-11-22'),
+      r(5, '2026-11-22', '2026-11-23', '2026-11-29'),
+      r(6, '2026-11-29', '2026-11-30', '2026-12-06'),
+      r(7, '2026-12-06', '2026-12-07', '2026-12-20'),
+    ],
+  },
+  {
     // começou atrasado: no domingo 11/10 saem as rodadas 1 e 2 juntas; depois segue o Beach de Santa Fé
     id: 'sfe-beach-masc',
     grupo: 'beach-sfe',
@@ -193,6 +214,7 @@ const POR_DIA = 2;
 const GRUPOS = {
   'tenis-mga': { nome: 'Tênis Maringá', topo: '🎾 *RANKEN TÊNIS MARINGÁ*' },
   'tenis-lda': { nome: 'Tênis Londrina', topo: '🎾 *RANKEN TÊNIS LONDRINA*' },
+  'tenis-cnt': { nome: 'Tênis Cianorte', topo: '🎾 *RANKEN TÊNIS CIANORTE*' },
   'beach-mga': { nome: 'Beach Maringá', topo: '🏖️ *RANKEN BEACH TENNIS MARINGÁ*' },
   'beach-sfe': { nome: 'Beach Santa Fé', topo: '🏖️ *RANKEN BEACH TENNIS SANTA FÉ*' },
 };
