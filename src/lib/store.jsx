@@ -3,6 +3,7 @@ import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 import { buildAgenda, dadosPaginaLolis, postsSorteio } from './engine';
+import { apagarAnexos, linksAnexos } from './anexos';
 import { INDICADORES_PADRAO } from './chefes';
 import { CALENDARIOS } from '../data/calendarios';
 import { jaExiste, chaveDe } from './financas';
@@ -405,13 +406,26 @@ function aplicarFeitosLolis(s, rows) {
 }
 
 // Página da Lolis (link sem login): publica o dia dela sempre que a central salva.
-const salvarPaginaLolis = (state) =>
-  state.lolisToken
-    ? supabase
-        .from('lolis_pagina')
-        .upsert({ token: state.lolisToken, dados: dadosPaginaLolis(state), updated_at: new Date().toISOString() })
-        .then(() => {}, () => {})
-    : null;
+// Tarefas com imagem: vão com links temporários (assinados), que só quem tem o link da página vê.
+const salvarPaginaLolis = async (state) => {
+  if (!state.lolisToken) return;
+  try {
+    const dados = await comAnexos(state, dadosPaginaLolis(state));
+    await supabase.from('lolis_pagina').upsert({ token: state.lolisToken, dados, updated_at: new Date().toISOString() });
+  } catch {
+    /* sem internet: tenta de novo no próximo salvamento */
+  }
+};
+async function comAnexos(state, dados) {
+  const porId = Object.fromEntries(state.tasks.filter((t) => t.anexos?.length).map((t) => [`t:${t.id}`, t.anexos]));
+  if (!Object.keys(porId).length) return dados;
+  const listas = [...dados.dias.flatMap((d) => [d.tarefas, d.atrasadas]), dados.adiantar || [], dados.expansao?.itens || []];
+  const paths = listas.flat().flatMap((x) => (porId[x.key] || []).map((a) => a.path));
+  if (!paths.length) return dados;
+  const links = await linksAnexos(paths).catch(() => ({}));
+  for (const l of listas) for (const x of l) if (porId[x.key]) x.anexos = porId[x.key].map((a) => ({ url: links[a.path], w: a.w, h: a.h })).filter((a) => a.url);
+  return dados;
+}
 
 export function StoreProvider({ user, children }) {
   const [state, setState] = useState(load);
@@ -728,7 +742,12 @@ export function StoreProvider({ user, children }) {
       toggleTask: (id) => patchTask(id, (t) => ({ done: !t.done, doneAt: !t.done ? today() : null })),
       postpone: (id, days = 1) =>
         patchTask(id, (t) => ({ due: addDays(t.due && t.due > today() ? t.due : today(), days), postponed: (t.postponed || 0) + 1 })),
-      deleteTask: (id) => setState((s) => ({ ...s, tasks: s.tasks.filter((t) => t.id !== id) })),
+      deleteTask: (id) =>
+        setState((s) => {
+          const t = s.tasks.find((x) => x.id === id);
+          if (t?.anexos?.length) apagarAnexos(t.anexos); // as imagens saem do Storage junto
+          return { ...s, tasks: s.tasks.filter((x) => x.id !== id) };
+        }),
 
       toggleRoutine: (rid, date, valor) =>
         setState((s) => {

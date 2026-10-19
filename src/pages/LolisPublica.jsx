@@ -659,6 +659,16 @@ function Tarefa({ t, feito, marca, onMarcar }) {
             </span>
           </span>
         )}
+        {/* imagens que a Laura anexou: clica e abre grande */}
+        {t.anexos?.length > 0 && (
+          <span className="mt-2 flex flex-wrap gap-2">
+            {t.anexos.map((a) => (
+              <a key={a.url} href={a.url} target="_blank" rel="noreferrer" title="Abrir a imagem">
+                <img src={a.url} alt="Imagem da tarefa" className="h-24 w-24 rounded-lg object-cover ring-1 ring-slate-200" />
+              </a>
+            ))}
+          </span>
+        )}
         {/* o que está escrito na tarefa (ex.: o recado completo que veio do Hub) */}
         {t.detalhe && (
           <>

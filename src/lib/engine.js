@@ -77,6 +77,7 @@ const fromTask = (t, projects, state) => ({
   notes: t.notes,
   hub: !!t.hub,
   hubPath: t.hubPath,
+  anexos: t.anexos?.length ? t.anexos : undefined,
   ...cobrancaPix(t),
 });
 

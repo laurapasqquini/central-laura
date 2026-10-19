@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { AREAS } from '../lib/engine';
 import { parseQuick } from '../lib/parse';
 import { fmtCurto, relativo, today } from '../lib/dates';
+import { imagensDoEvento } from '../lib/imagens';
+import { subirAnexo, apagarAnexos, linksAnexos } from '../lib/anexos';
 
 export const HUB_URL = 'https://ranken-financeiro.vercel.app/';
 
@@ -64,7 +66,10 @@ export function ItemRow({ item, showDate = false, onEdit }) {
       <span className={`mt-0.5 h-6 w-1 shrink-0 rounded-full ${AREAS[item.area].bar}`} />
       <Check done={item.done} onClick={toggle} area={item.area} />
       <button onClick={() => item.kind === 'task' && onEdit?.(item.id)} className="min-w-0 flex-1 text-left">
-        <div className={`text-[15px] leading-snug font-medium ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>{item.title}</div>
+        <div className={`text-[15px] leading-snug font-medium ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>
+          {item.title}
+          {item.anexos?.length > 0 && <span className="ml-1 text-xs text-slate-400" title="Tem imagem anexada">📎{item.anexos.length > 1 ? item.anexos.length : ''}</span>}
+        </div>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           {item.urgent && !item.done && <Pill className="bg-red-50 text-red-600 ring-red-200">urgente</Pill>}
           {item.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">🙋 Lolis</Pill>}
@@ -170,8 +175,10 @@ function gastoRapido(text) {
 }
 
 export function QuickAdd({ defaultArea }) {
-  const { addTask, addTransacao } = useStore();
+  const { addTask, addTransacao, user } = useStore();
   const [text, setText] = useState('');
+  const [fotos, setFotos] = useState([]); // imagens coladas, sobem ao criar a tarefa
+  const [enviando, setEnviando] = useState(false);
   const [lancado, setLancado] = useState('');
   const gasto = text.trim() ? gastoRapido(text) : null;
   const preview = text.trim() && !gasto ? parseQuick(text, { area: defaultArea }) : null;
@@ -186,8 +193,21 @@ export function QuickAdd({ defaultArea }) {
       return;
     }
     if (!preview?.title) return;
-    addTask(preview);
-    setText('');
+    if (!fotos.length) {
+      addTask(preview);
+      setText('');
+      return;
+    }
+    const id = crypto.randomUUID().slice(0, 8);
+    setEnviando(true);
+    Promise.all(fotos.map((f) => subirAnexo(user.id, id, f)))
+      .then((anexos) => {
+        addTask({ ...preview, id, anexos });
+        setText('');
+        setFotos([]);
+      })
+      .catch((err) => alert(`Não consegui subir a imagem: ${err.message}`))
+      .finally(() => setEnviando(false));
   };
 
   return (
@@ -197,16 +217,29 @@ export function QuickAdd({ defaultArea }) {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Anotar… ex.: pedir pra @lolis contar estoque sexta !urgente"
+          onPaste={(e) => {
+            const imgs = imagensDoEvento(e);
+            if (imgs.length) {
+              e.preventDefault();
+              setFotos((f) => [...f, ...imgs]);
+            }
+          }}
+          placeholder="Anotar… ex.: pedir pra @lolis contar estoque sexta !urgente (Ctrl+V cola imagem)"
           className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-slate-400"
         />
-        <button className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white disabled:opacity-30" disabled={!preview?.title && !gasto}>
-          {gasto ? 'Lançar' : 'Criar'}
+        <button className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white disabled:opacity-30" disabled={(!preview?.title && !gasto) || enviando}>
+          {enviando ? 'Enviando…' : gasto ? 'Lançar' : 'Criar'}
         </button>
       </div>
       {gasto && (
         <div className="px-2 pt-1 pb-1 text-xs text-slate-500">
           vai lançar no 💰 Financeiro (hoje): <b className={gasto.valor < 0 ? 'text-red-600' : 'text-emerald-600'}>{gasto.valor < 0 ? '−' : '+'}R$ {Math.abs(gasto.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</b> · {gasto.desc}
+        </div>
+      )}
+      {fotos.length > 0 && (
+        <div className="flex items-center gap-2 px-2 pt-1 text-xs text-slate-600">
+          📎 {fotos.length === 1 ? '1 imagem vai junto' : `${fotos.length} imagens vão juntas`}
+          <button type="button" onClick={() => setFotos([])} className="font-semibold text-slate-400 hover:text-red-500">tirar</button>
         </div>
       )}
       {lancado && <div className="px-2 pt-1 pb-1 text-xs font-semibold text-emerald-600">{lancado}</div>}
@@ -275,7 +308,7 @@ export function Modal({ title, onClose, children }) {
 }
 
 export function TaskModal({ id, onClose }) {
-  const { state, updateTask, deleteTask } = useStore();
+  const { state, updateTask, deleteTask, user } = useStore();
   const t = state.tasks.find((x) => x.id === id);
   const [form, setForm] = useState(() => ({ ...t }));
   if (!t) return null;
@@ -312,6 +345,9 @@ export function TaskModal({ id, onClose }) {
         <Field label="Notas">
           <textarea rows={3} className={inputCls} value={form.notes || ''} onChange={(e) => set('notes')(e.target.value)} placeholder="Detalhes, contato, link…" />
         </Field>
+        <Field label="Imagens">
+          <Anexos taskId={id} anexos={t.anexos || []} userId={user?.id} onChange={(anexos) => updateTask(id, { anexos })} />
+        </Field>
         {t.phase && <p className="text-xs text-slate-400">Etapa do projeto: {t.phase}</p>}
         <div className="flex items-center justify-between pt-2">
           <button
@@ -329,5 +365,76 @@ export function TaskModal({ id, onClose }) {
         </div>
       </div>
     </Modal>
+  );
+}
+
+// Imagens da tarefa: Ctrl+V (com a janela aberta), arrastar ou escolher. Sobem na hora e ficam na tarefa.
+export function Anexos({ taskId, anexos, userId, onChange }) {
+  const [links, setLinks] = useState({});
+  const [enviando, setEnviando] = useState(0);
+  const chave = anexos.map((a) => a.path).join('|');
+  useEffect(() => {
+    if (anexos.length) linksAnexos(anexos.map((a) => a.path)).then(setLinks, () => {});
+  }, [chave]); // eslint-disable-line react-hooks/exhaustive-deps
+  const adicionar = async (files) => {
+    if (!files.length) return;
+    setEnviando((n) => n + files.length);
+    try {
+      const novos = await Promise.all(files.map((f) => subirAnexo(userId, taskId, f)));
+      onChange([...anexos, ...novos]);
+    } catch (err) {
+      alert(`Não consegui subir a imagem: ${err.message}`);
+    } finally {
+      setEnviando((n) => n - files.length);
+    }
+  };
+  useEffect(() => {
+    const colar = (e) => {
+      const imgs = imagensDoEvento(e);
+      if (imgs.length) {
+        e.preventDefault();
+        adicionar(imgs);
+      }
+    };
+    window.addEventListener('paste', colar);
+    return () => window.removeEventListener('paste', colar);
+  });
+  const tirar = (a) => {
+    if (!confirm('Tirar esta imagem da tarefa?')) return;
+    apagarAnexos([a]);
+    onChange(anexos.filter((x) => x.path !== a.path));
+  };
+  return (
+    <div
+      className="space-y-2 rounded-xl border border-dashed border-slate-300 p-2"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        adicionar(imagensDoEvento(e));
+      }}
+    >
+      {anexos.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {anexos.map((a) => (
+            <div key={a.path} className="relative">
+              <a href={links[a.path]} target="_blank" rel="noreferrer">
+                {links[a.path] ? <img src={links[a.path]} alt="" className="h-20 w-20 rounded-lg object-cover ring-1 ring-slate-200" /> : <div className="grid h-20 w-20 place-items-center rounded-lg bg-slate-100 text-xs text-slate-400">…</div>}
+              </a>
+              <button type="button" onClick={() => tirar(a)} className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-xs text-red-500 shadow ring-1 ring-slate-200" aria-label="Tirar imagem">
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+        {enviando > 0 ? <span className="font-semibold text-indigo-600">Enviando…</span> : <span>Cole com <b>Ctrl+V</b>, arraste aqui ou</span>}
+        <label className="cursor-pointer font-semibold text-indigo-600">
+          escolha o arquivo
+          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => (adicionar(imagensDoEvento(e)), (e.target.value = ''))} />
+        </label>
+        <span className="text-slate-400">· a Lolis vê na página dela</span>
+      </div>
+    </div>
   );
 }
