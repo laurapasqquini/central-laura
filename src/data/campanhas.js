@@ -80,30 +80,37 @@ const GENERICO = {
 const HORA = { inicio: '09:00', meio: '18:00', fim: '10:00' };
 const diasEntre = (a, b) => Math.round((new Date(`${b}T12:00`) - new Date(`${a}T12:00`)) / 864e5);
 
-// Divide as datas em sequências que se repetem no mesmo intervalo, com o menor número de campanhas:
-// pega a primeira data livre e escolhe o intervalo que cobre mais datas seguidas (ex.: rodadas que
-// alternam 7 e 14 dias viram duas campanhas de 21 em 21 dias).
+// Divide as datas em sequências que se repetem no mesmo intervalo, com o MENOR número de campanhas.
+// Testa todas as combinações (são poucas datas por etapa): ex.: inícios 19/10, 26/10, 09/11, 16/11,
+// 23/11, 30/11 viram 2 campanhas semanais (19→26/10 e 09→30/11), e não 3 de 21 em 21 dias.
+// Empate: prefere intervalos de 7 dias (mais fáceis de conferir) e depois os menores.
 function sequencias(itens) {
-  const livres = [...itens];
-  const grupos = [];
-  while (livres.length) {
-    const primeiro = livres[0];
-    let melhor = { itens: [primeiro], passo: 1 };
-    for (const x of livres.slice(1)) {
+  const custo = (gs) => gs.length * 1000 + gs.filter((g) => g.itens.length > 1 && g.passo % 7).length * 10 + gs.reduce((s, g) => s + (g.itens.length > 1 ? g.passo : 0), 0) / 100;
+  let melhor = null;
+  const busca = (livres, grupos) => {
+    if (melhor && grupos.length * 1000 >= custo(melhor)) return; // já não ganha
+    if (!livres.length) {
+      if (!melhor || custo(grupos) < custo(melhor)) melhor = grupos;
+      return;
+    }
+    const [primeiro, ...resto] = livres;
+    const opcoes = [{ itens: [primeiro], passo: 1 }];
+    for (const x of resto) {
       const passo = diasEntre(primeiro.data, x.data);
-      if (passo <= 0) continue;
+      if (passo <= 0 || passo % 7 || passo > 21) continue; // só de 7, 14 ou 21 dias: fácil de conferir
       const seq = [primeiro];
       for (let d = add(primeiro.data, passo); ; d = add(d, passo)) {
-        const prox = livres.find((y) => y.data === d);
+        const prox = resto.find((y) => y.data === d);
         if (!prox) break;
         seq.push(prox);
+        opcoes.push({ itens: [...seq], passo }); // cada trecho da sequência é uma opção
       }
-      if (seq.length > melhor.itens.length || (seq.length === melhor.itens.length && passo < melhor.passo)) melhor = { itens: seq, passo };
     }
-    grupos.push(melhor);
-    for (const x of melhor.itens) livres.splice(livres.indexOf(x), 1);
-  }
-  return grupos;
+    opcoes.sort((a, b) => b.itens.length - a.itens.length); // as mais longas primeiro: acha cedo uma boa solução
+    for (const g of opcoes) busca(livres.filter((y) => !g.itens.includes(y)), [...grupos, g]);
+  };
+  busca(itens, []);
+  return melhor || [];
 }
 
 // Campanhas para criar no backoffice a partir de uma data. Cada aviso vira o menor número possível de
