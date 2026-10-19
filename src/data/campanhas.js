@@ -3,15 +3,15 @@
 import { CALENDARIOS } from './calendarios';
 
 // Etapa(s) no campo "Etapa" do backoffice, com o nome da lista. Duplas e beach de Maringá são duas
-// etapas lá (masculina e feminina): cada campanha vira duas. "(confira)" = nome ainda não visto na lista.
+// etapas lá (masculina e feminina): cada campanha vira duas. Nomes conferidos na lista do backoffice em 19/10.
 export const ETAPA_BACKOFFICE = {
   'mga-tenis-duplas': ['ETAPA LOEDE · TENIS DUPLAS · TENIS DUPLA MASCULINA - 19/07 a 20/12', 'ETAPA LOEDE · TENIS DUPLAS · TENIS DUPLA FEMININA - 19/07 a 20/12'],
   'mga-tenis-simples-masc': ['ETAPA LOEDE · TENIS MARINGA · TENIS SIMPLES MASCULINO'],
-  'mga-tenis-simples-fem': ['ETAPA LOEDE · TENIS MARINGA · TENIS SIMPLES FEMININO (confira)'],
+  'mga-tenis-simples-fem': ['ETAPA LOEDE · TENIS MARINGA · TENIS SIMPLES FEMININO'],
   'mga-beach': ['BEACH FEMININO - ETAPA 01 · BEACH TENIS MARINGA · BEACH FEMININO - ETAPA 01', 'BEACH MASCULINO - ETAPA 01 · BEACH TENIS MARINGA · BEACH MASCULINO - ETAPA 01'],
   'sfe-beach': ['ETAPA 01 · BEACH TENNIS SANTA FE · FEMININO B/C'],
-  'sfe-beach-masc': ['Beach Masculino Santa Fé (confira o nome da etapa na lista)'],
-  'cnt-tenis-simples-masc': ['Tênis Simples Masculino Cianorte · etapa de estreia (confira o nome da etapa na lista)'],
+  'sfe-beach-masc': ['ETAPA 01 · BEACH TENNIS SANTA FE · MASCULINO B/C'],
+  'cnt-tenis-simples-masc': ['ETAPA 01 · TENIS CIANORTE · MASCULINO CIANORTE'],
   'lda-tenis-simples-masc': ['ETAPA GEUM · ETAPA GEUM - RANKEN LONDRINA · TENIS SIMPLES MASCULINO'],
 };
 
