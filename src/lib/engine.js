@@ -878,26 +878,25 @@ export function expansaoLolis(state, ref = today()) {
   const fila = state.tasks
     .filter((t) => t.who === 'lolis' && !t.done && t.due && EXPANSAO.test(t.title))
     .map((t) => ({ t, ate: dataEfetiva(state, t), cidade: t.title.match(EXPANSAO)[2] }))
-    // no dia do prazo (ou atrasada) ela já está nas tarefas do dia: o card mostra a próxima
+    // no dia do prazo (ou atrasada) ela já está nas tarefas do dia
     .filter((x) => x.ate > ref)
     .sort((a, b) => a.ate.localeCompare(b.ate));
   if (!fila.length) return null;
-  const { t, ate, cidade } = fila[0];
-  const n = LOCAIS_EXPANSAO[semAcento(cidade)];
-  // dias úteis de hoje até o prazo: quanto fazer por dia
-  let uteis = 0;
-  for (let d = ref; d <= ate; d = addDays(d, 1)) if (isWorkday(state, d)) uteis++;
-  const telefone = /telefone do respons/i.test(t.title);
-  const porDia = n ? Math.max(4, Math.ceil(n / Math.max(1, uteis))) : 0; // pelo menos 4 locais por tarde
-  const meta =
-    telefone && n && n <= porDia ? `São só ${n} locais: dá pra fazer numa tarde`
-    : telefone && n ? `Meta: ${porDia} locais por dia (são ${n})`
-    : 'Dá pra fazer numa tarde';
-  const como = COMO_EXPANSAO.find(([re]) => re.test(t.title));
-  return {
-    atual: { key: `t:${t.id}`, titulo: t.title, ate, meta, detalhe: como ? como[1](cidade, n) : '' },
-    depois: fila.slice(1).map((x) => ({ titulo: x.t.title, ate: x.ate })),
-  };
+  const itens = fila.map(({ t, ate, cidade }) => {
+    const n = LOCAIS_EXPANSAO[semAcento(cidade)];
+    // dias úteis de hoje até o prazo: quanto fazer por dia
+    let uteis = 0;
+    for (let d = ref; d <= ate; d = addDays(d, 1)) if (isWorkday(state, d)) uteis++;
+    const telefone = /telefone do respons/i.test(t.title);
+    const porDia = n ? Math.max(4, Math.ceil(n / Math.max(1, uteis))) : 0; // pelo menos 4 locais por tarde
+    const meta =
+      telefone && n && n <= porDia ? `São só ${n} locais: dá pra fazer numa tarde`
+      : telefone && n ? `Meta: ${porDia} locais por dia (são ${n})`
+      : 'Dá pra fazer numa tarde';
+    const como = COMO_EXPANSAO.find(([re]) => re.test(t.title));
+    return { key: `t:${t.id}`, titulo: t.title, ate, meta, detalhe: como ? como[1](cidade, n) : '' };
+  });
+  return { itens };
 }
 
 // "Acabou? Puxa daqui": tarefas que nunca faltam, em ordem de prioridade (a Laura organiza em Lolis › Delegado).

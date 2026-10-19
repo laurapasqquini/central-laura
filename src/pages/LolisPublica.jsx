@@ -173,34 +173,41 @@ function CartaoPonto({ token, embutida }) {
 }
 
 // Rotinas de sorteio viram uma tarefa por sorteio do dia (Tênis Maringá, Tênis Londrina, Beach...), conforme a programação
-// Expansão: a tarefa da vez (com a meta do dia e onde anotar no Hub) e a fila das próximas
-function Expansao({ e, feito, marca, onMarcar }) {
-  const a = e.atual;
+// Expansão (cidades novas): todas as tarefas na ordem do prazo; cada uma abre o "como fazer"
+// (meta do dia e onde anotar no Hub) e tem a própria bolinha
+const itensExpansao = (e) => (e ? e.itens || (e.atual ? [e.atual, ...(e.depois || [])] : []) : []); // formato antigo: atual + depois
+function Expansao({ itens, feitos, marcas, marcar }) {
+  const [aberto, setAberto] = useState(null);
   return (
-    <div className={`space-y-2 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200 ${feito ? 'opacity-60' : ''}`}>
-      <div className="text-xs font-bold uppercase tracking-wide text-amber-800">🏖️ Cidades novas · a tarefa da vez</div>
-      <div className="flex items-start gap-3">
-        <Marca feito={feito} marca={marca} onClick={onMarcar} />
-        <div className="min-w-0 flex-1">
-          <div className={`text-[15px] font-semibold ${feito ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{tituloExpansao(a.titulo)}</div>
-          <div className="text-xs font-semibold text-amber-800">
-            até {fmtCurto(a.ate)} · {a.meta}
-          </div>
-          <Nota marca={marca} />
-          {a.detalhe && <p className="mt-1.5 rounded-lg bg-white/70 p-2 text-sm text-slate-700">{a.detalhe}</p>}
-          <p className="mt-1 text-xs text-slate-500">Terminou? Marque aqui e conclua também no Hub (Atividades). Aí aparece a próxima.</p>
-        </div>
-      </div>
-      {e.depois.length > 0 && (
-        <div className="border-t border-amber-200 pt-2 text-xs text-slate-500">
-          <div className="font-semibold text-slate-600">Na fila, depois desta:</div>
-          {e.depois.map((x) => (
-            <div key={x.titulo}>
-              {tituloExpansao(x.titulo)} · até {fmtCurto(x.ate)}
+    <div className="space-y-1 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200">
+      <div className="text-xs font-bold uppercase tracking-wide text-amber-800">🏖️ Cidades novas · na ordem do prazo</div>
+      {itens.map((a) => {
+        const feito = feitos.includes(a.key);
+        const ab = aberto === a.key;
+        return (
+          <div key={a.key} className={`rounded-xl px-2 py-2 ${ab ? 'bg-white' : ''} ${feito ? 'opacity-60' : ''}`}>
+            <div className="flex items-start gap-3">
+              <Marca feito={feito} marca={marcas[a.key]} onClick={() => marcar(a.key)} />
+              <button onClick={() => setAberto(ab ? null : a.key)} className="min-w-0 flex-1 text-left">
+                <span className={`block text-[15px] font-semibold ${feito ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{tituloExpansao(a.titulo)}</span>
+                <span className="block text-xs font-semibold text-amber-800">
+                  até {fmtCurto(a.ate)}
+                  {a.meta ? ` · ${a.meta}` : ''} <span className="font-normal text-slate-400">{ab ? '▲' : '▼ como fazer'}</span>
+                </span>
+              </button>
             </div>
-          ))}
-        </div>
-      )}
+            <div className="ml-8">
+              <Nota marca={marcas[a.key]} />
+              {ab && (
+                <>
+                  {a.detalhe && <p className="mt-1.5 rounded-lg bg-amber-50 p-2 text-sm text-slate-700">{a.detalhe}</p>}
+                  <p className="mt-1 text-xs text-slate-500">Terminou? Marque a bolinha e conclua também no Hub (Atividades).</p>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -213,6 +220,7 @@ const idGrupo = (p) => `sorteio-${p.grupo.replace(/\W+/g, '-')}`;
 
 function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
   const [aba, setAba] = useState('tarefas');
+  const [verBanco, setVerBanco] = useState(false);
   // marcas: { chave: { status: 'feito' | 'nao', nota } }. Vão para a nuvem: a central da Laura vê e dá baixa no que foi feito.
   const [marcas, setMarcas] = useState(() => lerMarcas(dia.date));
   const [pedindo, setPedindo] = useState(null); // item que ela acabou de clicar (abre a caixinha)
@@ -284,7 +292,7 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
     ...dia.posts.map((p) => [chaveSorteio(p), `Sorteio diário · ${p.grupo}`]),
     ...banco.map((t) => [t.key, t.titulo]),
     ...adiantar.map((t) => [t.key, tituloExpansao(t.titulo)]),
-    ...(expansao ? [[expansao.atual.key, tituloExpansao(expansao.atual.titulo)]] : []),
+    ...itensExpansao(expansao).map((t) => [t.key, tituloExpansao(t.titulo)]),
     ...lembretes.map((b) => [b.key, `${b.tipo === 'lembrete' ? 'Lembrete do prazo' : 'Conferir se deu certo'} · ${b.linha}`]),
   ]);
 
@@ -383,12 +391,24 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
             </Secao>
           )}
 
-          {(banco.length > 0 || expansao) && (
-            <Secao
-              titulo="🙌 Acabou? Puxa daqui"
-              dica="Terminou as tarefas do dia? Pegue a de cima e vá descendo. Ao marcar, conte na nota o que fez ou até onde chegou (as que não somem continuam amanhã)."
-            >
-              {expansao && <Expansao e={expansao} feito={feitos.includes(expansao.atual.key)} marca={marcas[expansao.atual.key]} onMarcar={() => marcar(expansao.atual.key)} />}
+          {(banco.length > 0 || itensExpansao(expansao).length > 0) && (
+            <section className="space-y-2">
+              <button
+                onClick={() => setVerBanco(!verBanco)}
+                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left shadow-sm ring-1 ${verBanco ? 'bg-amber-100 ring-amber-300' : 'bg-white ring-slate-200 hover:ring-amber-300'}`}
+              >
+                <span className="text-xl">🙌</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[15px] font-bold text-ink">Acabou? Puxa daqui</span>
+                  <span className="block text-xs text-slate-500">Terminou as tarefas do dia? Abra e pegue a de cima.</span>
+                </span>
+                <span className="rounded-full bg-amber-500 px-2 py-0.5 text-xs font-bold text-white">{itensExpansao(expansao).filter((t) => !feitos.includes(t.key)).length + banco.filter((t) => !feitos.includes(t.key)).length}</span>
+                <span className="text-sm text-slate-400">{verBanco ? '▲' : '▼'}</span>
+              </button>
+              {verBanco && (
+                <div className="space-y-2">
+                  <p className="px-1 text-xs text-slate-500">Vá de cima pra baixo. Ao marcar, conte na nota o que fez ou até onde chegou (as que não somem continuam amanhã).</p>
+              {itensExpansao(expansao).length > 0 && <Expansao itens={itensExpansao(expansao)} feitos={feitos} marcas={marcas} marcar={marcar} />}
               {banco.map((t, i) => (
                 <div key={t.key} className="flex items-start gap-2">
                   <span className="mt-3 w-5 shrink-0 text-right text-xs font-bold text-slate-400">{i + 1}</span>
@@ -397,7 +417,9 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
                   </div>
                 </div>
               ))}
-            </Secao>
+                </div>
+              )}
+            </section>
           )}
 
           {andamento.length > 0 && (
