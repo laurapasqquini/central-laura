@@ -197,9 +197,7 @@ const GRUPOS = {
   'beach-sfe': { nome: 'Beach Santa Fé', topo: '🏖️ *RANKEN BEACH TENNIS SANTA FÉ*' },
 };
 
-const DIAS_SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
 const ddmm = (s) => `${s.slice(8, 10)}/${s.slice(5, 7)}`;
-const diaSemana = (s) => DIAS_SEMANA[new Date(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)).getDay()];
 const dias = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
 
 // Mensagem "rodada aberta" de um grupo (formato do WhatsApp: *negrito*).
@@ -209,13 +207,12 @@ export function mensagemRodada(grupo, lista) {
     const linhas = [rd.nome ? `*RODADAS ${rd.nome.toUpperCase()} ABERTAS - ${c.rotulo}*` : `*RODADA ${rd.n} ABERTA - ${c.rotulo}*`];
     if (c.retaFinal && rd.n >= c.retaFinal) linhas.push('⚠️ *RETA FINAL*');
     linhas.push(`📅 *PRAZO:* ${ddmm(rd.inicio)} a ${ddmm(rd.fim)}${dias(rd.inicio, rd.fim) <= 7 ? (rd.nome ? ' *(2 rodadas em 1 semana!)*' : ' *(rodada de 1 semana!)*') : ''}`);
-    linhas.push(`⏰ *DATA LIMITE:* ${diaSemana(rd.fim)}, ${ddmm(rd.fim)}`);
     if (rd.n === 9 && ultima.n === 10) linhas.push('🔁 *Última rodada para encaixar jogos atrasados!*');
     return linhas.join('\n');
   });
   const so = (f) => lista.every(f);
   const adv = so(({ c }) => c.esporte === 'beach') ? 'sua dupla adversária' : so(({ c }) => c.id.endsWith('-fem')) ? 'sua adversária' : 'seu adversário';
-  return [GRUPOS[grupo].topo, ...blocos, `*Os jogos já estão no app!* Combine com ${adv} e lance o resultado até a *data limite*.`].join('\n\n');
+  return [GRUPOS[grupo].topo, ...blocos, `*Os jogos já estão no app!* Combine com ${adv} e lance o resultado.`].join('\n\n');
 }
 
 export function rotinasDoDia(date, addDays) {
