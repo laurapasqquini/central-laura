@@ -527,8 +527,9 @@ export function StoreProvider({ user, children }) {
           }
           if (!Array.isArray(lista)) continue;
           const limite = addDays(today(), -30);
-          const g = Object.fromEntries(Object.entries(s.ganhadores || {}).filter(([, x]) => x.data >= limite));
-          for (const x of lista) if (x.nome && x.data) g[`${x.data}|${x.nome}|${x.patrocinador}`] = x;
+          const nomeOk = (n) => /\p{L}.*\p{L}/u.test(n || ''); // descarta "nomes" que são só ícone (ex.: 🔍)
+          const g = Object.fromEntries(Object.entries(s.ganhadores || {}).filter(([, x]) => x.data >= limite && nomeOk(x.nome)));
+          for (const x of lista) if (nomeOk(x.nome) && x.data) g[`${x.data}|${x.nome}|${x.patrocinador}`] = x;
           s = { ...s, ganhadores: g, ganhadoresEm: new Date(r.created_at).toLocaleDateString('sv-SE') };
         }
         // programação do sorteio diário (por cidade e esporte): base dos posts de anúncio e parabéns

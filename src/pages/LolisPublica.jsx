@@ -619,7 +619,7 @@ function Mensagem({ b, feito, marca, onMarcar, semCopiar }) {
         <div className="min-w-0 flex-1">
           {b.sorteio && (
             <div className={`mb-0.5 text-xs font-bold ${b.tipo === 'lembrete' ? 'text-violet-700' : 'text-emerald-700'}`}>
-              {b.tipo === 'lembrete' ? '🎁 Lembrete do prazo (3º dia)' : '✅ Conferir se deu certo (4º dia)'} · sorteio de {fmtCurto(b.sorteio)} · prazo até {fmtCurto(b.prazo)}
+              {b.tipo === 'lembrete' ? '🎁 Lembrete do prazo (3º dia)' : '✅ Conferir se deu certo (último dia do prazo)'} · sorteio de {fmtCurto(b.sorteio)} · prazo até {fmtCurto(b.prazo)}
             </div>
           )}
           <div className="text-sm font-semibold text-slate-700">{b.linha}</div>

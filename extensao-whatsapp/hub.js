@@ -62,7 +62,10 @@ function lerGanhadores() {
     const [patrocinador, item] = premio.split('→').map((s) => (s || '').trim());
     // "· +1" = o ganhador levou mais um prêmio (de outro patrocinador, que só aparece abrindo no Hub)
     const extra = Number(((item || '').match(/·\s*\+(\d+)$/) || [])[1] || 0);
-    out.push({ nome: L[k - 1], data, local, patrocinador: patrocinador || '', premio: (item || '').replace(/\s*·\s*\+\d+$/, ''), extra });
+    // nome: a primeira linha acima com letras (alguns cartões têm um botão de ícone, como 🔍, antes da data)
+    const nome = [L[k - 1], L[k - 2], L[k - 3]].find((x) => x && /\p{L}.*\p{L}/u.test(x));
+    if (!nome) return;
+    out.push({ nome, data, local, patrocinador: patrocinador || '', premio: (item || '').replace(/\s*·\s*\+\d+$/, ''), extra });
   });
   return out.length ? out : null;
 }

@@ -418,7 +418,7 @@ function lembretesBrinde(state, date) {
 }
 
 // ── Brindes do sorteio diário: prazo de 7 dias para solicitar ──
-// 3º dia depois do sorteio: lembrar o prazo · dia útil seguinte: perguntar se deu certo.
+// 3º dia depois do sorteio: lembrar o prazo · último dia do prazo (dia útil): perguntar se deu certo.
 const PRAZO_BRINDE = 7;
 const diaNome = (d) => DIA_NOME[weekday(d)].toLowerCase();
 const capitaliza = (s) => (s ? s[0].toUpperCase() + s.slice(1).toLowerCase() : s);
@@ -468,9 +468,11 @@ function programacaoDoGanhador(state, g) {
 export function brindesDoDia(state, date) {
   const out = [];
   for (const [id, g] of Object.entries(state.ganhadores || {})) {
+    if (!/\p{L}.*\p{L}/u.test(g.nome || '')) continue; // "nome" que é só ícone (leitura errada do Hub)
     const acao = proximoDiaUtil(state, g.data);
     const lembrete = proximoDiaUtil(state, addDays(g.data, 3));
-    const conferir = proximoDiaUtil(state, addDays(lembrete, 1));
+    // pergunta no último dia do prazo (fim de semana: o dia útil antes), longe do lembrete
+    const conferir = proximoDiaUtil(state, addDays(g.data, PRAZO_BRINDE), -1);
     if (date !== lembrete && date !== conferir && date !== acao) continue;
     const prazo = addDays(g.data, PRAZO_BRINDE);
     const nome = capitaliza((g.nome || '').trim().split(/\s+/)[0]);
@@ -508,7 +510,7 @@ export function brindesDoDia(state, date) {
         telefone: g.telefone || '',
         title: `Conferir brinde: ${g.nome}`,
         linha,
-        texto: `Oi, ${nome}! E aí, conseguiu retirar ${varios ? 'os seus brindes' : 'o seu brinde'} do sorteio diário (${premio})? Deu tudo certo? 😊`,
+        texto: `Oi, ${nome}! E aí, conseguiu retirar ${varios ? 'os seus brindes' : 'o seu brinde'} do sorteio diário (${premio})? ${conferir === prazo ? 'Hoje é o último dia do prazo' : `O prazo vai até ${diaNome(prazo)}, ${ddmm(prazo)}`}, tá? 😊`,
       });
   }
   return out.sort((a, b) => a.linha.localeCompare(b.linha));
