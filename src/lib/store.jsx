@@ -396,10 +396,11 @@ function aplicarFeitosLolis(s, rows) {
   let mudouLembretes = false;
   for (const [dia, chaves] of Object.entries(porDia)) {
     const k = `${ID_LEMBRETES}:${dia}`;
-    if (routineDone[k]) continue;
     const lemb = brindesDoDia(s, dia).filter((b) => b.tipo !== 'acao').map((b) => b.key);
-    if (lemb.length && lemb.every((x) => chaves.includes(x))) {
-      routineDone[k] = true;
+    const todos = lemb.length > 0 && lemb.every((x) => chaves.includes(x));
+    if (todos !== !!routineDone[k]) {
+      if (todos) routineDone[k] = true;
+      else delete routineDone[k]; // a lista do dia mudou: volta a ficar pendente
       mudouLembretes = true;
     }
   }

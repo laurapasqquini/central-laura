@@ -412,9 +412,14 @@ function mensagemSemanaLolis(state, date, late) {
 export const ID_LEMBRETES = 'lembretes-brinde';
 function lembretesBrinde(state, date) {
   if (!isWorkday(state, date)) return [];
-  const n = brindesDoDia(state, date).filter((b) => b.tipo !== 'acao').length;
+  const lemb = brindesDoDia(state, date).filter((b) => b.tipo !== 'acao').map((b) => b.key);
+  const n = lemb.length;
   if (!n) return [];
-  return [{ key: `r:${ID_LEMBRETES}:${date}`, kind: 'routine', id: ID_LEMBRETES, title: `🎁 Lembretes de brinde de sorteios anteriores (${n})`, area: 'ranken', who: 'lolis', urgent: false, date, done: !!state.routineDone[`${ID_LEMBRETES}:${date}`], freq: 'brindes' }];
+  // feita = todos os lembretes DE AGORA marcados (se a lista do dia mudar, a marca acompanha);
+  // dias antigos (fora dos 7 dias que a central lê da página) usam a marca guardada
+  const marcados = (state.lolisFeitos || {})[date];
+  const done = marcados ? lemb.every((k) => marcados.includes(k)) : !!state.routineDone[`${ID_LEMBRETES}:${date}`];
+  return [{ key: `r:${ID_LEMBRETES}:${date}`, kind: 'routine', id: ID_LEMBRETES, title: `🎁 Lembretes de brinde de sorteios anteriores (${n})`, area: 'ranken', who: 'lolis', urgent: false, date, done, freq: 'brindes' }];
 }
 
 // ── Brindes do sorteio diário: prazo de 7 dias para solicitar ──
