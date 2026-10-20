@@ -141,7 +141,7 @@ const sortItems = (a, b) =>
 export function buildDay(state, date, filter) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
   const tasks = state.tasks.filter((t) => t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state));
-  const routines = state.routines.filter((r) => r.tipo !== 'lolis-lista' && occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date));
+  const routines = state.routines.filter((r) => r.tipo !== 'lolis-lista' && occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date), lembretesBrinde(state, date));
   // "mandar a lista pra Lolis" já leva a mensagem do dia
   if (filter.who !== 'lolis') {
     const it = itemLolis(state, date);
@@ -405,6 +405,16 @@ function mensagemSemanaLolis(state, date, late) {
     bancoLolis(state).length ? '\n🙌 *Acabou o que tinha pra fazer?* Puxa da lista "Acabou? Puxa daqui" na sua página, de cima pra baixo.' : '',
     '\n' + FIM_LOLIS,
   ].filter((x, i) => x !== '' || i === 0).join('\n');
+}
+
+// Lembretes de brinde de sorteios anteriores (lembrar o prazo e perguntar se deu certo) viram UMA tarefa
+// da Lolis por dia; ela fica feita quando todos os lembretes do dia forem marcados na página dela.
+export const ID_LEMBRETES = 'lembretes-brinde';
+function lembretesBrinde(state, date) {
+  if (!isWorkday(state, date)) return [];
+  const n = brindesDoDia(state, date).filter((b) => b.tipo !== 'acao').length;
+  if (!n) return [];
+  return [{ key: `r:${ID_LEMBRETES}:${date}`, kind: 'routine', id: ID_LEMBRETES, title: `🎁 Lembretes de brinde de sorteios anteriores (${n})`, area: 'ranken', who: 'lolis', urgent: false, date, done: !!state.routineDone[`${ID_LEMBRETES}:${date}`], freq: 'brindes' }];
 }
 
 // ── Brindes do sorteio diário: prazo de 7 dias para solicitar ──

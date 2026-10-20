@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
-import { buildAgenda, dadosPaginaLolis, postsSorteio } from './engine';
+import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES } from './engine';
 import { apagarAnexos, linksAnexos } from './anexos';
 import { INDICADORES_PADRAO } from './chefes';
 import { CALENDARIOS } from '../data/calendarios';
@@ -392,9 +392,20 @@ function aplicarFeitosLolis(s, rows) {
         for (const r of s.routines) if (r.who === 'lolis' && /sorteio di[aá]rio/i.test(r.title)) routineDone[`${r.id}:${dia}`] = true;
     }
   }
+  // lembretes de brinde do dia: todos marcados → a tarefa "Lembretes de brinde" fica feita (e entra no relatório)
+  let mudouLembretes = false;
+  for (const [dia, chaves] of Object.entries(porDia)) {
+    const k = `${ID_LEMBRETES}:${dia}`;
+    if (routineDone[k]) continue;
+    const lemb = brindesDoDia(s, dia).filter((b) => b.tipo !== 'acao').map((b) => b.key);
+    if (lemb.length && lemb.every((x) => chaves.includes(x))) {
+      routineDone[k] = true;
+      mudouLembretes = true;
+    }
+  }
   const lolisBanco = (s.lolisBanco || []).map((b) => (banco[b.id] && !b.continua && !b.feitoEm ? { ...b, feitoEm: banco[b.id] } : b));
   const mudouBanco = lolisBanco.some((b, i) => b !== (s.lolisBanco || [])[i]);
-  if (JSON.stringify(antes) === JSON.stringify(porDia) && JSON.stringify(s.lolisNotas || {}) === JSON.stringify(notas) && !tarefas.size && !mudouBanco) return s;
+  if (JSON.stringify(antes) === JSON.stringify(porDia) && JSON.stringify(s.lolisNotas || {}) === JSON.stringify(notas) && !tarefas.size && !mudouBanco && !mudouLembretes) return s;
   return {
     ...s,
     lolisFeitos: porDia,

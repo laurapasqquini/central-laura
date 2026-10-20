@@ -272,12 +272,15 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
   // um item por sorteio do dia; sem programação no Hub, fica o item geral
   const itensSorteio = dia.posts.length
     ? dia.posts.map((p) => ({ key: chaveSorteio(p), titulo: `🎾 Sorteio diário · ${p.grupo}`, alvo: idGrupo(p) }))
-    : temRotinaSorteio || lembretes.length
+    : temRotinaSorteio
       ? [{ key: 'sorteio', titulo: '🎾 Sorteio diário', alvo: null }]
       : [];
   const tarefas = dia.tarefas.filter((t) => !ehSorteio(t));
-  const pendTarefas = tarefas.filter((t) => !feitos.includes(t.key) && !t.feito).length + dia.atrasadas.filter((t) => !feitos.includes(t.key)).length + itensSorteio.filter((x) => !feitos.includes(x.key)).length;
-  const pendSorteio = itensSorteio.filter((x) => !feitos.includes(x.key)).length + lembretes.filter((b) => !feitos.includes(b.key)).length;
+  // a tarefa "Lembretes de brinde" fica feita quando todos os lembretes dentro dela forem marcados
+  const ehLembretes = (t) => t.key.startsWith('r:lembretes-brinde:');
+  const lembretesOk = lembretes.length > 0 && lembretes.every((b) => feitos.includes(b.key));
+  const pendTarefas = tarefas.filter((t) => (ehLembretes(t) ? !lembretesOk && !t.feito : !feitos.includes(t.key) && !t.feito)).length + dia.atrasadas.filter((t) => !feitos.includes(t.key)).length + itensSorteio.filter((x) => !feitos.includes(x.key)).length;
+  const pendSorteio = itensSorteio.filter((x) => !feitos.includes(x.key)).length;
 
   const abrirSorteio = (alvo) => {
     setAba('sorteio');
@@ -296,7 +299,7 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
     ...lembretes.map((b) => [b.key, `${b.tipo === 'lembrete' ? 'Lembrete do prazo' : 'Conferir se deu certo'} · ${b.linha}`]),
   ]);
 
-  const ABAS = [['tarefas', '📝 Tarefas', pendTarefas], ...(itensSorteio.length || lembretes.length ? [['sorteio', '🎾 Sorteio diário', pendSorteio]] : [])];
+  const ABAS = [['tarefas', '📝 Tarefas', pendTarefas], ...(itensSorteio.length ? [['sorteio', '🎾 Sorteio diário', pendSorteio]] : [])];
 
   return (
     <div className="space-y-5">
@@ -335,9 +338,13 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
                 </button>
               </div>
             ))}
-            {tarefas.map((t) => (
-              <Tarefa key={t.key} t={t} feito={feitos.includes(t.key) || !!t.feito} marca={marcas[t.key]} onMarcar={() => marcar(t.key)} />
-            ))}
+            {tarefas.map((t) =>
+              ehLembretes(t) ? (
+                <Lembretes key={t.key} t={t} lembretes={lembretes} feito={lembretesOk || !!t.feito} feitos={feitos} marcas={marcas} marcar={marcar} />
+              ) : (
+                <Tarefa key={t.key} t={t} feito={feitos.includes(t.key) || !!t.feito} marca={marcas[t.key]} onMarcar={() => marcar(t.key)} />
+              ),
+            )}
             {!tarefas.length && !itensSorteio.length && <Caixa>Nenhuma tarefa.</Caixa>}
           </Secao>
 
@@ -446,13 +453,6 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
             <Caixa>A programação do sorteio deste dia ainda não chegou na central.</Caixa>
           )}
 
-          {lembretes.length > 0 && (
-            <Secao titulo="📅 Lembretes de sorteios de dias anteriores" dica="Não são do sorteio de hoje: são para ganhadores de outros dias, no privado. O telefone está no Hub › Sorteio Diário › Ganhadores do dia (clicando no nome).">
-              {lembretes.map((b) => (
-                <Mensagem key={b.key} b={b} feito={feitos.includes(b.key)} marca={marcas[b.key]} onMarcar={() => marcar(b.key)} />
-              ))}
-            </Secao>
-          )}
         </>
       )}
     </div>
@@ -634,6 +634,32 @@ function Mensagem({ b, feito, marca, onMarcar, semCopiar }) {
         </div>
       )}
       <p className={`text-sm ${semCopiar ? 'font-medium text-amber-800' : 'whitespace-pre-wrap rounded-xl bg-[#e7ffdb] p-3 text-slate-800'}`}>{b.texto}</p>
+    </div>
+  );
+}
+
+// Tarefa do dia com os lembretes de brinde de sorteios anteriores: abre e mostra cada mensagem com a sua bolinha.
+// Fica feita sozinha quando todas forem marcadas.
+function Lembretes({ t, lembretes, feito, feitos, marcas, marcar }) {
+  const [aberto, setAberto] = useState(!feito);
+  const ok = lembretes.filter((b) => feitos.includes(b.key)).length;
+  return (
+    <div className={`space-y-2 rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-slate-200/70 ${feito && !aberto ? 'opacity-50' : ''}`}>
+      <button onClick={() => setAberto(!aberto)} className="flex w-full items-center gap-3 text-left">
+        <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[11px] text-white ${feito ? 'bg-emerald-500' : 'border-2 border-slate-300'}`}>{feito ? '✓' : ''}</span>
+        <span className={`flex-1 text-[15px] ${feito ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{t.titulo}</span>
+        <span className="shrink-0 text-xs font-semibold text-slate-500">
+          {ok} de {lembretes.length} {aberto ? '▲' : '▼'}
+        </span>
+      </button>
+      {aberto && (
+        <div className="space-y-2">
+          <p className="text-xs text-slate-500">No privado, para ganhadores de outros dias. O telefone está em cada um (ou no Hub › Sorteio Diário › Ganhadores do dia). Marque cada um: quando todos estiverem marcados, a tarefa fica feita.</p>
+          {lembretes.map((b) => (
+            <Mensagem key={b.key} b={b} feito={feitos.includes(b.key)} marca={marcas[b.key]} onMarcar={() => marcar(b.key)} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
