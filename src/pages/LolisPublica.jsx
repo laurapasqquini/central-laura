@@ -659,6 +659,12 @@ function Tarefa({ t, feito, marca, onMarcar }) {
             </span>
           </span>
         )}
+        {/* veio do WhatsApp da Laura: lembrar de responder o atleta por lá */}
+        {t.retorno && !feito && (
+          <span className="mt-2 block rounded-lg bg-amber-100 px-3 py-2 text-sm font-bold text-amber-900 ring-1 ring-amber-300">
+            📲 Fez a tarefa? Não esquece de dar o retorno pro atleta no WhatsApp da Laura!
+          </span>
+        )}
         {/* imagens que a Laura anexou: clica e abre grande */}
         {t.anexos?.length > 0 && (
           <span className="mt-2 flex flex-wrap gap-2">

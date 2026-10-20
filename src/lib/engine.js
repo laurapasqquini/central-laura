@@ -78,6 +78,7 @@ const fromTask = (t, projects, state) => ({
   hub: !!t.hub,
   hubPath: t.hubPath,
   anexos: t.anexos?.length ? t.anexos : undefined,
+  doWhats: !!t.entradaId, // veio do WhatsApp da Laura (botão da extensão)
   ...cobrancaPix(t),
 });
 
@@ -847,9 +848,9 @@ export function dadosPaginaLolis(state, ref = today()) {
     const tarefas = buildDay(state, d, f)
       .filter((x) => x.kind !== 'marco')
       .sort((a, b) => ordem(a) - ordem(b))
-      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title), detalhe: detalheTarefa(x), mensagem: x.kind === 'task' ? x.mensagem || '' : '', telefone: x.telefone || '' }));
+      .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title), detalhe: detalheTarefa(x), mensagem: x.kind === 'task' ? x.mensagem || '' : '', telefone: x.telefone || '', retorno: !!x.doWhats }));
     // atrasadas: tarefas e o que vem do calendário das etapas (melhores da rodada etc.); rotina comum não acumula
-    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task' || x.freq === 'calendario').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x), mensagem: x.mensagem || '', telefone: x.telefone || '' })) : [];
+    const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task' || x.freq === 'calendario').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x), mensagem: x.mensagem || '', telefone: x.telefone || '', retorno: !!x.doWhats })) : [];
     const brindes = brindesDoDia(state, d).map(({ key, tipo, linha, texto, sorteio, prazo, telefone }) => ({ key, tipo, linha, texto, sorteio, prazo, telefone, canva: tipo === 'acao' ? canvaPara(state, linha) : null }));
     const posts = postsSorteio(state, d);
     // quarta: dia de conferir os 6x0 6x0
