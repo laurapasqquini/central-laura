@@ -637,7 +637,7 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
                       {tipo === 'fechado' && <ChipPos p={p} />}
                       <span className="shrink-0 text-xs font-semibold text-slate-600">{p.total == null && !p.contrato ? 'tabela' : brl(valoresPedido(p).total)}</span>
                     </button>
-                    {linha === p.id && tipo === 'fechado' && <PosVenda p={p} />}
+                    {linha === p.id && tipo === 'fechado' && (p.historico ? <DataVendaAntiga p={p} /> : <PosVenda p={p} />)}
                     {linha === p.id && (
                       <div className="mt-2 flex flex-wrap gap-2 pb-1">
                         {tipo === 'fechado' && !p.historico && (
@@ -796,6 +796,7 @@ function ComoFui({ pedidos, cfg }) {
 function lerVendasEmLote(texto, mesPadrao) {
   const ano = mesPadrao.slice(0, 4);
   let mes = mesPadrao;
+  let viuMes = false;
   const out = [];
   for (const bruta of texto.split('\n')) {
     const l = bruta.trim();
@@ -804,6 +805,9 @@ function lerVendasEmLote(texto, mesPadrao) {
     if (m) {
       const i = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'].indexOf(m[1]);
       mes = `${m[2] || ano}-${String(i + 1).padStart(2, '0')}`;
+      // mês escrito DEPOIS das vendas (sem nenhum mês antes): vale também para as linhas de cima
+      if (!viuMes) for (const x of out) x.data = `${mes}-01`;
+      viuMes = true;
       continue;
     }
     const v = l.match(/(?:R\$\s*)?(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:,\d{1,2})?|\d+\.\d{1,2})\s*$/);
@@ -947,5 +951,26 @@ function VendaAntiga() {
         </div>
       )}
     </section>
+  );
+}
+
+// Venda antiga: trocar o mês em que fechou (ex.: entrou no mês errado ao colar)
+function DataVendaAntiga({ p }) {
+  const { updatePedido } = useStore();
+  const data = dataFechamento(p) || p.createdAt;
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+      Venda registrada à mão · fechou em
+      <input
+        type="date"
+        value={data}
+        onChange={(e) => {
+          const d = e.target.value;
+          if (d) updatePedido(p.id, { createdAt: d, history: [{ stage: 'contrato', date: d }], pos: { pago1: d, entregue: d, pago2: d } });
+        }}
+        className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs"
+      />
+      <span className="text-slate-400">(mudando a data, ela vai para o mês certo)</span>
+    </div>
   );
 }
