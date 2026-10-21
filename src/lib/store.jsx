@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
-import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES } from './engine';
+import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES, chaveApoiador } from './engine';
 import { apagarAnexos, linksAnexos } from './anexos';
 import { INDICADORES_PADRAO } from './chefes';
 import { CALENDARIOS } from '../data/calendarios';
@@ -562,6 +562,11 @@ export function StoreProvider({ user, children }) {
             p = JSON.parse(r.texto);
           } catch {
             /* ignora */
+          }
+          // contatos da retirada de cada patrocinador (cadastro do Hub): { retiradas: [{ empresa, contato, telefone }] }
+          if (Array.isArray(p?.retiradas)) {
+            s = { ...s, retiradas: Object.fromEntries(p.retiradas.filter((x) => x.empresa).map((x) => [chaveApoiador(x.empresa), { contato: x.contato || '', telefone: x.telefone || '' }])) };
+            continue;
           }
           if (!p?.cidade || !p?.esporte || !p.dias) continue;
           s = { ...s, programacao: { ...(s.programacao || {}), [`${p.cidade}|${p.esporte}`]: { cidade: p.cidade, esporte: p.esporte, dias: p.dias, em: new Date(r.created_at).toLocaleDateString('sv-SE') } } };

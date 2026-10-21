@@ -4,6 +4,7 @@ import { today, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 import { gerarVoucher, modeloVoucher } from '../lib/voucher';
 import { gerarArte6x0, MODELOS_6X0 } from '../lib/arte6x0';
 import { pontoHoje, baterPonto, resumoDia, hora, duracao, JORNADA_MAX } from '../lib/ponto';
+import { quemFala } from '../lib/engine';
 import { EntregasLolis } from '../components/Entregas';
 
 // Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
@@ -509,8 +510,9 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
     ...(retirada.length ? [`📍 ${retirada.join(' · ')}`] : []),
     // retirada que depende de combinar com alguém (receber em casa, entrar em contato...): vai o contato do patrocinador
     ...p.patrocinadores
-      .filter((x) => x.contato?.trim() && x.telefone && (x.contatoAtleta ?? /bonna|olaia/i.test(x.nome)))
-      .map((x) => `📞 Entre em contato com ${nomeProprio(x.contato)} (${x.nome}) ${x.instrucao || (/olaia/i.test(x.nome) ? 'para fazer o pedido da sua marmita' : 'para combinar a retirada')}: ${x.telefone}${linkWhats(x.telefone, '') ? ` · ${linkWhats(x.telefone, '').replace('?text=', '')}` : ''}`),
+      .map((x) => ({ ...x, cr: (x.contatoRetirada ?? x.contato ?? '').trim(), tr: x.telefoneRetirada || x.telefone }))
+      .filter((x) => x.cr && x.tr && (x.contatoAtleta ?? /bonna|olaia/i.test(x.nome)))
+      .map((x) => `📞 Entre em contato com ${quemFala(x.cr, x.nome)}${quemFala(x.cr, x.nome).startsWith('a ') ? '' : ` (${x.nome})`} ${x.instrucao || (/olaia/i.test(x.nome) ? 'para fazer o pedido da sua marmita' : 'para combinar a retirada')}: ${x.tr}${linkWhats(x.tr, '') ? ` · ${linkWhats(x.tr, '').replace('?text=', '')}` : ''}`),
     `⏱ Você tem 7 dias para solicitar: até ${prazo}.`,
     // passo a passo do apoiador (ex.: como usar o voucher da Lívia Madi)
     ...p.patrocinadores.filter((x) => x.textoGanhador).flatMap((x) => ['', x.textoGanhador]),

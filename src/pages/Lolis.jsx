@@ -379,7 +379,7 @@ function ContatosApoiadores() {
     for (const d of Object.values(p.dias || {}))
       for (const x of d.patrocinadores || []) {
         const k = chaveApoiador(x.nome);
-        if (k && !porNome[k]) porNome[k] = { nome: x.nome, contato: x.contato || '', telefone: x.telefone || '' };
+        if (k && !porNome[k]) porNome[k] = { nome: x.nome, contato: state.retiradas?.[k]?.contato || x.contato || '', telefone: state.retiradas?.[k]?.telefone || x.telefone || '' }; // o da retirada (Hub)
       }
   const lista = Object.entries(porNome).sort((a, b) => a[1].nome.localeCompare(b[1].nome));
   if (!lista.length) return null;

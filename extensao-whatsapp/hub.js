@@ -525,6 +525,16 @@ async function tentar() {
   if (Date.now() - ultimo6x0 > 3 * 60e3) {
     ultimo6x0 = Date.now();
     ler6x0().then((d) => d && mandar('seiszero', d, 'ultimo6x0', `✓ ${d.ganhadores.length} ganhadores do 6x0 na Central`), () => {});
+    // contato da retirada de cada patrocinador ("Prêmio do sorteio" no cadastro): o que vai para os atletas
+    fetch('/api/torneios/patrocinadores-info', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        const lista = (Array.isArray(j) ? j : j?.patrocinadores || Object.values(j || {}).find(Array.isArray) || [])
+          .map((x) => ({ empresa: x.empresa, contato: x.premio_contato_nome || '', telefone: x.premio_contato_whatsapp || '' }))
+          .filter((x) => x.empresa && (x.contato || x.telefone));
+        if (lista.length) setTimeout(() => mandar('programacao', { retiradas: lista }, 'ultimoRetiradas', `✓ Contatos de retirada dos apoiadores na Central`), 1500);
+      })
+      .catch(() => {});
   }
   if (location.pathname === '/atividades') {
     const n = lerAtividadesLaura();

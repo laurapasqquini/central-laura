@@ -451,9 +451,10 @@ export function comoRetirar(pats, cidade = '') {
     .map((x) => {
       const r = regraDe(x.nome, cidade);
       const nome = tituloBonito(x.nome);
-      const contato = (x.contato || '').trim().split(/\s+/)[0];
-      if (r.contatoAtleta && contato && x.telefone)
-        return `📞 ${nome}: fale com ${capitaliza(contato)} ${r.instrucao || 'para combinar a retirada'}: ${x.telefone} · ${whatsDe(x.telefone)}`;
+      // contato da RETIRADA (o que o Hub mostra em "Prêmio do sorteio"), não o do apoiador
+      const contato = (x.contatoRetirada || '').trim();
+      if (r.contatoAtleta && contato && x.telefoneRetirada)
+        return `📞 ${nome}: fale com ${quemFala(contato, x.nome)} ${r.instrucao || 'para combinar a retirada'}: ${x.telefoneRetirada} · ${whatsDe(x.telefoneRetirada)}`;
       const local = r.local || x.local;
       return local ? `📍 ${nome}: ${local}` : '';
     })
@@ -464,11 +465,24 @@ export function comoRetirar(pats, cidade = '') {
 // Programação do sorteio diário (do Hub), com o contato de cada apoiador trocado pelo que a Laura definiu
 // na central (Lolis › Delegado, link e frases › Contato dos apoiadores): vale para posts, brindes e 6x0
 export const chaveApoiador = (nome = '') => semAcento(nome).replace(/[^a-z0-9]+/g, ' ').trim();
+// "Bonna Pizza" (o contato é a própria loja) → "a Bonna Pizza"; "Ronaldo Silva" → "Ronaldo"
+export function quemFala(contato = '', empresa = '') {
+  const c = contato.trim();
+  const primeira = semAcento(c).split(/\s+/)[0];
+  if (primeira && semAcento(empresa).includes(primeira)) return `a ${tituloBonito(c)}`;
+  return capitaliza(c.split(/\s+/)[0]);
+}
+// Cada apoiador tem 2 contatos no Hub: o do apoiador (contato/telefone: mensagens PARA o apoiador) e o da
+// retirada do prêmio (contatoRetirada/telefoneRetirada: o que vai PARA os atletas). O da retirada vem do
+// cadastro do patrocinador no Hub (state.retiradas, lido pela extensão); a Laura ainda pode trocar na central.
 function programacoes(state) {
   const tr = state.contatosApoiadores || {};
+  const ret = state.retiradas || {};
   const troca = (x) => {
-    const o = tr[chaveApoiador(x.nome)];
-    return o && (o.telefone || o.contato) ? { ...x, telefone: o.telefone || x.telefone, contato: o.contato || x.contato } : x;
+    const k = chaveApoiador(x.nome);
+    const o = tr[k] || {};
+    const h = ret[k] || {};
+    return { ...x, contatoRetirada: o.contato || h.contato || x.contato || '', telefoneRetirada: o.telefone || h.telefone || x.telefone || '' };
   };
   return Object.values(state.programacao || {}).map((p) => ({ ...p, dias: Object.fromEntries(Object.entries(p.dias || {}).map(([d, v]) => [d, { ...v, patrocinadores: (v.patrocinadores || []).map(troca) }])) }));
 }
@@ -636,6 +650,8 @@ export function postsSorteio(state, date) {
         apelido: regraDe(x.nome).apelido || '',
         contato: x.contato || '',
         telefone: x.telefone || '',
+        contatoRetirada: x.contatoRetirada || '',
+        telefoneRetirada: x.telefoneRetirada || '',
         regra: regraPatrocinador(x.nome),
         avisar: avisarPatrocinador(x.nome),
         canva: canvaPara(state, x.nome),
@@ -861,7 +877,7 @@ const detalheTarefa = (x) => (x.kind === 'task' && x.notes ? x.notes.replace(/\n
 // Prêmios das artes de cada cidade; o contato da Bonna vem da Programação do Hub (sorteio diário).
 function contatoPatrocinador(state, re) {
   for (const p of programacoes(state))
-    for (const d of Object.values(p.dias || {})) for (const x of d.patrocinadores || []) if (re.test(x.nome) && x.telefone) return { nome: (x.contato || '').trim().split(/\s+/)[0], telefone: x.telefone };
+    for (const d of Object.values(p.dias || {})) for (const x of d.patrocinadores || []) if (re.test(x.nome) && x.telefoneRetirada) return { quem: quemFala(x.contatoRetirada, x.nome), telefone: x.telefoneRetirada };
   return null;
 }
 const mensagemPadrao6x0 = (c) =>
@@ -873,7 +889,7 @@ export function mensagens6x0(state) {
     {
       cidade: 'Maringá',
       premios: ['01 açaí', '01 pizza brotinho', '01 chopp'],
-      itens: [acai, `01 pizza brotinho (Bonna Pizza: ${bonna ? `fale com ${capitaliza(bonna.nome) || 'a Bonna'} no ${bonna.telefone}` : 'chame a Bonna Pizza'} para combinar a retirada)`, '01 chopp (é só retirar na Craft Sports Bar)'],
+      itens: [acai, `01 pizza brotinho (Bonna Pizza: ${bonna ? `fale com ${bonna.quem} no ${bonna.telefone}` : 'chame a Bonna Pizza'} para combinar a retirada)`, '01 chopp (é só retirar na Craft Sports Bar)'],
     },
     {
       cidade: 'Londrina',
