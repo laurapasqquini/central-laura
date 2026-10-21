@@ -405,6 +405,18 @@ async function rodarAuto6x0() {
 }
 if (AUTO_6X0) rodarAuto6x0();
 let ultimo6x0 = 0;
+// clicou no 📷 ou no 🎁 do 6x0 no Hub: relê e manda a lista nova para a Central logo em seguida
+document.addEventListener(
+  'click',
+  (e) => {
+    const b = e.target.closest?.('button');
+    if (b && /Postado no Instagram|Voucher do/i.test(b.getAttribute('title') || b.getAttribute('aria-label') || b.textContent || '')) {
+      ultimo6x0 = 0;
+      setTimeout(() => tentar(), 2500);
+    }
+  },
+  true,
+);
 
 // ── Atividades (lista da Laura): o que está em aberto com ela vira tarefa dela na Central ──
 // (de 2 em 2 horas a extensão abre esta tela numa aba em segundo plano; também lê quando a Laura abre)
@@ -508,9 +520,9 @@ if (AUTO_EQUIPE) rodarAutoEquipe();
 
 async function tentar() {
   if (enviando || AUTO || AUTO_EQUIPE || AUTO_LAURA || AUTO_TEL || AUTO_6X0) return;
-  // quarta à tarde: os 6x0 da semana vão para a Central ao abrir qualquer página do Hub (no máx. a cada 20 min)
-  const agora = new Date();
-  if (agora.getDay() === 3 && agora.getHours() >= 13 && Date.now() - ultimo6x0 > 20 * 60e3) {
+  // 6x0: a lista da Central acompanha o Hub. Relê ao usar qualquer página do Hub (no máx. a cada 3 min),
+  // em qualquer dia: quem ganhou o 📷 no Hub sai da lista sem esperar a próxima quarta
+  if (Date.now() - ultimo6x0 > 3 * 60e3) {
     ultimo6x0 = Date.now();
     ler6x0().then((d) => d && mandar('seiszero', d, 'ultimo6x0', `✓ ${d.ganhadores.length} ganhadores do 6x0 na Central`), () => {});
   }

@@ -668,6 +668,8 @@ export function StoreProvider({ user, children }) {
             // é porque o 📷 não foi marcado no Hub (a página da Lolis avisa)
             const limite = addDays(today(), -60);
             const vistos = Object.fromEntries(Object.entries(s.seisZeroVistos || {}).filter(([, dia]) => dia >= limite));
+            // só as leituras de quarta contam (é o dia da arte); a lista também atualiza nos outros dias
+            if (new Date(`${d.dia}T12:00`).getDay() === 3)
             for (const g of d.ganhadores) {
               const k = `${g.nome}|R${g.rodada}`;
               if (!vistos[k] || vistos[k] > d.dia) vistos[k] = d.dia;

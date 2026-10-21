@@ -891,7 +891,8 @@ export function mensagens6x0(state) {
       // já entrou na lista de uma quarta anterior: saiu na arte e o 📷 não foi marcado no Hub
       .map((g) => {
         const visto = (state.seisZeroVistos || {})[`${g.nome}|R${g.rodada}`];
-        return { ...g, key: `6x0:${g.nome}:R${g.rodada}`, jaSaiu: visto && sz.dia && visto < sz.dia ? visto : null };
+        const quarta = sz.dia ? addDays(sz.dia, -((weekday(sz.dia) + 4) % 7)) : null; // a quarta desta semana
+        return { ...g, key: `6x0:${g.nome}:R${g.rodada}`, jaSaiu: visto && quarta && visto < quarta ? visto : null };
       }),
     // texto que a Laura editou na central (Lolis › Delegado, link e frases › Mensagem do 6x0), ou o padrão
     mensagem: (state.mensagens6x0 || {})[c.cidade]?.trim() || mensagemPadrao6x0(c),
