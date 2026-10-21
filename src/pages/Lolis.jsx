@@ -7,6 +7,7 @@ import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../comp
 import LolisPublica from './LolisPublica';
 import PontoLolis from '../components/PontoLolis';
 import BancoLolis from '../components/BancoLolis';
+import { EntregasResumo } from '../components/Entregas';
 
 export default function Lolis() {
   const { state } = useStore();
@@ -69,6 +70,7 @@ export default function Lolis() {
       ) : (
         <>
       <AvisosLolis />
+      <EntregasResumo />
       <HojeComLolis />
       <FeitasRecentes />
       <LinkLolis />

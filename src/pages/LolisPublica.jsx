@@ -4,6 +4,7 @@ import { today, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 import { gerarVoucher, modeloVoucher } from '../lib/voucher';
 import { gerarArte6x0, MODELOS_6X0 } from '../lib/arte6x0';
 import { pontoHoje, baterPonto, resumoDia, hora, duracao, JORNADA_MAX } from '../lib/ponto';
+import { EntregasLolis } from '../components/Entregas';
 
 // Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
 // O que ela marca (feito / não consegui + nota) vai para a central da Laura.
@@ -335,6 +336,8 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
               ))}
             </Secao>
           )}
+
+          {dia.date === today() && <EntregasLolis token={token} />}
 
           <Secao titulo="Tarefas do dia">
             {itensSorteio.map((x) => (
