@@ -632,6 +632,7 @@ export function postsSorteio(state, date) {
         contatoAtleta: !!regraDe(x.nome).contatoAtleta,
         instrucao: regraDe(x.nome).instrucao || '',
         pedeVoucher: !!regraDe(x.nome).pedeVoucher,
+        textoGanhador: regraDe(x.nome).textoGanhador || '',
         apelido: regraDe(x.nome).apelido || '',
         contato: x.contato || '',
         telefone: x.telefone || '',
@@ -672,6 +673,21 @@ const REGRAS_PATROCINADOR = [
   { re: /olaia/i, regra: 'Avisar a Olaia Grill no privado quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para fazer o pedido da sua marmita' },
   { re: /burgo|jacar[eé]/i, regra: 'Fazer o voucher e mandar no privado do ganhador.' },
   // regra só de uma cidade vem antes da geral
+  // Lívia Madi Joias (quarta): o ganhador recebe o passo a passo do voucher (combinado com a Laura em 22/10)
+  {
+    re: /l[ií]via\s*madi/i,
+    textoGanhador: [
+      '🛍️ Veja como usar seu voucher:',
+      '',
+      '👉 Acesse www.liviamadijoias.com.br',
+      '👉 Escolha suas peças e finalize o pedido normalmente, sem efetuar o pagamento.',
+      '👉 Depois, chame o Hélio pelo WhatsApp: (43) 3037-0362.',
+      '',
+      'Ele fará a baixa manual do seu voucher e o envio será grátis! 📦✨',
+      '',
+      '💎 Se você se apaixonar pelas lindas peças e quiser levar mais de uma ou escolher uma de maior valor, aproveite! O Hélio verifica o valor do seu voucher e combina com você o pagamento somente da diferença. 💖',
+    ].join('\n'),
+  },
   { re: /cristal/i, cidade: /londrina/i, local: 'Retirada na R. Araguaia, 725 - Jardim Agari' },
   { re: /vamo|cristal|enara/i, local: 'Retirada no QG da RANKEN' },
 ];

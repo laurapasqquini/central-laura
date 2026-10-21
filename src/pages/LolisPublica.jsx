@@ -507,6 +507,8 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
       .filter((x) => x.contato?.trim() && x.telefone && (x.contatoAtleta ?? /bonna|olaia/i.test(x.nome)))
       .map((x) => `📞 Entre em contato com ${nomeProprio(x.contato)} (${x.nome}) ${x.instrucao || (/olaia/i.test(x.nome) ? 'para fazer o pedido da sua marmita' : 'para combinar a retirada')}: ${x.telefone}${linkWhats(x.telefone, '') ? ` · ${linkWhats(x.telefone, '').replace('?text=', '')}` : ''}`),
     `⏱ Você tem 7 dias para solicitar: até ${prazo}.`,
+    // passo a passo do apoiador (ex.: como usar o voucher da Lívia Madi)
+    ...p.patrocinadores.filter((x) => x.textoGanhador).flatMap((x) => ['', x.textoGanhador]),
     ...(voucher ? ['', 'Segue o seu voucher 👇'] : []),
     '',
     'Qualquer dúvida é só chamar aqui 💚',
