@@ -693,11 +693,19 @@ function blocoBrindes(itens) {
   ];
 }
 
+// Ordem do dia da Lolis (ela faz de cima para baixo): primeiro as rotinas, depois as tarefas na ordem
+// em que foram criadas; a tarefa que a Laura acabou de criar entra por último.
+// (state.tasks guarda a mais nova no começo: índice maior = mais antiga)
+function ordemLolis(state) {
+  const idx = new Map(state.tasks.map((t, i) => [t.id, i]));
+  const grupo = (x) => (x.kind === 'task' ? 3 : x.freq === 'daily' ? 2 : 1);
+  return (a, b) => grupo(a) - grupo(b) || (a.kind === 'task' && b.kind === 'task' ? (idx.get(b.id) ?? 0) - (idx.get(a.id) ?? 0) : 0);
+}
+
 // Lista completa do dia (a Lolis entra 13h30): pedidos avulsos primeiro, depois as rotinas
 function mensagemDiaLolis(state, date, late) {
   const f = { area: 'all', who: 'lolis' };
-  const ordem = (x) => (x.kind === 'task' ? 0 : x.freq === 'daily' ? 2 : 1);
-  const hoje = buildDay(state, date, f).filter((x) => x.kind !== 'marco' && !x.done).sort((a, b) => ordem(a) - ordem(b));
+  const hoje = buildDay(state, date, f).filter((x) => x.kind !== 'marco' && !x.done).sort(ordemLolis(state));
   const andamento = noDate(state, f);
   return [
     `Oi Lolis! Sua lista de hoje (${fmtCurto(date)}):`,
@@ -873,10 +881,9 @@ export function dadosPaginaLolis(state, ref = today()) {
   for (let d = ref, n = 0; n < 2 && dias.length < 2; d = addDays(d, 1)) {
     if (!isWorkday(state, d)) continue;
     n++;
-    const ordem = (x) => (x.kind === 'task' ? 0 : x.freq === 'daily' ? 2 : 1);
     const tarefas = buildDay(state, d, f)
       .filter((x) => x.kind !== 'marco')
-      .sort((a, b) => ordem(a) - ordem(b))
+      .sort(ordemLolis(state))
       .map((x) => ({ key: x.key, titulo: x.title, rotina: x.kind === 'routine', feito: !!x.done, canva: canvaPara(state, x.title), detalhe: detalheTarefa(x), mensagem: x.kind === 'task' ? x.mensagem || '' : '', telefone: x.telefone || '', retorno: !!x.doWhats }));
     // atrasadas: tarefas e o que vem do calendário das etapas (melhores da rodada etc.); rotina comum não acumula
     const atrasadas = d === ref ? buildOverdue(state, f, d).filter((x) => x.kind === 'task' || x.freq === 'calendario').map((x) => ({ key: x.key, titulo: x.title, era: x.date, detalhe: detalheTarefa(x), mensagem: x.mensagem || '', telefone: x.telefone || '', retorno: !!x.doWhats })) : [];
