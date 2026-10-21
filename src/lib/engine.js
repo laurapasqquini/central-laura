@@ -886,7 +886,11 @@ export function mensagens6x0(state) {
     lidoEm: sz.dia || null,
     ganhadores: sz.ganhadores
       .filter((g) => g.cidade === c.cidade)
-      .map((g) => ({ ...g, key: `6x0:${g.nome}:R${g.rodada}` })),
+      // já entrou na lista de uma quarta anterior: saiu na arte e o 📷 não foi marcado no Hub
+      .map((g) => {
+        const visto = (state.seisZeroVistos || {})[`${g.nome}|R${g.rodada}`];
+        return { ...g, key: `6x0:${g.nome}:R${g.rodada}`, jaSaiu: visto && sz.dia && visto < sz.dia ? visto : null };
+      }),
     mensagem: ['Que partida! 🎾', 'Você ganhou com um *6x0 6x0* impecável, domínio total do início ao fim! 🔥', '', '*Seu prêmio:*', ...c.itens.map((x) => `• ${x}`), '', 'Segue esse ritmo na próxima rodada. Bora! 💚', '_Prazo de 7 dias para retirada/consumo._'].join('\n'),
   }));
 }

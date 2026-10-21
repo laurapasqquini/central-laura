@@ -663,7 +663,17 @@ export function StoreProvider({ user, children }) {
             /* ignora */
           }
           // a extensão já manda só quem ainda não saiu na arte (sem o 📷 no Hub)
-          if (Array.isArray(d?.ganhadores)) s = { ...s, seisZero: { dia: d.dia, ganhadores: d.ganhadores } };
+          if (Array.isArray(d?.ganhadores)) {
+            // lembra em que dia cada 6x0 entrou na lista da arte: se voltar numa quarta seguinte,
+            // é porque o 📷 não foi marcado no Hub (a página da Lolis avisa)
+            const limite = addDays(today(), -60);
+            const vistos = Object.fromEntries(Object.entries(s.seisZeroVistos || {}).filter(([, dia]) => dia >= limite));
+            for (const g of d.ganhadores) {
+              const k = `${g.nome}|R${g.rodada}`;
+              if (!vistos[k] || vistos[k] > d.dia) vistos[k] = d.dia;
+            }
+            s = { ...s, seisZero: { dia: d.dia, ganhadores: d.ganhadores }, seisZeroVistos: vistos };
+          }
         }
         // telefones das cobranças Pix (achados em Cadastros do Hub): { "Nome da atleta": "5544999999999" }
         for (const r of rows.filter((x) => x.conta === 'telefones')) {

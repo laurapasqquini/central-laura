@@ -382,12 +382,17 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
                           <span className="min-w-0 flex-1 text-sm text-slate-800">
                             <b>{g.nome}</b> <span className="text-slate-500">(R{g.rodada}) · classe {g.classe}{g.lancado ? ` · lançado ${g.lancado}` : ''}</span>
                             {g.brinde && <span className="ml-1 rounded-full bg-slate-100 px-1.5 text-[11px] font-bold text-slate-500">🎁 brinde já marcado no Hub</span>}
+                            {g.jaSaiu && (
+                              <span className="mt-1 block rounded-lg bg-red-50 px-2 py-1 text-xs font-bold text-red-700">
+                                ⚠️ Já saiu na arte de {fmtCurto(g.jaSaiu)}: não vai de novo na arte. Marque o 📷 no Hub (Torneios › 6x0 6x0).
+                              </span>
+                            )}
                           </span>
                           <BotaoWhats tel={g.telefone} />
                         </div>
                       ))}
-                      <BotaoArte6x0 cidade={c.cidade} nomes={c.ganhadores.map((g) => `${g.nome} (R${g.rodada})`)} />
-                      <Texto rotulo="Nomes para a arte do Instagram" texto={c.ganhadores.map((g) => `${g.nome} (R${g.rodada})`).join('\n')} />
+                      <BotaoArte6x0 cidade={c.cidade} nomes={c.ganhadores.filter((g) => !g.jaSaiu).map((g) => `${g.nome} (R${g.rodada})`)} />
+                      <Texto rotulo="Nomes para a arte do Instagram" texto={c.ganhadores.filter((g) => !g.jaSaiu).map((g) => `${g.nome} (R${g.rodada})`).join('\n')} />
                     </div>
                   ) : (
                     <p className="text-xs text-slate-400">{c.lidoEm ? 'Nenhum ganhador pendente nesta cidade.' : 'Aguardando a leitura do Hub.'}</p>
