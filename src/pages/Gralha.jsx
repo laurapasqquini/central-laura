@@ -791,6 +791,92 @@ function ComoFui({ pedidos, cfg }) {
 }
 
 // Registrar vendas fechadas antes da central (só para o histórico e a comissão do mês em que fechou)
+// Várias vendas antigas coladas de uma vez. Uma por linha ("Cliente - 4.740,00");
+// uma linha só com o nome do mês ("Setembro") vale para as linhas de baixo. Entram no dia 1º do mês.
+function lerVendasEmLote(texto, mesPadrao) {
+  const ano = mesPadrao.slice(0, 4);
+  let mes = mesPadrao;
+  const out = [];
+  for (const bruta of texto.split('\n')) {
+    const l = bruta.trim();
+    if (!l || /^total\b/i.test(semAcento(l))) continue; // linhas de total são só conferência
+    const m = semAcento(l).match(/^(janeiro|fevereiro|marco|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro)\b\s*(?:de\s*)?(\d{4})?\s*:?$/);
+    if (m) {
+      const i = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'].indexOf(m[1]);
+      mes = `${m[2] || ano}-${String(i + 1).padStart(2, '0')}`;
+      continue;
+    }
+    const v = l.match(/(?:R\$\s*)?(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d+(?:,\d{1,2})?|\d+\.\d{1,2})\s*$/);
+    const cliente = v ? l.slice(0, v.index).replace(/[\s\-–—:·|=]+$/, '').trim() : '';
+    out.push({ linha: l, cliente, total: v ? valorDigitado(v[1]) : 0, data: `${mes}-01` });
+  }
+  return out;
+}
+function VendasEmLote() {
+  const { addVendaAntiga } = useStore();
+  const [aberto, setAberto] = useState(false);
+  const [texto, setTexto] = useState('');
+  const [mes, setMes] = useState(today().slice(0, 7));
+  const [feito, setFeito] = useState(0);
+  const lidas = texto.trim() ? lerVendasEmLote(texto, mes) : [];
+  const boas = lidas.filter((x) => x.cliente && x.total > 0);
+  if (!aberto)
+    return (
+      <button onClick={() => setAberto(true)} className="text-xs font-semibold text-sky-600">
+        📋 Colar várias vendas de uma vez
+      </button>
+    );
+  return (
+    <div className="space-y-2 rounded-xl bg-sky-50/60 p-3 ring-1 ring-sky-100">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-sky-700">Colar várias de uma vez</span>
+        <label className="flex items-center gap-1.5 text-xs text-slate-500">
+          mês (se o texto não disser)
+          <input type="month" value={mes} onChange={(e) => e.target.value && setMes(e.target.value)} className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs" />
+        </label>
+      </div>
+      <textarea
+        rows={6}
+        className={inputCls}
+        placeholder={'Uma venda por linha, com o valor no fim. O nome do mês numa linha vale para as de baixo:\n\nSetembro\nNSA - 4.740,00\nODONTO UEM 2.300\nOutubro\nSHARK - 1.361,68'}
+        value={texto}
+        onChange={(e) => {
+          setTexto(e.target.value);
+          setFeito(0);
+        }}
+      />
+      {lidas.length > 0 && (
+        <div className="max-h-56 space-y-0.5 overflow-y-auto rounded-lg bg-white p-2 text-xs">
+          {lidas.map((x, i) => (
+            <div key={i} className={`flex gap-2 ${x.cliente && x.total ? 'text-slate-700' : 'text-red-500'}`}>
+              <span className="w-16 shrink-0 text-slate-400">{nomeMes(x.data.slice(0, 7)).replace(/ \d{4}$/, '').slice(0, 3)}/{x.data.slice(2, 4)}</span>
+              <span className="min-w-0 flex-1 truncate">{x.cliente || x.linha}</span>
+              <span className="shrink-0 font-semibold">{x.total ? brl(x.total) : 'sem valor: não entra'}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          disabled={!boas.length}
+          onClick={() => {
+            boas.forEach((x) => addVendaAntiga({ cliente: x.cliente, data: x.data, total: x.total, cidade: '' }));
+            setFeito(boas.length);
+            setTexto('');
+          }}
+          className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-40"
+        >
+          Registrar {boas.length || ''} {boas.length === 1 ? 'venda' : 'vendas'}
+        </button>
+        {feito > 0 && <span className="text-xs font-semibold text-emerald-600">✓ {feito} {feito === 1 ? 'venda registrada' : 'vendas registradas'}</span>}
+        <button onClick={() => setAberto(false)} className="ml-auto text-xs font-semibold text-slate-400">
+          fechar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // '3.565,00', '3565' ou '3565.5' → número
 const valorDigitado = (v) => {
   const t = String(v || '').trim();
@@ -845,6 +931,7 @@ function VendaAntiga() {
           Registrar venda
         </button>
       </div>
+      <VendasEmLote />
       {cidades.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           <span className="text-slate-400">Cidades já usadas:</span>
