@@ -155,7 +155,9 @@ function Novo({ cat, onSaved, pedido }) {
                   {g.results.map((p) => (
                     <button
                       key={p.id}
-                      onClick={() => !added.has(p.id) && add(p)}
+                      // clicou de novo num já escolhido: tira do orçamento
+                      onClick={() => (added.has(p.id) ? setItens((xs) => xs.filter((x) => x.prodId !== p.id)) : add(p))}
+                      title={added.has(p.id) ? 'Clique para tirar do orçamento' : 'Clique para adicionar'}
                       className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2 text-left ${added.has(p.id) ? 'bg-sky-50' : 'hover:bg-sky-50'}`}
                     >
                       <div className="min-w-0">
