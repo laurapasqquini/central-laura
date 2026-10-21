@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
 import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes, cidadesConhecidas, cidadeDe } from '../lib/gralha';
 import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa } from '../lib/gralha';
-import { fmtCurto, relativo, today } from '../lib/dates';
+import { fmtCurto, relativo, today, addDays } from '../lib/dates';
 import { inputCls, inputBase, Empty, Pill, Segmented } from '../components/ui';
 import Contrato from './Contrato';
 import ListaDoDia from '../components/ListaDoDia';
@@ -387,6 +387,17 @@ function Pedidos({ onContrato, onEditar }) {
               )}
             </div>
           </div>
+          <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2 text-xs text-sky-100">
+            Meta do mês R$
+            <input
+              inputMode="decimal"
+              placeholder="0"
+              value={cfg.meta || ''}
+              onChange={(e) => setGralhaCfg({ meta: e.target.value.replace(',', '.').replace(/[^\d.]/g, '') })}
+              className="w-20 rounded-lg bg-white/20 px-2 py-1 text-center text-sm font-bold text-white outline-none placeholder:text-white/60"
+            />
+          </div>
           <div className="flex items-center gap-2 text-xs text-sky-100">
             <input
               inputMode="decimal"
@@ -400,7 +411,18 @@ function Pedidos({ onContrato, onEditar }) {
               <option value="produtos" className="text-slate-800">só os produtos</option>
             </select>
           </div>
+          </div>
         </div>
+        {Number(cfg.meta) > 0 && (
+          <div className="space-y-1">
+            <div className="h-2.5 overflow-hidden rounded-full bg-white/25">
+              <div className="h-full rounded-full bg-white transition-all" style={{ width: `${Math.min(100, (comissaoMes / Number(cfg.meta)) * 100)}%` }} />
+            </div>
+            <div className="text-xs text-sky-100">
+              {comissaoMes >= Number(cfg.meta) ? '🎉 Meta do mês batida!' : `${Math.round((comissaoMes / Number(cfg.meta)) * 100)}% da meta · faltam ${brl(Number(cfg.meta) - comissaoMes)}`}
+            </div>
+          </div>
+        )}
       </section>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -457,7 +479,13 @@ function Pedidos({ onContrato, onEditar }) {
         </>
       )}
 
-      {aba === 'fechados' && <ListaPorMes pedidos={fechados.filter(bate)} cfg={cfg} tipo="fechado" onContrato={onContrato} onEditar={onEditar} />}
+      {aba === 'fechados' && (
+        <>
+          <ComoFui pedidos={pedidos} cfg={cfg} />
+          <VendaAntiga />
+          <ListaPorMes pedidos={fechados.filter(bate)} cfg={cfg} tipo="fechado" onContrato={onContrato} onEditar={onEditar} />
+        </>
+      )}
       {aba === 'perdidos' && <ListaPorMes pedidos={perdidos.filter(bate)} cfg={cfg} tipo="perdido" onContrato={onContrato} onEditar={onEditar} />}
       {aba === 'ativacoes' && (resumoAtivacoes(pedidos).length ? <Ativacoes pedidos={pedidos} /> : <Empty>Nenhuma ativação ainda. Preencha o campo de ativação no orçamento.</Empty>)}
     </div>
@@ -469,6 +497,7 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
   const { moveStage, deletePedido, updatePedido } = useStore();
   const [aberto, setAberto] = useState(false);
   const [perdendo, setPerdendo] = useState(false);
+  const [follow, setFollow] = useState(false);
   const since = p.history?.at(-1)?.date || p.createdAt;
   const idx = STAGES.findIndex((x) => x.id === p.stage);
   const next = STAGES[idx + 1];
@@ -513,10 +542,16 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
         <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
           ✏️ Editar orçamento
         </button>
+        {FOLLOW[p.stage] && (
+          <button onClick={() => setFollow(!follow)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+            💬 Follow-up
+          </button>
+        )}
         <button onClick={() => setPerdendo(!perdendo)} className="rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-400 ring-1 ring-slate-200">
           Perdido
         </button>
       </div>
+      {follow && FOLLOW[p.stage] && <TextoCopiar texto={FOLLOW[p.stage](p)} />}
       {perdendo && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl bg-slate-50 p-2 text-xs">
           <span className="font-semibold text-slate-500">Por que perdeu?</span>
@@ -591,18 +626,22 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
                         {p.cidade && <span className="font-normal text-slate-400"> · {p.cidade}</span>}
                         {tipo === 'perdido' && p.motivoPerda && <span className="font-normal text-slate-400"> · {p.motivoPerda}</span>}
                       </span>
+                      {tipo === 'fechado' && <ChipPos p={p} />}
                       <span className="shrink-0 text-xs font-semibold text-slate-600">{p.total == null && !p.contrato ? 'tabela' : brl(valoresPedido(p).total)}</span>
                     </button>
+                    {linha === p.id && tipo === 'fechado' && <PosVenda p={p} />}
                     {linha === p.id && (
                       <div className="mt-2 flex flex-wrap gap-2 pb-1">
-                        {tipo === 'fechado' && (
+                        {tipo === 'fechado' && !p.historico && (
                           <button onClick={() => onContrato(p.id)} className="rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
                             📄 Ver contrato
                           </button>
                         )}
-                        <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
-                          ✏️ Ver orçamento
-                        </button>
+                        {!p.historico && (
+                          <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
+                            ✏️ Ver orçamento
+                          </button>
+                        )}
                         <button
                           onClick={() => moveStage(p.id, [...(p.history || [])].reverse().find((h) => h.stage !== p.stage)?.stage || 'enviado')}
                           className="rounded-xl px-3 py-1.5 text-xs font-semibold text-sky-600 ring-1 ring-sky-200"
@@ -622,5 +661,166 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
         );
       })}
     </div>
+  );
+}
+
+// Mensagens de follow-up prontas, por etapa (é só copiar e mandar no WhatsApp da Gralha)
+const FOLLOW = {
+  enviado: (p) => `Oii, tudo bem? 😊 Passando pra saber se vocês conseguiram ver o orçamento da ${p.cliente} que te mandei. Ficou alguma dúvida sobre os produtos, os prazos ou os valores? Se quiserem, consigo ajustar quantidades ou modelos!`,
+  arte: (p) => `Oii, tudo bem? Só pra te atualizar: a arte da ${p.cliente} já está com o nosso time de criação. Assim que ficar pronta eu te mando por aqui 💙`,
+  aprovacao: (p) => `Oii, tudo bem? Conseguiram dar uma olhada na arte da ${p.cliente}? Se estiver tudo certo, já sigo com o contrato pra garantir o prazo de produção 😊`,
+  fechado: (p) => `Oii! Vou te mandar o contrato da ${p.cliente} pra gente garantir o prazo de produção. Me confirma o nome completo e o CPF de quem vai assinar? 😊`,
+};
+
+function TextoCopiar({ texto }) {
+  const [ok, setOk] = useState(false);
+  return (
+    <div className="mt-2 space-y-2 rounded-xl bg-[#e7ffdb] p-3">
+      <p className="whitespace-pre-wrap text-sm text-slate-800">{texto}</p>
+      <button
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(texto);
+            setOk(true);
+            setTimeout(() => setOk(false), 1500);
+          } catch {
+            prompt('Copie a mensagem:', texto);
+          }
+        }}
+        className="rounded-lg bg-emerald-600 px-3 py-1 text-xs font-bold text-white"
+      >
+        {ok ? '✓ Copiado' : 'Copiar'}
+      </button>
+    </div>
+  );
+}
+
+// Depois do contrato: 1ª parcela → produção → entregue → 2ª parcela
+const previsaoDe = (p) => p.pos?.previsao || addDays(dataFechamento(p) || p.createdAt, 30);
+function ChipPos({ p }) {
+  const pos = p.pos || {};
+  const [txt, cor] = pos.pago2
+    ? ['✔ concluído', 'bg-emerald-50 text-emerald-700']
+    : pos.entregue
+      ? ['📦 falta a 2ª parcela', 'bg-amber-50 text-amber-800']
+      : pos.pago1
+        ? [`🏭 entrega até ${fmtCurto(previsaoDe(p)).replace(/^\w+, /, '')}`, 'bg-sky-50 text-sky-700']
+        : ['💸 falta a 1ª parcela', 'bg-red-50 text-red-700'];
+  return <span className={`hidden shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold sm:inline ${cor}`}>{txt}</span>;
+}
+function PosVenda({ p }) {
+  const { setPosVenda } = useStore();
+  const pos = p.pos || {};
+  const passo = (chave, rotulo) => (
+    <button
+      onClick={() => setPosVenda(p.id, { [chave]: pos[chave] ? null : today() })}
+      className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold ring-1 ${pos[chave] ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-white text-slate-600 ring-slate-200 hover:ring-slate-400'}`}
+    >
+      <span className={`grid h-4 w-4 place-items-center rounded-full text-[10px] text-white ${pos[chave] ? 'bg-emerald-500' : 'border-2 border-slate-300'}`}>{pos[chave] ? '✓' : ''}</span>
+      {rotulo}
+      {pos[chave] && <span className="font-normal text-emerald-600">{fmtCurto(pos[chave]).replace(/^\w+, /, '')}</span>}
+    </button>
+  );
+  return (
+    <div className="mt-2 space-y-2 rounded-xl bg-slate-50 p-3">
+      <div className="text-xs font-bold uppercase tracking-wide text-slate-500">Depois do contrato</div>
+      <div className="flex flex-wrap items-center gap-2">
+        {passo('pago1', '1ª parcela (50%) recebida')}
+        <label className="flex items-center gap-1.5 text-xs text-slate-600">
+          🏭 entrega prevista
+          <input type="date" value={previsaoDe(p)} onChange={(e) => e.target.value && setPosVenda(p.id, { previsao: e.target.value })} className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs" />
+        </label>
+        {passo('entregue', 'Enviado / entregue')}
+        {passo('pago2', '2ª parcela (50%) recebida')}
+      </div>
+      <p className="text-[11px] text-slate-400">Ao marcar "Enviado / entregue", a central cria a tarefa de cobrar os 50% restantes.</p>
+    </div>
+  );
+}
+
+// Como fui: vendas fechadas por mês nos últimos 12 meses (inclui as vendas antigas registradas)
+function ComoFui({ pedidos, cfg }) {
+  const meses = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - (11 - i));
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const dados = meses.map((m) => {
+    const ps = pedidos.filter((p) => p.stage !== 'perdido' && (dataFechamento(p) || '').startsWith(m));
+    return { m, n: ps.length, vendido: ps.reduce((s, p) => s + (valoresPedido(p).total || 0), 0), comissao: ps.reduce((s, p) => s + comissaoDe(p, cfg), 0) };
+  });
+  const max = Math.max(...dados.map((d) => d.vendido), 1);
+  const total = dados.reduce((s, d) => s + d.comissao, 0);
+  const comVenda = dados.filter((d) => d.n).length;
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">📈 Como fui · últimos 12 meses</h2>
+        <span className="text-xs text-slate-500">
+          comissão <b className="text-emerald-600">{brl(total)}</b>
+          {comVenda > 0 && <> · média de {brl(total / comVenda)} nos meses com venda</>}
+        </span>
+      </div>
+      <div className="flex h-32 items-end gap-1.5">
+        {dados.map((d) => (
+          <div key={d.m} className="flex min-w-0 flex-1 flex-col items-center gap-1" title={`${nomeMes(d.m)}: ${d.n} ${d.n === 1 ? 'venda' : 'vendas'} · ${brl(d.vendido)} · comissão ${brl(d.comissao)}`}>
+            <span className="text-[10px] font-bold text-slate-500">{d.n || ''}</span>
+            <div className={`w-full rounded-t-md ${d.m === today().slice(0, 7) ? 'bg-sky-500' : 'bg-sky-200'}`} style={{ height: `${Math.max(d.vendido ? 4 : 0, (d.vendido / max) * 96)}px` }} />
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-1.5 text-[10px] text-slate-400">
+        {dados.map((d) => (
+          <span key={d.m} className="min-w-0 flex-1 text-center">
+            {MESES_NOME[Number(d.m.slice(5)) - 1].slice(0, 3)}
+          </span>
+        ))}
+      </div>
+      <p className="text-xs text-slate-400">Altura da barra = valor vendido no mês; o número em cima = quantas vendas. Passe o mouse para ver a comissão.</p>
+    </section>
+  );
+}
+
+// Registrar vendas fechadas antes da central (só para o histórico e a comissão do mês em que fechou)
+// '3.565,00', '3565' ou '3565.5' → número
+const valorDigitado = (v) => {
+  const t = String(v || '').trim();
+  const milhar = t.includes(',') || /^\d{1,3}(\.\d{3})+$/.test(t); // "3.565" = três mil e quinhentos
+  return Number(milhar ? t.replace(/\./g, '').replace(',', '.') : t) || 0;
+};
+function VendaAntiga() {
+  const { addVendaAntiga } = useStore();
+  const [aberto, setAberto] = useState(false);
+  const [f, setF] = useState({ cliente: '', data: '', total: '', cidade: '' });
+  const ok = f.cliente.trim() && f.data && valorDigitado(f.total) > 0;
+  const salvar = () => {
+    if (!ok) return;
+    addVendaAntiga({ cliente: f.cliente.trim(), data: f.data, total: valorDigitado(f.total), cidade: f.cidade.trim() });
+    setF({ cliente: '', data: f.data, total: '', cidade: '' });
+  };
+  if (!aberto)
+    return (
+      <button onClick={() => setAberto(true)} className="text-sm font-semibold text-sky-600">
+        + Registrar uma venda dos meses anteriores
+      </button>
+    );
+  return (
+    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-sky-200">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-sky-700">Venda dos meses anteriores</h2>
+        <button onClick={() => setAberto(false)} className="text-xs font-semibold text-slate-400">fechar</button>
+      </div>
+      <p className="text-xs text-slate-500">Para ter a base de como você foi. Entra direto em Contratos fechados, já como concluída, no mês em que fechou.</p>
+      <div className="grid gap-2 sm:grid-cols-4">
+        <input className={`${inputCls} sm:col-span-2`} placeholder="Cliente (ex.: Medicina UEM 2026)" value={f.cliente} onChange={(e) => setF({ ...f, cliente: e.target.value })} />
+        <input type="date" className={inputCls} value={f.data} onChange={(e) => setF({ ...f, data: e.target.value })} aria-label="Data em que fechou" />
+        <input inputMode="decimal" className={inputCls} placeholder="Valor total R$" value={f.total} onChange={(e) => setF({ ...f, total: e.target.value })} />
+        <input className={`${inputCls} sm:col-span-2`} placeholder="Cidade (opcional)" value={f.cidade} onChange={(e) => setF({ ...f, cidade: e.target.value })} />
+        <button disabled={!ok} onClick={salvar} className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-40 sm:col-span-2">
+          Registrar venda
+        </button>
+      </div>
+    </section>
   );
 }

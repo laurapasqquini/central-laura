@@ -363,6 +363,22 @@ function stageTask(pedidoId, cliente, stage) {
   };
 }
 
+// Contrato fechado: tarefa de conferir a produção/envio (perto do fim do prazo de 20 a 30 dias)
+// e o lembrete de oferecer de novo para a turma do ano seguinte (~11 meses depois)
+const PRAZO_PRODUCAO = 30;
+function tarefasDoContrato(s, ped, data) {
+  const out = [];
+  if (!s.tasks.some((t) => t.pedidoPos === ped.id && /produção e envio/i.test(t.title)))
+    out.push({ id: uid(), title: `Conferir produção e envio: ${ped.cliente}`, area: 'gralha', who: 'laura', urgent: false, due: addDays(data, PRAZO_PRODUCAO - 3), done: false, createdAt: data, postponed: 0, notes: 'Prazo de produção de 20 a 30 dias. Ao enviar, marque "Entregue" no pedido (Gralha › Pedidos › Contratos fechados) para cobrar os 50% restantes.', pedidoPos: ped.id });
+  const de = recorrente(ped, data);
+  if (de && !s.tasks.some((t) => t.pedidoRecorrente === ped.id)) out.push(de);
+  return out;
+}
+function recorrente(ped, data) {
+  const [y, m] = data.split('-');
+  return { id: uid(), title: `Oferecer de novo: ${ped.cliente} (fechou em ${m}/${y}, turma do ano seguinte?)`, area: 'gralha', who: 'laura', urgent: false, due: addDays(data, 330), done: false, createdAt: data, postponed: 0, notes: 'Quem fechou no ano passado costuma ter a turma seguinte com a mesma necessidade. Procure o contato e mande um oi com o catálogo novo.', pedidoRecorrente: ped.id };
+}
+
 const Ctx = createContext(null);
 
 // Textos das notificações vão numa coluna à parte; se falhar, os dados continuam salvos.
@@ -829,18 +845,47 @@ export function StoreProvider({ user, children }) {
         setState((s) => {
           const ped = (s.pedidos || []).find((p) => p.id === id);
           const next = stageTask(id, ped.cliente, stage);
+          const extras = stage === 'contrato' ? tarefasDoContrato(s, ped, today()) : [];
           return {
             ...s,
             pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, stage, history: [...(p.history || []), { stage, date: today() }] } : p)),
             tasks: [
               ...(next ? [next] : []),
+              ...extras,
               ...s.tasks.map((t) => (t.pedidoId === id && !t.done ? { ...t, done: true, doneAt: today() } : t)),
             ],
           };
         }),
+      // depois do contrato: 1ª parcela, produção/entrega e 2ª parcela (cada passo fecha ou cria a tarefa certa)
+      setPosVenda: (id, patch) =>
+        setState((s) => {
+          const ped = (s.pedidos || []).find((p) => p.id === id);
+          if (!ped) return s;
+          const pos = { ...(ped.pos || {}), ...patch };
+          for (const k of Object.keys(pos)) if (pos[k] == null) delete pos[k];
+          let tasks = s.tasks;
+          const fechar = (fn) => (tasks = tasks.map((t) => (fn(t) && !t.done ? { ...t, done: true, doneAt: today() } : t)));
+          if (patch.pago1) fechar((t) => t.pedidoId === id && /pagamento dos 50%/i.test(t.title));
+          if (patch.entregue) {
+            fechar((t) => t.pedidoPos === id && /produção e envio/i.test(t.title));
+            if (!pos.pago2 && !tasks.some((t) => t.pedidoPos === id && /50% restantes/i.test(t.title)))
+              tasks = [{ id: uid(), title: `Cobrar os 50% restantes: ${ped.cliente}`, area: 'gralha', who: 'laura', urgent: true, due: today(), done: false, createdAt: today(), postponed: 0, notes: '', pedidoPos: id }, ...tasks];
+          }
+          if (patch.pago2) fechar((t) => t.pedidoPos === id && /50% restantes/i.test(t.title));
+          if (patch.previsao) tasks = tasks.map((t) => (t.pedidoPos === id && /produção e envio/i.test(t.title) && !t.done ? { ...t, due: addDays(patch.previsao, -3) } : t));
+          return { ...s, tasks, pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, pos } : p)) };
+        }),
+      // venda fechada antes da central existir: entra direto em "Contratos fechados", para o histórico e a comissão
+      addVendaAntiga: ({ cliente, data, total, cidade, ativacao }) =>
+        setState((s) => {
+          const id = uid();
+          const ped = { id, cliente, cidade: cidade || '', ativacao: ativacao || '', tipo: 'qtd', itens: [], frete: 0, total: Number(total) || 0, mensagem: '', historico: true, stage: 'contrato', createdAt: data, history: [{ stage: 'contrato', date: data }], pos: { pago1: data, entregue: data, pago2: data } };
+          const de = recorrente(ped, data);
+          return { ...s, pedidos: [ped, ...(s.pedidos || [])], tasks: de && de.due > today() ? [de, ...s.tasks] : s.tasks };
+        }),
       updatePedido: (id, patch) => setState((s) => ({ ...s, pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
       deletePedido: (id) =>
-        setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
+        setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => ![t.pedidoId, t.pedidoPos, t.pedidoRecorrente].includes(id) || t.done) })),
 
       // lista "Acabou? Puxa daqui" da Lolis
       setLolisAvisos: (avisos) => setState((s) => ({ ...s, lolisAvisos: avisos })),
