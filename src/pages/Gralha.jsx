@@ -330,9 +330,19 @@ function Ativacoes({ pedidos }) {
   );
 }
 
+// Pedidos: em andamento (cartões, por etapa), fechados e perdidos (lista compacta, por mês, com busca).
+// Assim a tela não cresce sem fim quando os contratos se acumulam.
+const EM_ANDAMENTO = ['enviado', 'arte', 'aprovacao', 'fechado'];
+const MOTIVOS_PERDA = ['Preço', 'Prazo de produção', 'Fechou com outro', 'Sumiu / não respondeu', 'Desistiu do pedido', 'Outro'];
+const MESES_NOME = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const nomeMes = (ym) => `${MESES_NOME[Number(ym.slice(5)) - 1]} ${ym.slice(0, 4)}`;
+const semAcento = (s = '') => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
 function Pedidos({ onContrato, onEditar }) {
-  const { state, moveStage, deletePedido, setGralhaCfg } = useStore();
-  const [open, setOpen] = useState(null);
+  const { state, setGralhaCfg } = useStore();
+  const [aba, setAba] = useState('andamento');
+  const [etapa, setEtapa] = useState('');
+  const [busca, setBusca] = useState('');
   const pedidos = state.pedidos || [];
   if (!pedidos.length) return <Empty>Nenhum pedido ainda. Faça um orçamento e clique em "Salvar e acompanhar".</Empty>;
 
@@ -341,20 +351,40 @@ function Pedidos({ onContrato, onEditar }) {
   const mes = today().slice(0, 7);
   const fechadosMes = pedidos.filter((p) => p.stage !== 'perdido' && (dataFechamento(p) || '').startsWith(mes));
   const comissaoMes = fechadosMes.reduce((s, p) => s + comissaoDe(p, cfg), 0);
+  const ano = today().slice(0, 4);
+  const comissaoAno = pedidos.filter((p) => p.stage !== 'perdido' && (dataFechamento(p) || '').startsWith(ano)).reduce((s, p) => s + comissaoDe(p, cfg), 0);
   const abertos = pedidos.filter((p) => ['enviado', 'arte', 'aprovacao'].includes(p.stage) && p.total != null);
   const possivel = abertos.reduce((s, p) => s + comissaoDe(p, cfg), 0);
-  const MESES = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
+  const andamento = pedidos.filter((p) => EM_ANDAMENTO.includes(p.stage));
+  const fechados = pedidos.filter((p) => p.stage === 'contrato');
+  const perdidos = pedidos.filter((p) => p.stage === 'perdido');
+  const q = semAcento(busca.trim());
+  const bate = (p) => !q || semAcento(`${p.cliente} ${p.cidade || ''} ${p.ativacao || ''}`).includes(q);
+
+  // taxa de fechamento: dos orçamentos que já tiveram desfecho, quantos fecharam
+  const ganhos = fechados.length + pedidos.filter((p) => p.stage === 'fechado').length;
+  const taxa = ganhos + perdidos.length ? Math.round((ganhos / (ganhos + perdidos.length)) * 100) : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <section className="space-y-3 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 p-4 text-white shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-sky-100">💰 Sua comissão em {MESES[Number(mes.slice(5)) - 1]}</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-sky-100">💰 Sua comissão em {MESES_NOME[Number(mes.slice(5)) - 1]}</div>
             <div className="text-3xl font-bold">{brl(comissaoMes)}</div>
             <div className="text-xs text-sky-100">
               {fechadosMes.length} {fechadosMes.length === 1 ? 'pedido fechado' : 'pedidos fechados'} no mês
               {possivel > 0 && ` · + ${brl(possivel)} se os ${abertos.length} em aberto fecharem`}
+            </div>
+            <div className="mt-1 text-xs text-sky-100">
+              No ano: <b className="text-white">{brl(comissaoAno)}</b>
+              {taxa != null && (
+                <>
+                  {' '}
+                  · fecha <b className="text-white">{taxa}%</b> dos orçamentos que tiveram resposta
+                </>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-sky-100">
@@ -372,80 +402,222 @@ function Pedidos({ onContrato, onEditar }) {
           </div>
         </div>
       </section>
-      <Ativacoes pedidos={pedidos} />
-      {STAGES.map((st) => {
-        const list = pedidos.filter((p) => p.stage === st.id);
-        if (!list.length) return null;
-        return (
-          <section key={st.id} className="space-y-2">
-            <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">
-              {st.label} <span className="text-slate-400">{list.length}</span>
-            </h2>
-            {list.map((p) => {
-              const since = p.history?.at(-1)?.date || p.createdAt;
-              const idx = STAGES.findIndex((x) => x.id === p.stage);
-              const next = STAGES[idx + 1];
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Segmented
+          value={aba}
+          onChange={(v) => {
+            setAba(v);
+            setEtapa('');
+          }}
+          options={[
+            ['andamento', `Em andamento (${andamento.length})`, 'bg-sky-500 text-white ring-transparent'],
+            ['fechados', `✅ Contratos fechados (${fechados.length})`, 'bg-emerald-600 text-white ring-transparent'],
+            ['perdidos', `Perdidos (${perdidos.length})`, 'bg-slate-500 text-white ring-transparent'],
+            ['ativacoes', '🎯 Ativações', 'bg-violet-600 text-white ring-transparent'],
+          ]}
+        />
+        {aba !== 'ativacoes' && <input className={`${inputBase} w-full sm:ml-auto sm:w-56`} placeholder="Buscar cliente, cidade…" value={busca} onChange={(e) => setBusca(e.target.value)} />}
+      </div>
+
+      {aba === 'andamento' && (
+        <>
+          {/* funil: quantos em cada etapa; clicar filtra */}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {STAGES.filter((st) => EM_ANDAMENTO.includes(st.id)).map((st) => {
+              const n = andamento.filter((p) => p.stage === st.id).length;
+              const ativo = etapa === st.id;
               return (
-                <div key={p.id} className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-                  <div className="flex items-start justify-between gap-3">
-                    <button onClick={() => setOpen(open === p.id ? null : p.id)} className="min-w-0 text-left">
-                      <div className="font-bold text-slate-800">
-                        {p.cliente}
-                        {parados[p.id] && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">⏳ parado há {parados[p.id]} dias</span>}
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {p.total == null && !p.contrato ? 'tabela de preços' : brl(valoresPedido(p).total)}
-                        {['fechado', 'contrato'].includes(p.stage) && <b className="text-emerald-600"> · comissão {brl(comissaoDe(p, cfg))}</b>} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}
-                        {p.cidade && ` · ${p.cidade}`}
-                        {p.ativacao && <b className="text-violet-600"> · 🎯 {p.ativacao}{valoresPedido(p).desconto > 0 && ` (−${brl(valoresPedido(p).desconto)})`}</b>} · nesta etapa desde {since === today() ? 'hoje' : relativo(since)}
-                      </div>
-                    </button>
-                    <span className="shrink-0 text-xs text-slate-400">{fmtCurto(p.createdAt)}</span>
-                  </div>
-                  {!['contrato', 'perdido'].includes(p.stage) && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {next && next.id !== 'perdido' && (
-                        <button onClick={() => moveStage(p.id, next.id)} className="rounded-xl bg-sky-500 px-3 py-1.5 text-xs font-bold text-white">
-                          → {next.label}
-                        </button>
-                      )}
-                      <button onClick={() => moveStage(p.id, 'perdido')} className="rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-400 ring-1 ring-slate-200">
-                        Perdido
-                      </button>
-                    </div>
-                  )}
-                  {['contrato', 'perdido'].includes(p.stage) && (
-                    <div className="mt-3">
-                      {/* volta para a etapa anterior (ex.: clicou em "Perdido" sem querer) */}
-                      <button
-                        onClick={() => moveStage(p.id, [...(p.history || [])].reverse().find((h) => h.stage !== p.stage)?.stage || 'enviado')}
-                        className="rounded-xl px-3 py-1.5 text-xs font-semibold text-sky-600 ring-1 ring-sky-200"
-                      >
-                        ↩ Reabrir
-                      </button>
-                    </div>
-                  )}
-                  {p.stage !== 'perdido' && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <button onClick={() => onContrato(p.id)} className="rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
-                        📄 {p.contrato ? 'Continuar contrato' : 'Contrato'}
-                      </button>
-                      <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
-                        ✏️ Editar orçamento
-                      </button>
-                    </div>
-                  )}
-                  {open === p.id && (
-                    <div className="mt-3 space-y-2">
-                      <pre className="whitespace-pre-wrap rounded-xl bg-slate-50 p-3 font-sans text-xs text-slate-700">{p.mensagem}</pre>
-                      <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}?`) && deletePedido(p.id)} className="text-xs font-semibold text-red-500">
-                        Excluir pedido
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <button
+                  key={st.id}
+                  onClick={() => setEtapa(ativo ? '' : st.id)}
+                  className={`rounded-xl px-3 py-2 text-left ring-1 transition ${ativo ? 'bg-sky-500 text-white ring-sky-500' : 'bg-white text-slate-700 ring-slate-200 hover:ring-sky-300'}`}
+                >
+                  <div className="text-xl font-bold">{n}</div>
+                  <div className={`text-xs font-semibold ${ativo ? 'text-sky-100' : 'text-slate-500'}`}>{st.id === 'fechado' ? 'Fechado (falta contrato)' : st.label}</div>
+                </button>
               );
             })}
+          </div>
+          {STAGES.filter((st) => EM_ANDAMENTO.includes(st.id) && (!etapa || etapa === st.id)).map((st) => {
+            const list = andamento.filter((p) => p.stage === st.id && bate(p));
+            if (!list.length) return null;
+            return (
+              <section key={st.id} className="space-y-2">
+                <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">
+                  {st.id === 'fechado' ? 'Fechado (falta contrato)' : st.label} <span className="text-slate-400">{list.length}</span>
+                </h2>
+                {list.map((p) => (
+                  <CartaoPedido key={p.id} p={p} cfg={cfg} parado={parados[p.id]} onContrato={onContrato} onEditar={onEditar} />
+                ))}
+              </section>
+            );
+          })}
+          {!andamento.some(bate) && <Empty>{q ? 'Nenhum pedido em andamento com essa busca.' : 'Nenhum pedido em andamento.'}</Empty>}
+        </>
+      )}
+
+      {aba === 'fechados' && <ListaPorMes pedidos={fechados.filter(bate)} cfg={cfg} tipo="fechado" onContrato={onContrato} onEditar={onEditar} />}
+      {aba === 'perdidos' && <ListaPorMes pedidos={perdidos.filter(bate)} cfg={cfg} tipo="perdido" onContrato={onContrato} onEditar={onEditar} />}
+      {aba === 'ativacoes' && (resumoAtivacoes(pedidos).length ? <Ativacoes pedidos={pedidos} /> : <Empty>Nenhuma ativação ainda. Preencha o campo de ativação no orçamento.</Empty>)}
+    </div>
+  );
+}
+
+// Cartão de um pedido em andamento: avançar etapa, perdido (com motivo), contrato e editar
+function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
+  const { moveStage, deletePedido, updatePedido } = useStore();
+  const [aberto, setAberto] = useState(false);
+  const [perdendo, setPerdendo] = useState(false);
+  const since = p.history?.at(-1)?.date || p.createdAt;
+  const idx = STAGES.findIndex((x) => x.id === p.stage);
+  const next = STAGES[idx + 1];
+  const perder = (motivo) => {
+    updatePedido(p.id, { motivoPerda: motivo });
+    moveStage(p.id, 'perdido');
+    setPerdendo(false);
+  };
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="flex items-start justify-between gap-3">
+        <button onClick={() => setAberto(!aberto)} className="min-w-0 text-left">
+          <div className="font-bold text-slate-800">
+            {p.cliente}
+            {parado && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">⏳ parado há {parado} dias</span>}
+          </div>
+          <div className="text-xs text-slate-500">
+            {p.total == null && !p.contrato ? 'tabela de preços' : brl(valoresPedido(p).total)}
+            {p.stage === 'fechado' && <b className="text-emerald-600"> · comissão {brl(comissaoDe(p, cfg))}</b>} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}
+            {p.cidade && ` · ${p.cidade}`}
+            {p.ativacao && (
+              <b className="text-violet-600">
+                {' '}
+                · 🎯 {p.ativacao}
+                {valoresPedido(p).desconto > 0 && ` (−${brl(valoresPedido(p).desconto)})`}
+              </b>
+            )}{' '}
+            · nesta etapa desde {since === today() ? 'hoje' : relativo(since)}
+          </div>
+        </button>
+        <span className="shrink-0 text-xs text-slate-400">{fmtCurto(p.createdAt)}</span>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {next && next.id !== 'perdido' && (
+          <button onClick={() => moveStage(p.id, next.id)} className="rounded-xl bg-sky-500 px-3 py-1.5 text-xs font-bold text-white">
+            → {next.id === 'contrato' ? 'Contrato enviado (fechado ✅)' : next.label}
+          </button>
+        )}
+        <button onClick={() => onContrato(p.id)} className="rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
+          📄 {p.contrato ? 'Continuar contrato' : 'Contrato'}
+        </button>
+        <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
+          ✏️ Editar orçamento
+        </button>
+        <button onClick={() => setPerdendo(!perdendo)} className="rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-400 ring-1 ring-slate-200">
+          Perdido
+        </button>
+      </div>
+      {perdendo && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 rounded-xl bg-slate-50 p-2 text-xs">
+          <span className="font-semibold text-slate-500">Por que perdeu?</span>
+          {MOTIVOS_PERDA.map((m) => (
+            <button key={m} onClick={() => perder(m)} className="rounded-full bg-white px-2.5 py-1 font-semibold text-slate-600 ring-1 ring-slate-200 hover:ring-slate-400">
+              {m}
+            </button>
+          ))}
+        </div>
+      )}
+      {aberto && (
+        <div className="mt-3 space-y-2">
+          <pre className="whitespace-pre-wrap rounded-xl bg-slate-50 p-3 font-sans text-xs text-slate-700">{p.mensagem}</pre>
+          <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}?`) && deletePedido(p.id)} className="text-xs font-semibold text-red-500">
+            Excluir pedido
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Fechados e perdidos: uma linha por pedido, agrupados por mês (o mês atual aberto, os outros recolhidos)
+function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
+  const { moveStage, deletePedido } = useStore();
+  const mesAtual = today().slice(0, 7);
+  const [abertos, setAbertos] = useState({ [mesAtual]: true });
+  const [linha, setLinha] = useState(null);
+  if (!pedidos.length) return <Empty>{tipo === 'fechado' ? 'Nenhum contrato fechado ainda.' : 'Nenhum pedido perdido.'}</Empty>;
+  const dataDe = (p) => (tipo === 'fechado' ? dataFechamento(p) : [...(p.history || [])].reverse().find((h) => h.stage === 'perdido')?.date) || p.createdAt;
+  const porMes = {};
+  for (const p of pedidos) (porMes[dataDe(p).slice(0, 7)] ||= []).push(p);
+  const meses = Object.keys(porMes).sort().reverse();
+  // motivos de perda: o que mais faz perder
+  const contagem = {};
+  if (tipo === 'perdido') for (const p of pedidos) contagem[p.motivoPerda || 'Sem motivo'] = (contagem[p.motivoPerda || 'Sem motivo'] || 0) + 1;
+  const motivos = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+  return (
+    <div className="space-y-3">
+      {motivos.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 text-xs">
+          {motivos.map(([m, n]) => (
+            <span key={m} className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">
+              {m}: {n}
+            </span>
+          ))}
+        </div>
+      )}
+      {meses.map((m) => {
+        const lista = porMes[m].sort((a, b) => dataDe(b).localeCompare(dataDe(a)));
+        const total = lista.reduce((s, p) => s + (valoresPedido(p).total || 0), 0);
+        const com = lista.reduce((s, p) => s + comissaoDe(p, cfg), 0);
+        const ab = !!abertos[m];
+        return (
+          <section key={m} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <button onClick={() => setAbertos((x) => ({ ...x, [m]: !ab }))} className="flex w-full items-center gap-3 px-4 py-3 text-left">
+              <span className="flex-1 text-sm font-bold capitalize text-slate-800">{nomeMes(m)}</span>
+              <span className="text-xs text-slate-500">
+                {lista.length} {lista.length === 1 ? 'pedido' : 'pedidos'} · {brl(total)}
+                {tipo === 'fechado' && <b className="text-emerald-600"> · comissão {brl(com)}</b>}
+              </span>
+              <span className="text-xs text-slate-400">{ab ? '▲' : '▼'}</span>
+            </button>
+            {ab && (
+              <div className="divide-y divide-slate-100 border-t border-slate-100">
+                {lista.map((p) => (
+                  <div key={p.id} className="px-4 py-2">
+                    <button onClick={() => setLinha(linha === p.id ? null : p.id)} className="flex w-full items-center gap-3 text-left text-sm">
+                      <span className="w-12 shrink-0 text-xs text-slate-400">{fmtCurto(dataDe(p)).replace(/^\w+, /, '')}</span>
+                      <span className="min-w-0 flex-1 truncate font-semibold text-slate-800">
+                        {p.cliente}
+                        {p.cidade && <span className="font-normal text-slate-400"> · {p.cidade}</span>}
+                        {tipo === 'perdido' && p.motivoPerda && <span className="font-normal text-slate-400"> · {p.motivoPerda}</span>}
+                      </span>
+                      <span className="shrink-0 text-xs font-semibold text-slate-600">{p.total == null && !p.contrato ? 'tabela' : brl(valoresPedido(p).total)}</span>
+                    </button>
+                    {linha === p.id && (
+                      <div className="mt-2 flex flex-wrap gap-2 pb-1">
+                        {tipo === 'fechado' && (
+                          <button onClick={() => onContrato(p.id)} className="rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
+                            📄 Ver contrato
+                          </button>
+                        )}
+                        <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
+                          ✏️ Ver orçamento
+                        </button>
+                        <button
+                          onClick={() => moveStage(p.id, [...(p.history || [])].reverse().find((h) => h.stage !== p.stage)?.stage || 'enviado')}
+                          className="rounded-xl px-3 py-1.5 text-xs font-semibold text-sky-600 ring-1 ring-sky-200"
+                        >
+                          ↩ Reabrir
+                        </button>
+                        <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}?`) && deletePedido(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-semibold text-red-500">
+                          Excluir
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         );
       })}

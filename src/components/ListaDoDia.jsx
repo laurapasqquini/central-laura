@@ -70,13 +70,16 @@ export default function ListaDoDia({ area }) {
             <div className="h-2 overflow-hidden rounded-full bg-slate-100">
               <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-sky-500 to-violet-500 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Segmented
-                value={filter.who}
-                onChange={(who) => setFilter((f) => ({ ...f, who }))}
-                options={[['all', 'Todos'], ['laura', 'Só eu'], ['lolis', '🙋 Lolis', 'bg-amber-500 text-white ring-transparent']]}
-              />
-            </div>
+            {/* a Gralha é só da Laura: sem filtro de Lolis */}
+            {area !== 'gralha' && (
+              <div className="flex flex-wrap items-center gap-2">
+                <Segmented
+                  value={filter.who}
+                  onChange={(who) => setFilter((f) => ({ ...f, who }))}
+                  options={[['all', 'Todos'], ['laura', 'Só eu'], ['lolis', '🙋 Lolis', 'bg-amber-500 text-white ring-transparent']]}
+                />
+              </div>
+            )}
           </div>
 
           {marcos.length > 0 && (

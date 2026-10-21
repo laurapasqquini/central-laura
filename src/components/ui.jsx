@@ -315,7 +315,7 @@ export function TaskModal({ id, onClose }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = () => {
-    updateTask(id, { title: form.title, area: form.area, who: form.who, due: form.due || null, urgent: form.urgent, hub: !!form.hub, notes: form.notes });
+    updateTask(id, { title: form.title, area: form.area, who: form.area === 'gralha' ? 'laura' : form.who, due: form.due || null, urgent: form.urgent, hub: !!form.hub, notes: form.notes });
     onClose();
   };
 
@@ -332,9 +332,12 @@ export function TaskModal({ id, onClose }) {
           <Field label="Quando">
             <input type="date" className={inputCls} value={form.due || ''} onChange={(e) => set('due')(e.target.value)} />
           </Field>
-          <Field label="Quem faz">
-            <Segmented value={form.who} onChange={set('who')} options={[['laura', 'Eu'], ['lolis', '🙋 Lolis', 'bg-amber-500 text-white ring-transparent']]} />
-          </Field>
+          {/* Gralha é só da Laura: não delega para a Lolis */}
+          {form.area !== 'gralha' && (
+            <Field label="Quem faz">
+              <Segmented value={form.who} onChange={set('who')} options={[['laura', 'Eu'], ['lolis', '🙋 Lolis', 'bg-amber-500 text-white ring-transparent']]} />
+            </Field>
+          )}
         </div>
         <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <input type="checkbox" checked={!!form.urgent} onChange={(e) => set('urgent')(e.target.checked)} className="h-4 w-4 accent-red-500" /> Urgente
