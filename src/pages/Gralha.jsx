@@ -798,7 +798,18 @@ const valorDigitado = (v) => {
   return Number(milhar ? t.replace(/\./g, '').replace(',', '.') : t) || 0;
 };
 function VendaAntiga() {
-  const { addVendaAntiga } = useStore();
+  const { state, addVendaAntiga } = useStore();
+  // cidades já usadas (orçamentos e vendas), das mais frequentes para as menos
+  const cidades = useMemo(() => {
+    const cont = {};
+    for (const p of state.pedidos || []) {
+      const c = (p.cidade || '').trim();
+      if (!c) continue;
+      const k = c.toLowerCase();
+      cont[k] = { nome: cont[k]?.nome || c, n: (cont[k]?.n || 0) + 1 };
+    }
+    return Object.values(cont).sort((a, b) => b.n - a.n || a.nome.localeCompare(b.nome)).map((x) => x.nome);
+  }, [state.pedidos]);
   const [aberto, setAberto] = useState(false);
   const [f, setF] = useState({ cliente: '', data: '', total: '', cidade: '' });
   const ok = f.cliente.trim() && f.data && valorDigitado(f.total) > 0;
@@ -824,11 +835,30 @@ function VendaAntiga() {
         <input className={`${inputCls} sm:col-span-2`} placeholder="Cliente (ex.: Medicina UEM 2026)" value={f.cliente} onChange={(e) => setF({ ...f, cliente: e.target.value })} />
         <input type="date" className={inputCls} value={f.data} onChange={(e) => setF({ ...f, data: e.target.value })} aria-label="Data em que fechou" />
         <input inputMode="decimal" className={inputCls} placeholder="Valor total R$" value={f.total} onChange={(e) => setF({ ...f, total: e.target.value })} />
-        <input className={`${inputCls} sm:col-span-2`} placeholder="Cidade (opcional)" value={f.cidade} onChange={(e) => setF({ ...f, cidade: e.target.value })} />
+        <input className={`${inputCls} sm:col-span-2`} list="cidades-venda-antiga" placeholder="Cidade (opcional)" value={f.cidade} onChange={(e) => setF({ ...f, cidade: e.target.value })} />
+        <datalist id="cidades-venda-antiga">
+          {cidades.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
         <button disabled={!ok} onClick={salvar} className="rounded-xl bg-sky-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-40 sm:col-span-2">
           Registrar venda
         </button>
       </div>
+      {cidades.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          <span className="text-slate-400">Cidades já usadas:</span>
+          {cidades.slice(0, 10).map((c) => (
+            <button
+              key={c}
+              onClick={() => setF({ ...f, cidade: c })}
+              className={`rounded-full px-2.5 py-1 font-semibold ring-1 ${f.cidade === c ? 'bg-sky-500 text-white ring-sky-500' : 'bg-white text-slate-600 ring-slate-200 hover:ring-sky-300'}`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
