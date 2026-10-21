@@ -343,6 +343,7 @@ function Pedidos({ onContrato, onEditar }) {
   const [aba, setAba] = useState('andamento');
   const [etapa, setEtapa] = useState('');
   const [busca, setBusca] = useState('');
+  const [ajustes, setAjustes] = useState(false);
   const pedidos = state.pedidos || [];
   if (!pedidos.length) return <Empty>Nenhum pedido ainda. Faça um orçamento e clique em "Salvar e acompanhar".</Empty>;
 
@@ -387,30 +388,37 @@ function Pedidos({ onContrato, onEditar }) {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2 text-xs text-sky-100">
-            Meta do mês R$
-            <input
-              inputMode="decimal"
-              placeholder="0"
-              value={cfg.meta || ''}
-              onChange={(e) => setGralhaCfg({ meta: e.target.value.replace(',', '.').replace(/[^\d.]/g, '') })}
-              className="w-20 rounded-lg bg-white/20 px-2 py-1 text-center text-sm font-bold text-white outline-none placeholder:text-white/60"
-            />
-          </div>
-          <div className="flex items-center gap-2 text-xs text-sky-100">
-            <input
-              inputMode="decimal"
-              value={cfg.comissao}
-              onChange={(e) => setGralhaCfg({ comissao: e.target.value.replace(',', '.').replace(/[^\d.]/g, '') })}
-              className="w-12 rounded-lg bg-white/20 px-2 py-1 text-center text-sm font-bold text-white outline-none"
-            />
-            % sobre
-            <select value={cfg.base} onChange={(e) => setGralhaCfg({ base: e.target.value })} className="rounded-lg bg-white/20 px-2 py-1 text-sm font-semibold text-white outline-none">
-              <option value="total" className="text-slate-800">o total (com frete)</option>
-              <option value="produtos" className="text-slate-800">só os produtos</option>
-            </select>
-          </div>
+          {/* ajustes discretos: um botãozinho que abre % da comissão, base e meta */}
+          <div className="flex flex-col items-end gap-1.5 text-[11px] text-sky-100">
+            <button onClick={() => setAjustes(!ajustes)} className="rounded-full bg-white/15 px-2.5 py-0.5 font-semibold hover:bg-white/25">
+              ⚙️ {cfg.comissao}% {cfg.base === 'produtos' ? 'dos produtos' : 'do total'}
+              {Number(cfg.meta) > 0 ? ` · meta ${brl(Number(cfg.meta))}` : ' · definir meta'}
+            </button>
+            {ajustes && (
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
+                <input
+                  inputMode="decimal"
+                  aria-label="Porcentagem da comissão"
+                  value={cfg.comissao}
+                  onChange={(e) => setGralhaCfg({ comissao: e.target.value.replace(',', '.').replace(/[^\d.]/g, '') })}
+                  className="w-9 rounded-md bg-white/20 px-1 py-0.5 text-center text-xs font-bold text-white outline-none"
+                />
+                % sobre
+                <select value={cfg.base} onChange={(e) => setGralhaCfg({ base: e.target.value })} className="rounded-md bg-white/20 px-1 py-0.5 text-xs font-semibold text-white outline-none">
+                  <option value="total" className="text-slate-800">o total</option>
+                  <option value="produtos" className="text-slate-800">só produtos</option>
+                </select>
+                · meta R$
+                <input
+                  inputMode="decimal"
+                  aria-label="Meta de comissão do mês"
+                  placeholder="0"
+                  value={cfg.meta || ''}
+                  onChange={(e) => setGralhaCfg({ meta: e.target.value.replace(',', '.').replace(/[^\d.]/g, '') })}
+                  className="w-16 rounded-md bg-white/20 px-1 py-0.5 text-center text-xs font-bold text-white outline-none placeholder:text-white/60"
+                />
+              </div>
+            )}
           </div>
         </div>
         {Number(cfg.meta) > 0 && (
