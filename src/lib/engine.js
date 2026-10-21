@@ -864,6 +864,8 @@ function contatoPatrocinador(state, re) {
     for (const d of Object.values(p.dias || {})) for (const x of d.patrocinadores || []) if (re.test(x.nome) && x.telefone) return { nome: (x.contato || '').trim().split(/\s+/)[0], telefone: x.telefone };
   return null;
 }
+const mensagemPadrao6x0 = (c) =>
+  ['Que partida! 🎾', 'Você ganhou com um *6x0 6x0* impecável, domínio total do início ao fim! 🔥', '', '*Seu prêmio:*', ...c.itens.map((x) => `• ${x}`), '', 'Segue esse ritmo na próxima rodada. Bora! 💚', '_Prazo de 7 dias para retirada/consumo._'].join('\n');
 export function mensagens6x0(state) {
   const bonna = contatoPatrocinador(state, /bonna/i);
   const acai = '01 açaí de 500ml com 3 acompanhamentos (Gela Boca: peça pelo app ou pelo cardápio digital https://app.gelaboca.com.br/ · o cupom é o seu nome)';
@@ -891,7 +893,9 @@ export function mensagens6x0(state) {
         const visto = (state.seisZeroVistos || {})[`${g.nome}|R${g.rodada}`];
         return { ...g, key: `6x0:${g.nome}:R${g.rodada}`, jaSaiu: visto && sz.dia && visto < sz.dia ? visto : null };
       }),
-    mensagem: ['Que partida! 🎾', 'Você ganhou com um *6x0 6x0* impecável, domínio total do início ao fim! 🔥', '', '*Seu prêmio:*', ...c.itens.map((x) => `• ${x}`), '', 'Segue esse ritmo na próxima rodada. Bora! 💚', '_Prazo de 7 dias para retirada/consumo._'].join('\n'),
+    // texto que a Laura editou na central (Lolis › Delegado, link e frases › Mensagem do 6x0), ou o padrão
+    mensagem: (state.mensagens6x0 || {})[c.cidade]?.trim() || mensagemPadrao6x0(c),
+    padrao: mensagemPadrao6x0(c),
   }));
 }
 

@@ -907,6 +907,14 @@ export function StoreProvider({ user, children }) {
           else c[chave] = v;
           return { ...s, contatosApoiadores: c };
         }),
+      // mensagem do 6x0 por cidade (vazio = volta ao texto padrão)
+      setMensagem6x0: (cidade, texto) =>
+        setState((s) => {
+          const m = { ...(s.mensagens6x0 || {}) };
+          if (texto && texto.trim()) m[cidade] = texto;
+          else delete m[cidade];
+          return { ...s, mensagens6x0: m };
+        }),
       setLolisAvisos: (avisos) => setState((s) => ({ ...s, lolisAvisos: avisos })),
       setLolisBanco: (fn) => setState((s) => ({ ...s, lolisBanco: fn(s.lolisBanco || []) })),
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),

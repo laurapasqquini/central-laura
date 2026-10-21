@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, chaveApoiador } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, chaveApoiador, mensagens6x0 } from '../lib/engine';
 import { today, addDays, fmtCurto } from '../lib/dates';
 import { supabase } from '../lib/supabase';
 import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../components/ui';
@@ -76,6 +76,7 @@ export default function Lolis() {
       <LinkLolis />
       <FrasesSorteio />
       <ContatosApoiadores />
+      <Mensagem6x0 />
 
       {late.length > 0 && (
         <Section title="Atrasadas: cobrar retorno" count={late.length} tone="red">
@@ -405,6 +406,45 @@ function ContatosApoiadores() {
               <input className={inputCls} inputMode="tel" placeholder={x.telefone || 'telefone'} value={tr[k]?.telefone || ''} onChange={(e) => setContatoApoiador(k, { telefone: e.target.value })} />
             </div>
           ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Mensagem do 6x0 que a Lolis manda no privado do ganhador, uma por cidade (o prêmio muda)
+function Mensagem6x0() {
+  const { state, setMensagem6x0 } = useStore();
+  const [aberto, setAberto] = useState(false);
+  const cidades = mensagens6x0(state);
+  const editadas = cidades.filter((c) => (state.mensagens6x0 || {})[c.cidade]).length;
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">
+          🏆 Mensagem do 6x0 6x0 {editadas > 0 && <span className="normal-case text-slate-400">· {editadas} editada{editadas > 1 ? 's' : ''}</span>}
+        </h2>
+        <span className="text-xs font-semibold text-slate-500">{aberto ? 'fechar' : 'editar'}</span>
+      </button>
+      {aberto && (
+        <div className="space-y-4">
+          <p className="text-xs text-slate-500">O texto que vai no privado de quem fez 6x0 6x0. Como no WhatsApp: *asteriscos* deixam em negrito e _sublinhados_ em itálico. Salva sozinho.</p>
+          {cidades.map((c) => {
+            const editada = (state.mensagens6x0 || {})[c.cidade];
+            return (
+              <label key={c.cidade} className="block space-y-1">
+                <span className="flex items-center justify-between text-xs font-semibold text-slate-600">
+                  {c.cidade}
+                  {editada && (
+                    <button type="button" onClick={() => confirm('Voltar ao texto padrão?') && setMensagem6x0(c.cidade, '')} className="font-semibold text-slate-400 hover:text-red-500">
+                      voltar ao padrão
+                    </button>
+                  )}
+                </span>
+                <textarea rows={10} className={inputCls} value={editada ?? c.padrao} onChange={(e) => setMensagem6x0(c.cidade, e.target.value)} />
+              </label>
+            );
+          })}
         </div>
       )}
     </section>
