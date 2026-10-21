@@ -64,9 +64,12 @@ export function mensagemTabela({ cliente, cidade, itens, produtos, descontoTexto
     out.push(`${rotuloDesconto(ativacao)} ${ehPorcentagem(d) ? `${d} nos produtos` : `${brl(descontoValor(d, Infinity))} no pedido`}`);
   }
   // os 5% à vista não vão no orçamento: só se o cliente pedir desconto
-  out.push('*Pagamento:* 50% no fechamento do pedido e 50% no envio');
+  out.push('*Pagamento:* 50% no fechamento do pedido e 50% no envio', '', assinatura());
   return out.join('\n');
 }
+
+// rodapé de todo orçamento (em itálico no WhatsApp)
+const assinatura = (d = new Date()) => `_Orçamento enviado em ${d.toLocaleDateString('pt-BR')} pela vendedora Laura_`;
 
 export const detalhe = (p) => [p.tecido, p.tamanho, p.personalizacao].filter(Boolean).join(' · ');
 
@@ -111,7 +114,7 @@ export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, 
   out.push('');
   if (desconto > 0) out.push(`Produtos: ${brl(produtosTotal)}`, `${rotuloDesconto(ativacao)} −${brl(desconto)}${ehPorcentagem(descontoTexto) ? ` (${String(descontoTexto).trim()})` : ''}`);
   // os 5% à vista não vão no orçamento: só se o cliente pedir desconto (o valor fica na tela)
-  out.push(`*Total: ${brl(total)}*`, '', '*Pagamento:* 50% no fechamento do pedido e 50% no envio');
+  out.push(`*Total: ${brl(total)}*`, '', '*Pagamento:* 50% no fechamento do pedido e 50% no envio', '', assinatura());
   return out.join('\n');
 }
 
