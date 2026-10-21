@@ -461,10 +461,22 @@ export function comoRetirar(pats, cidade = '') {
     .join('\n');
 }
 
+// Programação do sorteio diário (do Hub), com o contato de cada apoiador trocado pelo que a Laura definiu
+// na central (Lolis › Delegado, link e frases › Contato dos apoiadores): vale para posts, brindes e 6x0
+export const chaveApoiador = (nome = '') => semAcento(nome).replace(/[^a-z0-9]+/g, ' ').trim();
+function programacoes(state) {
+  const tr = state.contatosApoiadores || {};
+  const troca = (x) => {
+    const o = tr[chaveApoiador(x.nome)];
+    return o && (o.telefone || o.contato) ? { ...x, telefone: o.telefone || x.telefone, contato: o.contato || x.contato } : x;
+  };
+  return Object.values(state.programacao || {}).map((p) => ({ ...p, dias: Object.fromEntries(Object.entries(p.dias || {}).map(([d, v]) => [d, { ...v, patrocinadores: (v.patrocinadores || []).map(troca) }])) }));
+}
+
 // Patrocinadores do sorteio em que a pessoa ganhou (Programação do Hub, pelo dia da semana, cidade e esporte)
 function programacaoDoGanhador(state, g) {
   const local = semAcento(g.local || '');
-  const p = Object.values(state.programacao || {}).find((x) => local.includes(semAcento(x.cidade)) && local.includes(semAcento(x.esporte).split(' ')[0]));
+  const p = programacoes(state).find((x) => local.includes(semAcento(x.cidade)) && local.includes(semAcento(x.esporte).split(' ')[0]));
   const pats = p?.dias?.[DIA_NOME[weekday(g.data)]]?.patrocinadores;
   // só confia se o patrocinador que aparece no Hub está no dia
   return pats?.length && pats.some((x) => semAcento(x.nome) === semAcento(g.patrocinador || '')) ? pats : null;
@@ -569,7 +581,7 @@ const fraseSorteio = (state, p, dia) => (state.frasesSorteio || {})[chaveFrase(p
 export function postsSorteio(state, date) {
   const dia = DIA_NOME[weekday(date)];
   const out = [];
-  for (const p of Object.values(state.programacao || {})) {
+  for (const p of programacoes(state)) {
     const d = p.dias?.[dia];
     if (!d || !d.patrocinadores?.length) continue;
     const pats = d.patrocinadores;
@@ -824,7 +836,7 @@ const detalheTarefa = (x) => (x.kind === 'task' && x.notes ? x.notes.replace(/\n
 // ── 6x0 6x0 (conferido às quartas): o que cada cidade ganha e a mensagem do privado ──
 // Prêmios das artes de cada cidade; o contato da Bonna vem da Programação do Hub (sorteio diário).
 function contatoPatrocinador(state, re) {
-  for (const p of Object.values(state.programacao || {}))
+  for (const p of programacoes(state))
     for (const d of Object.values(p.dias || {})) for (const x of d.patrocinadores || []) if (re.test(x.nome) && x.telefone) return { nome: (x.contato || '').trim().split(/\s+/)[0], telefone: x.telefone };
   return null;
 }

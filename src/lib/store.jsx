@@ -888,6 +888,15 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => ![t.pedidoId, t.pedidoPos, t.pedidoRecorrente].includes(id) || t.done) })),
 
       // lista "Acabou? Puxa daqui" da Lolis
+      // contato do apoiador que vai para os atletas (sobrepõe o que veio da Programação do Hub); vazio = usa o do Hub
+      setContatoApoiador: (chave, patch) =>
+        setState((s) => {
+          const c = { ...(s.contatosApoiadores || {}) };
+          const v = { ...(c[chave] || {}), ...patch };
+          if (!v.telefone && !v.contato) delete c[chave];
+          else c[chave] = v;
+          return { ...s, contatosApoiadores: c };
+        }),
       setLolisAvisos: (avisos) => setState((s) => ({ ...s, lolisAvisos: avisos })),
       setLolisBanco: (fn) => setState((s) => ({ ...s, lolisBanco: fn(s.lolisBanco || []) })),
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),

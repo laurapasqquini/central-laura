@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, chaveApoiador } from '../lib/engine';
 import { today, addDays, fmtCurto } from '../lib/dates';
 import { supabase } from '../lib/supabase';
 import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../components/ui';
@@ -73,6 +73,7 @@ export default function Lolis() {
       <FeitasRecentes />
       <LinkLolis />
       <FrasesSorteio />
+      <ContatosApoiadores />
 
       {late.length > 0 && (
         <Section title="Atrasadas: cobrar retorno" count={late.length} tone="red">
@@ -361,6 +362,49 @@ function AvisosLolis() {
           Adicionar
         </button>
       </div>
+    </section>
+  );
+}
+
+// Contato de cada apoiador que vai para os atletas (posts, brindes e 6x0). Vem da Programação do Hub;
+// quando o apoiador pede outro número, troque aqui (vale para tênis, beach e 6x0 de uma vez).
+function ContatosApoiadores() {
+  const { state, setContatoApoiador } = useStore();
+  const [aberto, setAberto] = useState(false);
+  const porNome = {};
+  for (const p of Object.values(state.programacao || {}))
+    for (const d of Object.values(p.dias || {}))
+      for (const x of d.patrocinadores || []) {
+        const k = chaveApoiador(x.nome);
+        if (k && !porNome[k]) porNome[k] = { nome: x.nome, contato: x.contato || '', telefone: x.telefone || '' };
+      }
+  const lista = Object.entries(porNome).sort((a, b) => a[1].nome.localeCompare(b[1].nome));
+  if (!lista.length) return null;
+  const tr = state.contatosApoiadores || {};
+  const trocados = lista.filter(([k]) => tr[k]).length;
+  return (
+    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">
+          📞 Contato dos apoiadores {trocados > 0 && <span className="normal-case text-slate-400">· {trocados} trocado{trocados > 1 ? 's' : ''}</span>}
+        </h2>
+        <span className="text-xs font-semibold text-slate-500">{aberto ? 'fechar' : 'editar'}</span>
+      </button>
+      {aberto && (
+        <div className="space-y-2">
+          <p className="text-xs text-slate-500">O contato que vai nas mensagens para os atletas (sorteio diário, brindes e 6x0). Em cinza, o que está no Hub; preencha só quando o apoiador pedir outro.</p>
+          {lista.map(([k, x]) => (
+            <div key={k} className="grid gap-2 rounded-xl bg-slate-50 p-2 sm:grid-cols-[minmax(0,1fr)_8rem_10rem] sm:items-center">
+              <div className="min-w-0 text-sm font-semibold text-slate-800">
+                {x.nome}
+                {tr[k] && <span className="ml-1 rounded-full bg-amber-100 px-1.5 text-[10px] font-bold text-amber-800">trocado</span>}
+              </div>
+              <input className={inputCls} placeholder={x.contato || 'nome do contato'} value={tr[k]?.contato || ''} onChange={(e) => setContatoApoiador(k, { contato: e.target.value })} />
+              <input className={inputCls} inputMode="tel" placeholder={x.telefone || 'telefone'} value={tr[k]?.telefone || ''} onChange={(e) => setContatoApoiador(k, { telefone: e.target.value })} />
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
