@@ -880,7 +880,7 @@ export function dadosPaginaLolis(state, ref = today()) {
     .filter((t) => t.who === 'lolis' && !t.done && t.due && !EXPANSAO.test(t.title) && dataEfetiva(state, t) > ultimo && dataEfetiva(state, t) <= addDays(ref, 30))
     .map((t) => ({ key: `t:${t.id}`, titulo: t.title, ate: dataEfetiva(state, t), detalhe: detalheTarefa({ kind: 'task', notes: t.notes }) }))
     .sort((a, b) => a.ate.localeCompare(b.ate));
-  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title), banco: bancoLolis(state), adiantar, expansao: expansaoLolis(state, ref) };
+  return { geradoEm: new Date().toISOString(), dias, andamento: noDate(state, f).map((x) => x.title), banco: bancoLolis(state), adiantar, expansao: expansaoLolis(state, ref), avisos: (state.lolisAvisos || []).filter((a) => a.trim()) };
 }
 
 // ── Expansão (tarefas do Hub "[Expansão Beach Tennis Cidade] ..."): uma de cada vez, na ordem do prazo,

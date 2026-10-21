@@ -17,8 +17,9 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 28,
+    version: 29,
     createdAt: hoje,
+    lolisAvisos: [AVISO_JOGOS],
     lolisBanco: bancoInicial(),
     tasks: seedTasks(hoje).map((t) => ({ done: false, createdAt: hoje, postponed: 0, notes: '', ...t })),
     routines: seedRoutines().map((r) => ({ ...r, createdAt: hoje })),
@@ -264,8 +265,13 @@ function migrate(s) {
     const t = { ...tarefa('Criar no backoffice as campanhas push de Cianorte (Etapas › Campanhas mostra o que e como criar)', '2026-10-19'), urgent: true };
     s = { ...s, version: 28, tasks: s.tasks.some((x) => /campanhas push de Cianorte/.test(x.title)) ? s.tasks : [t, ...s.tasks] };
   }
+  // v29: regras fixas no topo da página da Lolis (a Laura edita em Lolis › Delegado, link e frases)
+  if (s.version < 29) {
+    s = { ...s, version: 29, lolisAvisos: [...new Set([...(s.lolisAvisos || []), AVISO_JOGOS])] };
+  }
   return s;
 }
+const AVISO_JOGOS = 'SEMPRE que casar ou substituir um jogo, avise os atletas envolvidos.';
 
 // Sugestões para começar (a Laura edita em Lolis › Delegado, link e frases).
 function bancoInicial() {
@@ -837,6 +843,7 @@ export function StoreProvider({ user, children }) {
         setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => t.pedidoId !== id || t.done) })),
 
       // lista "Acabou? Puxa daqui" da Lolis
+      setLolisAvisos: (avisos) => setState((s) => ({ ...s, lolisAvisos: avisos })),
       setLolisBanco: (fn) => setState((s) => ({ ...s, lolisBanco: fn(s.lolisBanco || []) })),
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
       // Plano: iniciativas, radar descartado, metas do mês e números da semana

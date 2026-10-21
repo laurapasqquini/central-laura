@@ -72,6 +72,17 @@ export default function LolisPublica({ token, embutida }) {
           <CartaoPonto token={token} embutida={embutida} />
         </Protecao>
 
+        {(dados.avisos || []).length > 0 && (
+          <section className="space-y-1.5 rounded-2xl bg-red-50 px-4 py-3 ring-2 ring-red-200">
+            <div className="text-xs font-bold uppercase tracking-wide text-red-700">📌 Sempre lembrar</div>
+            {dados.avisos.map((a) => (
+              <p key={a} className="text-[15px] font-bold text-red-900">
+                {a}
+              </p>
+            ))}
+          </section>
+        )}
+
         {dias.length > 1 && (
           <div className="flex gap-1.5">
             {dias.map((d, i) => (

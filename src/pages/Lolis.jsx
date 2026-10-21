@@ -68,6 +68,7 @@ export default function Lolis() {
         )
       ) : (
         <>
+      <AvisosLolis />
       <HojeComLolis />
       <FeitasRecentes />
       <LinkLolis />
@@ -332,3 +333,34 @@ function FrasesSorteio() {
   );
 }
 
+
+// Regras fixas que aparecem sempre no topo da página da Lolis (ex.: avisar os atletas ao casar/substituir jogo)
+function AvisosLolis() {
+  const { state, setLolisAvisos } = useStore();
+  const [novo, setNovo] = useState('');
+  const avisos = state.lolisAvisos || [];
+  const add = () => {
+    if (!novo.trim()) return;
+    setLolisAvisos([...avisos, novo.trim()]);
+    setNovo('');
+  };
+  return (
+    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-red-700">📌 Sempre lembrar (topo da página dela)</h2>
+      {avisos.map((a, i) => (
+        <div key={i} className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-900">
+          <span className="min-w-0 flex-1">{a}</span>
+          <button onClick={() => confirm('Tirar este lembrete da página dela?') && setLolisAvisos(avisos.filter((_, j) => j !== i))} className="shrink-0 text-xs font-semibold text-red-400 hover:text-red-600">
+            tirar
+          </button>
+        </div>
+      ))}
+      <div className="flex gap-2">
+        <input className={inputCls} placeholder="Nova regra fixa (ex.: conferir o Hub antes de responder)" value={novo} onChange={(e) => setNovo(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} />
+        <button onClick={add} className="shrink-0 rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white">
+          Adicionar
+        </button>
+      </div>
+    </section>
+  );
+}
