@@ -101,7 +101,9 @@ const rotuloDesconto = (ativacao) => `*Desconto${ativacao ? ` · ${ativacao}` : 
 
 export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, descontoTexto, ativacao }) {
   const { linhas, produtosTotal, desconto, total } = totals(itens, produtos, frete, descontoTexto);
-  const prazos = [...new Set(linhas.map((l) => l.p.prazo).filter(Boolean))];
+  // com mais de um item, vale o prazo mais longo (dias úteis contam como 7/5 de corridos)
+  const diasMax = (t) => Math.max(...(t.match(/\d+/g) || [0]).map(Number)) * (/úteis/i.test(t) ? 7 / 5 : 1);
+  const prazos = linhas.map((l) => l.p.prazo).filter(Boolean).sort((a, b) => diasMax(b) - diasMax(a)).slice(0, 1);
   const out = ['*ORÇAMENTO GRALHA AZUL UNIFORMES*', ''];
   if (cliente) out.push(`Cliente: ${cliente}`, '');
   linhas.forEach((l, i) => {
