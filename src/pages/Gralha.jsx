@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
 import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes, cidadesConhecidas, cidadeDe } from '../lib/gralha';
-import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa } from '../lib/gralha';
+import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa, prazoUteis } from '../lib/gralha';
 import { fmtCurto, relativo, today, addDays } from '../lib/dates';
 import { inputCls, inputBase, Empty, Pill, Segmented } from '../components/ui';
 import Contrato from './Contrato';
@@ -184,7 +184,7 @@ function Novo({ cat, onSaved, pedido }) {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-bold text-slate-800">{l.p.nome}</div>
-                  <div className="text-xs text-slate-500">{detalhe(l.p)}{l.p.prazo && ` · prazo ${l.p.prazo}`}</div>
+                  <div className="text-xs text-slate-500">{detalhe(l.p)}{l.p.prazo && ` · prazo ${prazoUteis(l.p.prazo)}`}</div>
                 </div>
                 <button onClick={() => setItens((xs) => xs.filter((x) => x.key !== l.key))} className="text-xl leading-none text-slate-300 hover:text-red-500">×</button>
               </div>

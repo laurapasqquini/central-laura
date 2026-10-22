@@ -47,6 +47,9 @@ export function faixasLabel(prod) {
 }
 
 // Mensagem só com a tabela de preços (cliente ainda sem quantidade definida).
+// todo prazo de produção é em dias úteis, mesmo quando a planilha não diz
+export const prazoUteis = (t) => (t && !/úteis/i.test(t) ? `${String(t).trim()} úteis` : t);
+
 export function mensagemTabela({ cliente, cidade, itens, produtos, descontoTexto, ativacao }) {
   const out = ['*ORÇAMENTO GRALHA AZUL UNIFORMES*', ''];
   if (cliente) out.push(`Cliente: ${cliente}`, '');
@@ -55,7 +58,7 @@ export function mensagemTabela({ cliente, cidade, itens, produtos, descontoTexto
     out.push(`*${i + 1}) ${p.nome}*`);
     if (detalhe(p)) out.push(detalhe(p));
     faixasLabel(p).forEach((f) => out.push(`• ${f.label}: ${brl(f.preco)}`));
-    if (p.prazo) out.push(`Prazo: ${p.prazo}`);
+    if (p.prazo) out.push(`Prazo: ${prazoUteis(p.prazo)}`);
     out.push('');
   });
   out.push(`*Frete:* ${isMaringa(cidade) ? 'grátis para Maringá-PR' : 'a calcular conforme o endereço de entrega'}`);
@@ -101,9 +104,9 @@ const rotuloDesconto = (ativacao) => `*Desconto${ativacao ? ` · ${ativacao}` : 
 
 export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, descontoTexto, ativacao }) {
   const { linhas, produtosTotal, desconto, total } = totals(itens, produtos, frete, descontoTexto);
-  // com mais de um item, vale o prazo mais longo (dias úteis contam como 7/5 de corridos)
-  const diasMax = (t) => Math.max(...(t.match(/\d+/g) || [0]).map(Number)) * (/úteis/i.test(t) ? 7 / 5 : 1);
-  const prazos = linhas.map((l) => l.p.prazo).filter(Boolean).sort((a, b) => diasMax(b) - diasMax(a)).slice(0, 1);
+  // com mais de um item, vale o prazo mais longo
+  const diasMax = (t) => Math.max(...(t.match(/\d+/g) || [0]).map(Number));
+  const prazos = linhas.map((l) => prazoUteis(l.p.prazo)).filter(Boolean).sort((a, b) => diasMax(b) - diasMax(a)).slice(0, 1);
   const out = ['*ORÇAMENTO GRALHA AZUL UNIFORMES*', ''];
   if (cliente) out.push(`Cliente: ${cliente}`, '');
   linhas.forEach((l, i) => {
