@@ -599,7 +599,7 @@ export function postsSorteio(state, date) {
     const bruto = p.dias?.[dia];
     if (!bruto || !bruto.patrocinadores?.length) continue;
     // corrige erro de digitação que vem da programação do Hub
-    const d = { ...bruto, titulo: (bruto.titulo || '').replace(/tie[\s-]?brake/i, 'TIE BREAK') };
+    const d = { ...bruto, titulo: (bruto.titulo || '').replace(/tie[\s-]?brake/i, 'TIE-BREAK') };
     const pats = d.patrocinadores;
     const nomes = pats.map((x) => x.nome);
     const premios = pats.map((x) => `${comReais(x.premio)} (${tituloBonito(x.nome)})`).join(' + ');
