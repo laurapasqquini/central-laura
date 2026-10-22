@@ -504,7 +504,7 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
       ? `Oii ${x.apelido || (x.contato?.trim() ? nomeProprio(x.contato) : '')}, tudo bem? Segue o nome do ganhador de hoje: ${quem} 💚`
       : `Oii${x.contato?.trim() ? ` ${nomeProprio(x.contato)}` : ''}, tudo bem?\nPassando pra avisar que quem ganhou o sorteio diário do ranken de hoje foi ${quem}, que vai retirar ${x.premio}.\nValeuuu pela parceria 👊🏻`;
   const msgGanhador = [
-    `Oi, ${primeiro}! Parabéns, você foi sorteado(a) hoje no sorteio diário da RANKEN (${p.titulo})! 🎉`,
+    `Oiii ${primeiro}, tudo bem? Parabéns, você foi sorteado(a) hoje no sorteio diário do ranken 🎉`,
     '',
     `🎁 Seu prêmio: ${premios}`,
     ...(retirada.length ? [`📍 ${retirada.join(' · ')}`] : []),
