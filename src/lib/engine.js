@@ -596,8 +596,10 @@ export function postsSorteio(state, date) {
   const dia = DIA_NOME[weekday(date)];
   const out = [];
   for (const p of programacoes(state)) {
-    const d = p.dias?.[dia];
-    if (!d || !d.patrocinadores?.length) continue;
+    const bruto = p.dias?.[dia];
+    if (!bruto || !bruto.patrocinadores?.length) continue;
+    // corrige erro de digitação que vem da programação do Hub
+    const d = { ...bruto, titulo: (bruto.titulo || '').replace(/tie[\s-]?brake/i, 'TIE-BREAK') };
     const pats = d.patrocinadores;
     const nomes = pats.map((x) => x.nome);
     const premios = pats.map((x) => `${comReais(x.premio)} (${tituloBonito(x.nome)})`).join(' + ');
