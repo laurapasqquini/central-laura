@@ -422,20 +422,21 @@ document.addEventListener(
 // (de 2 em 2 horas a extensão abre esta tela numa aba em segundo plano; também lê quando a Laura abre)
 const AUTO_LAURA = new URLSearchParams(location.search).get('central') === 'laura';
 
-function lerAtividadesLaura() {
+// a tela de Atividades com as tarefas da Laura: a antiga ("O dia de Laura") ou a nova (filtro "Minhas" ligado)
+function mainDaLaura() {
   if (location.pathname !== '/atividades') return null;
   const main = document.querySelector('main');
   if (!main) return null;
-  // só com o filtro nas tarefas da Laura: tela antiga ("O dia de Laura") ou a nova (filtro "Minhas" ligado)
   const minhas = [...main.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Minhas' && /bg-marca-preto/.test(b.className));
-  if (!/O dia de Laura/.test(main.innerText) && !minhas && !/tarefas suas pra resolver/.test(main.innerText)) return null;
-  const hoje = new Date();
-  const iso = (d) => d.toLocaleDateString('sv-SE');
-  const abertas = [];
+  return /O dia de Laura/.test(main.innerText) || minhas || /tarefas suas pra resolver/.test(main.innerText) ? main : null;
+}
+
+// cartões em aberto (ATRASADAS, HOJE, SEM PRAZO…; as concluídas ficam de fora), com o título
+function cartoesAbertos(main) {
+  const out = [];
   for (const card of main.querySelectorAll('div[class*="border-l-[3px]"]')) {
-    // seção do cartão (ATRASADAS, HOJE, SEM PRAZO…): as concluídas ficam de fora
-    // (sobe pelos blocos até achar o título da seção; pula os que começam pelo próprio cartão,
-    // senão uma tarefa escrita em maiúsculas, como "CAMPEAS", parece título de seção)
+    // sobe pelos blocos até achar o título da seção; pula os que começam pelo próprio cartão,
+    // senão uma tarefa escrita em maiúsculas, como "CAMPEAS", parece título de seção
     const primeira = (card.innerText || '').split('\n')[0].trim();
     let sec = card;
     let cab = '';
@@ -450,7 +451,18 @@ function lerAtividadesLaura() {
     if (!cab || /^CONCLU/.test(cab)) continue;
     // o primeiro botão do cartão é o de concluir (vazio): o título é o botão com texto
     const titulo = [...card.querySelectorAll('button')].map((b) => b.textContent.trim()).find(Boolean);
-    if (!titulo) continue;
+    if (titulo) out.push({ card, titulo });
+  }
+  return out;
+}
+
+function lerAtividadesLaura() {
+  const main = mainDaLaura();
+  if (!main) return null;
+  const hoje = new Date();
+  const iso = (d) => d.toLocaleDateString('sv-SE');
+  const abertas = [];
+  for (const { card, titulo } of cartoesAbertos(main)) {
     const meta = card.innerText.split('\n').map((s) => s.trim()).filter(Boolean).slice(1);
     let prazo = null;
     const lim = meta.map((l) => l.match(/^Limite: (\d{2})\/(\d{2})\/(\d{4})/)).find(Boolean);
@@ -461,6 +473,59 @@ function lerAtividadesLaura() {
     abertas.push({ titulo, prazo, urgente: meta.some((l) => /URGENTE/.test(l)) });
   }
   return abertas.length ? { dia: iso(hoje), abertas } : null;
+}
+
+// O que a Laura deu como feito na Central e ainda está em aberto aqui: a extensão clica em "Concluir tarefa"
+// no cartão (só na lista dela e só em cartões em aberto). Se o Hub abrir alguma janela, para e não mexe em mais nada.
+let concluindo = false;
+let ultimoConcluir = 0;
+async function concluirNoHub() {
+  const main = mainDaLaura();
+  if (!main || concluindo) return 0;
+  concluindo = true;
+  try {
+    const resp = await new Promise((r) => chrome.runtime.sendMessage({ tipo: 'hub-concluir-lista' }, r));
+    const lista = resp?.ok ? resp.lista || [] : [];
+    if (!lista.length) return 0;
+    const bate = (titulo) =>
+      lista.some((h) => (h.titulo && h.titulo.trim() === titulo) || (h.pix && /^Cobrar (mensalidade|renova[cç][aã]o) Pix/i.test(titulo) && nomePix(titulo).toLowerCase() === h.pix.trim().toLowerCase()));
+    let feitos = 0;
+    for (const { card, titulo } of cartoesAbertos(main)) {
+      if (!bate(titulo)) continue;
+      const btn = card.querySelector('button[aria-label="Concluir tarefa"]');
+      if (!btn || btn.disabled) continue;
+      btn.click();
+      feitos++;
+      await new Promise((r) => setTimeout(r, 900));
+      if (document.querySelector('[role="dialog"]')) break;
+    }
+    if (feitos) aviso(`✓ ${feitos} ${feitos > 1 ? 'tarefas concluídas' : 'tarefa concluída'} no Hub (feitas na Central)`, 5000);
+    return feitos;
+  } finally {
+    concluindo = false;
+  }
+}
+
+// Pagamento Pix (Torneios): quem está "a cobrar" vai para a Central, que monta a cobrança do dia
+const dadosPix = () =>
+  fetch('/api/torneios/pix', { credentials: 'include' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) =>
+      Array.isArray(j?.itens)
+        ? {
+            hoje: j.hoje,
+            itens: j.itens
+              .filter((i) => i.situacao === 'a_cobrar')
+              .map((i) => ({ id: String(i.ranking_user_id || i.id), nome: (i.nome || '').trim(), telefone: i.telefone || '', esporte: i.esporte, vencimento: i.vencimento, valor: i.valor })),
+          }
+        : null,
+    )
+    .catch(() => null);
+let ultimoPix = 0;
+function lerPix() {
+  if (Date.now() - ultimoPix < 30 * 60e3) return;
+  ultimoPix = Date.now();
+  dadosPix().then((p) => p && mandar('pix', p, 'ultimoPix', `✓ ${p.itens.length} cobranças Pix na Central`));
 }
 
 // Descrição das tarefas da Laura: na lista dela o Hub abre "Editar tarefa"; lê a descrição e
@@ -496,8 +561,15 @@ async function comDescricaoLaura(n, buscar) {
 async function rodarAutoLaura() {
   for (let i = 0; i < 40; i++) {
     await new Promise((r) => setTimeout(r, 500));
-    const n = lerAtividadesLaura();
+    let n = lerAtividadesLaura();
     if (n) {
+      // primeiro conclui aqui o que já foi feito na Central, depois lê de novo o que sobrou em aberto
+      if (await concluirNoHub()) {
+        await new Promise((r) => setTimeout(r, 2000));
+        n = lerAtividadesLaura() || n;
+      }
+      const pix = await dadosPix();
+      if (pix) await new Promise((r) => chrome.runtime.sendMessage({ tipo: 'pix', dados: pix }, r));
       const completo = await comTelefonePix(await comDescricaoLaura(n, true));
       chrome.runtime.sendMessage({ tipo: 'hub-laura', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
@@ -539,9 +611,19 @@ async function tentar() {
       })
       .catch(() => {});
   }
+  lerPix();
   if (location.pathname === '/atividades') {
-    const n = lerAtividadesLaura();
-    if (n) comDescricaoLaura(n, false).then(comTelefonePix).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
+    if (!lerAtividadesLaura()) return;
+    enviando = true; // segura outras leituras enquanto conclui
+    const agora = Date.now() - ultimoConcluir > 45e3; // a tela muda o tempo todo: olha a Central no máx. a cada 45 s
+    if (agora) ultimoConcluir = Date.now();
+    (agora ? concluirNoHub() : Promise.resolve(0))
+      .then((f) => f && new Promise((r) => setTimeout(r, 2000)))
+      .finally(() => {
+        enviando = false;
+        const n = lerAtividadesLaura();
+        if (n) comDescricaoLaura(n, false).then(comTelefonePix).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
+      });
     return;
   }
   if (/^\/atividades\/equipe/.test(location.pathname)) {

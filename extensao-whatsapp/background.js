@@ -45,6 +45,14 @@ async function enviar(item, contaFixa) {
   if (!r.ok) throw new Error(`Não foi para a Central (${r.status})`);
 }
 
+// O que a Laura deu como feito na Central e ainda falta concluir no Hub (só lê o próprio estado dela: RLS)
+async function listaConcluir() {
+  const r = await fetch(`${URL}/rest/v1/central_state?select=c:data->hubConcluir`, { headers: { apikey: KEY, Authorization: `Bearer ${await token()}` } });
+  if (!r.ok) throw new Error(`Não leu a Central (${r.status})`);
+  const j = await r.json();
+  return { lista: Array.isArray(j[0]?.c) ? j[0].c : [] };
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, responder) => {
   // aba do Hub aberta em segundo plano para ler os ganhadores (e fechada logo depois)
   if (msg.tipo === 'abrir-aba') return void chrome.tabs.create({ url: msg.url, active: false });
@@ -60,6 +68,8 @@ chrome.runtime.onMessage.addListener((msg, sender, responder) => {
     : msg.tipo === 'seiszero' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · 6x0 6x0' }, 'seiszero')
     : msg.tipo === 'telefones' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Cadastros' }, 'telefones')
     : msg.tipo === 'hub-laura' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Atividades (Laura)' }, 'hub-laura')
+    : msg.tipo === 'pix' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Pagamento Pix' }, 'pix')
+    : msg.tipo === 'hub-concluir-lista' ? listaConcluir()
     : Promise.resolve();
   run.then((r) => responder({ ok: true, ...r }), (e) => responder({ ok: false, erro: e.message }));
   return true; // resposta assíncrona

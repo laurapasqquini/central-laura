@@ -100,6 +100,32 @@ function cobrancaPix(t) {
   };
 }
 
+// Cobranças Pix lidas do Hub (Torneios › Pagamento Pix): cada atleta "a cobrar" vira uma cobrança
+// por dia até pagar (quem pagou sai da lista do Hub e não volta no dia seguinte)
+const ESPORTE_PIX = { beach_tennis: 'Beach Tennis', tenis: 'Tênis', padel: 'Padel' };
+export const PIX_HUB = /^Cobrar (mensalidade|renova[cç][aã]o) Pix/i;
+export function cobrancasPixDoDia(state, date) {
+  const p = state.pixCobrar;
+  if (!p?.itens?.length || date !== today() || p.dia < addDays(date, -3)) return [];
+  return p.itens.map((i) => {
+    const [, mm, dd] = i.vencimento.split('-');
+    const title = `Cobrar mensalidade Pix — ${i.nome} (${ESPORTE_PIX[i.esporte] || i.esporte}) — ${i.vencimento < date ? 'venceu' : 'vence'} em ${dd}/${mm}`;
+    return {
+      key: `r:pix:${i.id}:${date}`,
+      kind: 'routine',
+      id: `pix:${i.id}`,
+      title,
+      area: 'ranken',
+      who: 'laura',
+      urgent: i.vencimento < date,
+      date,
+      done: !!state.routineDone[`pix:${i.id}:${date}`],
+      freq: 'pix',
+      ...cobrancaPix({ title, telefone: i.telefone }),
+    };
+  });
+}
+
 const fromRoutine = (r, date, routineDone) => ({
   key: `r:${r.id}:${date}`,
   kind: 'routine',
@@ -147,7 +173,7 @@ export function buildDay(state, date, filter) {
     const it = itemLolis(state, date);
     if (it) routines.push(it);
   }
-  routines.push(...contasDoDia(state, date));
+  routines.push(...contasDoDia(state, date), ...cobrancasPixDoDia(state, date));
   for (const x of routines) if (/^Planejar a próxima semana/.test(x.title)) x.acao = 'revisao';
   const marcos = state.marcos
     .filter((m) => m.date === date)

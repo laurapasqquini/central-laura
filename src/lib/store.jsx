@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
-import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES, chaveApoiador } from './engine';
+import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES, chaveApoiador, PIX_HUB } from './engine';
 import { apagarAnexos, linksAnexos } from './anexos';
 import { INDICADORES_PADRAO } from './chefes';
 import { CALENDARIOS } from '../data/calendarios';
@@ -615,6 +615,18 @@ export function StoreProvider({ user, children }) {
         }
         // tarefas em aberto da Laura no Hub (Atividades): viram tarefas dela aqui (se ela repassar
         // para a Lolis na Central, continua ligada ao Hub); as que saíram de "em aberto" ganham baixa
+        // Pagamento Pix (Hub › Torneios): quem está "a cobrar" vira cobrança do dia (engine.cobrancasPixDoDia);
+        // as tarefas "Cobrar mensalidade Pix" copiadas das Atividades do Hub saem, para não ficar em dobro
+        for (const r of rows.filter((x) => x.conta === 'pix')) {
+          let d = null;
+          try {
+            d = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!Array.isArray(d?.itens)) continue;
+          s = { ...s, pixCobrar: { dia: d.hoje || today(), itens: d.itens }, tasks: s.tasks.filter((t) => !(t.hubLaura && !t.done && PIX_HUB.test(t.title))) };
+        }
         for (const r of rows.filter((x) => x.conta === 'hub-laura')) {
           let d = null;
           try {
@@ -623,6 +635,19 @@ export function StoreProvider({ user, children }) {
             /* ignora */
           }
           if (!Array.isArray(d?.abertas) || !d.abertas.length) continue;
+          // o que a Laura deu como feito aqui e o Hub já fechou sai da fila de "concluir no Hub"
+          // (a extensão conclui lá; depois de 7 dias desiste)
+          if (s.hubConcluir?.length) {
+            const noHub = d.abertas.map((a) => a.titulo.trim());
+            const seteDias = addDays(today(), -7);
+            s = {
+              ...s,
+              hubConcluir: s.hubConcluir.filter(
+                (h) => h.em >= seteDias && (h.pix ? noHub.some((t) => PIX_HUB.test(t) && t.toLowerCase().includes(`— ${h.pix.toLowerCase()} (`)) : noHub.includes(h.titulo.trim())),
+              ),
+            };
+          }
+          if (s.pixCobrar) d = { ...d, abertas: d.abertas.filter((a) => !PIX_HUB.test(a.titulo)) };
           const RODAPE = 'Veio do Hub (Atividades › Laura)';
           const chave = (titulo, prazo) => `${titulo.trim().toLowerCase()}|${prazo || ''}`;
           const abertas = new Map(d.abertas.map((a) => [chave(a.titulo, a.prazo), a]));
@@ -791,7 +816,19 @@ export function StoreProvider({ user, children }) {
           ],
         })),
       updateTask: (id, patch) => patchTask(id, () => patch),
-      toggleTask: (id) => patchTask(id, (t) => ({ done: !t.done, doneAt: !t.done ? today() : null })),
+      // tarefa que veio das Atividades do Hub: feita aqui entra na fila para a extensão concluir lá também
+      toggleTask: (id) =>
+        setState((s) => {
+          const t = s.tasks.find((x) => x.id === id);
+          if (!t) return s;
+          const done = !t.done;
+          const resto = (s.hubConcluir || []).filter((h) => h.titulo !== t.title);
+          return {
+            ...s,
+            ...(t.hubLaura ? { hubConcluir: done ? [...resto, { titulo: t.title, em: today() }] : resto } : {}),
+            tasks: s.tasks.map((x) => (x.id === id ? { ...x, done, doneAt: done ? today() : null } : x)),
+          };
+        }),
       postpone: (id, days = 1) =>
         patchTask(id, (t) => ({ due: addDays(t.due && t.due > today() ? t.due : today(), days), postponed: (t.postponed || 0) + 1 })),
       deleteTask: (id) =>
@@ -810,6 +847,14 @@ export function StoreProvider({ user, children }) {
             else routineDone[k] = valor;
           } else if (routineDone[k]) delete routineDone[k];
           else routineDone[k] = true;
+          // cobrança Pix feita: a tarefa "Cobrar mensalidade Pix — Nome" do Hub também é concluída lá (pela extensão)
+          if (rid.startsWith('pix:')) {
+            const nome = s.pixCobrar?.itens?.find((i) => `pix:${i.id}` === rid)?.nome;
+            if (nome) {
+              const resto = (s.hubConcluir || []).filter((h) => h.pix !== nome);
+              return { ...s, routineDone, hubConcluir: routineDone[k] ? [...resto, { pix: nome, em: today() }] : resto };
+            }
+          }
           return { ...s, routineDone };
         }),
       addRoutine: (r) => setState((s) => ({ ...s, routines: [...s.routines, { id: uid(), active: true, createdAt: today(), ...r }] })),
