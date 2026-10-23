@@ -11,7 +11,6 @@ export const seedRoutines = () => [
   r('Atendimento pessoal no WhatsApp da RANKEN', 'laura', 'daily'),
   r('Sorteio diário (tênis e beach)', 'lolis', 'daily'),
   r('Responder o WhatsApp do Hub', 'lolis', 'daily'),
-  r('Cobrar mensalidades Pix de hoje e as atrasadas', 'laura', 'daily'),
   r('Zerar os atrasados do Hub antes de encerrar o dia', 'laura', 'daily'),
   // Semanais
   r('Avisar quem tem 2 resultados pendentes (risco de suspensão)', 'lolis', 'weekly', { weekday: 1 }),

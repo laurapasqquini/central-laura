@@ -17,7 +17,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 29,
+    version: 30,
     createdAt: hoje,
     lolisAvisos: [AVISO_JOGOS],
     lolisBanco: bancoInicial(),
@@ -268,6 +268,10 @@ function migrate(s) {
   // v29: regras fixas no topo da página da Lolis (a Laura edita em Lolis › Delegado, link e frases)
   if (s.version < 29) {
     s = { ...s, version: 29, lolisAvisos: [...new Set([...(s.lolisAvisos || []), AVISO_JOGOS])] };
+  }
+  // v30: a rotina geral de Pix saiu: as cobranças agora vêm uma por atleta da lista de Pagamento Pix do Hub
+  if (s.version < 30) {
+    s = { ...s, version: 30, routines: s.routines.filter((r) => r.title !== PIX) };
   }
   return s;
 }
