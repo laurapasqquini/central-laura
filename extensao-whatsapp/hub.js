@@ -425,7 +425,10 @@ const AUTO_LAURA = new URLSearchParams(location.search).get('central') === 'laur
 function lerAtividadesLaura() {
   if (location.pathname !== '/atividades') return null;
   const main = document.querySelector('main');
-  if (!main || !/O dia de Laura/.test(main.innerText)) return null; // só com o filtro na Laura
+  if (!main) return null;
+  // só com o filtro nas tarefas da Laura: tela antiga ("O dia de Laura") ou a nova (filtro "Minhas" ligado)
+  const minhas = [...main.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Minhas' && /bg-marca-preto/.test(b.className));
+  if (!/O dia de Laura/.test(main.innerText) && !minhas && !/tarefas suas pra resolver/.test(main.innerText)) return null;
   const hoje = new Date();
   const iso = (d) => d.toLocaleDateString('sv-SE');
   const abertas = [];
