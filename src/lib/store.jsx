@@ -17,7 +17,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 30,
+    version: 31,
     createdAt: hoje,
     lolisAvisos: [AVISO_JOGOS],
     lolisBanco: bancoInicial(),
@@ -272,6 +272,10 @@ function migrate(s) {
   // v30: a rotina geral de Pix saiu: as cobranças agora vêm uma por atleta da lista de Pagamento Pix do Hub
   if (s.version < 30) {
     s = { ...s, version: 30, routines: s.routines.filter((r) => r.title !== PIX) };
+  }
+  // v31: a lista do Pagamento Pix chegou como tarefa ("RANKEN Hub · Pagamento Pix: {…}") antes da Central saber ler: sai
+  if (s.version < 31) {
+    s = { ...s, version: 31, tasks: s.tasks.filter((t) => !/^RANKEN Hub · Pagamento Pix: \{/.test(t.title || '')) };
   }
   return s;
 }
@@ -733,7 +737,7 @@ export function StoreProvider({ user, children }) {
         }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero', 'pix'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {
