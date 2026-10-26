@@ -44,6 +44,7 @@ const REGRAS = [
   [/aplicacao rdb|rdb\b|caixinha|dinheiro guardado|guardado/, 'guardou'],
   [/yotha ranking/, 'salario'],
   [/julia maria ferreira ricobello/, 'gralha'],
+  [/gralha azul/, 'gralha'], // às vezes o Pix da Gralha aparece como "Gralha Azul"
   [/uber|99 ride|\b99\b|\*99|taxi|posto|combustiv|shell|ipiranga/, 'transporte'],
   [/ifd\*|ifood|restaurante|lanch|lanc\b|petiscaria|pizza|burger|burguer|sushi|acai|lanchonete|vila velha|caldo de cana/, 'comida'],
   [/craft|bar\b|ultra club|pub|choperia|cervej|bebidas/, 'bares'],
