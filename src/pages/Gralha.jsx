@@ -593,6 +593,13 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
   const porMes = {};
   for (const p of pedidos) (porMes[dataDe(p).slice(0, 7)] ||= []).push(p);
   const meses = Object.keys(porMes).sort().reverse();
+  const anos = [...new Set(meses.map((m) => m.slice(0, 4)))];
+  const anoAtual = mesAtual.slice(0, 4);
+  const resumo = (lista) => ({
+    n: lista.length,
+    total: lista.reduce((s, p) => s + (valoresPedido(p).total || 0), 0),
+    com: lista.reduce((s, p) => s + comissaoDe(p, cfg), 0),
+  });
   // motivos de perda: o que mais faz perder
   const contagem = {};
   if (tipo === 'perdido') for (const p of pedidos) contagem[p.motivoPerda || 'Sem motivo'] = (contagem[p.motivoPerda || 'Sem motivo'] || 0) + 1;
@@ -608,29 +615,64 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
           ))}
         </div>
       )}
-      {meses.map((m) => {
-        const lista = porMes[m].sort((a, b) => dataDe(b).localeCompare(dataDe(a)));
-        const total = lista.reduce((s, p) => s + (valoresPedido(p).total || 0), 0);
-        const com = lista.reduce((s, p) => s + comissaoDe(p, cfg), 0);
-        const ab = !!abertos[m];
+      {anos.map((ano) => {
+        const msAno = meses.filter((m) => m.startsWith(ano));
+        const r = resumo(msAno.flatMap((m) => porMes[m]));
+        const anoAberto = abertos[`ano:${ano}`] ?? ano === anoAtual;
+        const valorMes = (m) => (tipo === 'fechado' ? resumo(porMes[m]).com : resumo(porMes[m]).total);
+        const maxMes = Math.max(...msAno.map(valorMes), 1);
+        // colunas da tabela de meses (no celular só o mês e o valor principal)
+        const COLS = 'grid-cols-[1fr_auto_1rem] sm:grid-cols-[1fr_4.5rem_8rem_8rem_1rem]';
         return (
-          <section key={m} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-            <button onClick={() => setAbertos((x) => ({ ...x, [m]: !ab }))} className="flex w-full items-center gap-3 px-4 py-3 text-left">
-              <span className="flex-1 text-sm font-bold capitalize text-slate-800">{nomeMes(m)}</span>
-              <span className="text-xs text-slate-500">
-                {lista.length} {lista.length === 1 ? 'pedido' : 'pedidos'} · {brl(total)}
-                {tipo === 'fechado' && <b className="text-emerald-600"> · comissão {brl(com)}</b>}
+          <section key={ano} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+            <button onClick={() => setAbertos((x) => ({ ...x, [`ano:${ano}`]: !anoAberto }))} className="flex w-full flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-4 text-left hover:bg-slate-50">
+              <span className="text-2xl font-extrabold text-slate-800">{ano}</span>
+              <span className="text-sm text-slate-500">
+                {r.n} {r.n === 1 ? 'pedido' : 'pedidos'} · {brl(r.total)} {tipo === 'fechado' ? 'vendidos' : 'perdidos'}
               </span>
-              <span className="text-xs text-slate-400">{ab ? '▲' : '▼'}</span>
+              {tipo === 'fechado' && (
+                <span className="ml-auto text-xl font-extrabold text-emerald-600">
+                  {brl(r.com)} <span className="text-xs font-semibold text-emerald-500">de comissão</span>
+                </span>
+              )}
+              <span className={`text-xs text-slate-400 ${tipo === 'fechado' ? '' : 'ml-auto'}`}>{anoAberto ? '▲' : '▼'}</span>
             </button>
-            {ab && (
-              <div className="divide-y divide-slate-100 border-t border-slate-100">
+            {anoAberto && (
+              <div className="border-t border-slate-100">
+                <div className={`hidden gap-3 bg-slate-50 px-5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 sm:grid ${COLS}`}>
+                  <span>Mês</span>
+                  <span className="text-right">Pedidos</span>
+                  <span className="text-right">{tipo === 'fechado' ? 'Vendido' : ''}</span>
+                  <span className="text-right">{tipo === 'fechado' ? 'Comissão' : 'Valor'}</span>
+                  <span />
+                </div>
+                {msAno.map((m) => {
+                  const lista = porMes[m].sort((a, b) => dataDe(b).localeCompare(dataDe(a)));
+                  const x = resumo(lista);
+                  const ab = !!abertos[m];
+                  return (
+                    <div key={m} className="border-t border-slate-100">
+                      <button onClick={() => setAbertos((o) => ({ ...o, [m]: !ab }))} className={`grid w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-slate-50 ${COLS} ${ab ? 'bg-slate-50' : ''}`}>
+                        <span className="min-w-0">
+                          <span className="block text-sm font-semibold text-slate-800">{MESES_NOME[Number(m.slice(5)) - 1]}</span>
+                          <span className="mt-1 block h-1.5 max-w-xs rounded-full bg-slate-100">
+                            <span className={`block h-full rounded-full ${tipo === 'fechado' ? 'bg-emerald-400' : 'bg-slate-300'}`} style={{ width: `${Math.max(4, (valorMes(m) / maxMes) * 100)}%` }} />
+                          </span>
+                        </span>
+                        <span className="hidden text-right text-sm text-slate-500 sm:block">{x.n}</span>
+                        <span className="hidden text-right text-sm text-slate-600 sm:block">{tipo === 'fechado' ? brl(x.total) : ''}</span>
+                        <span className={`text-right text-sm font-bold ${tipo === 'fechado' ? 'text-emerald-600' : 'text-slate-600'}`}>{brl(valorMes(m))}</span>
+                        <span className="text-xs text-slate-400">{ab ? '▲' : '▼'}</span>
+                      </button>
+                      {ab && (
+              <div className="divide-y divide-slate-100 border-t border-slate-100 bg-slate-50/40">
                 {lista.map((p) => (
-                  <div key={p.id} className="px-4 py-2">
+                  <div key={p.id} className="px-5 py-2">
                     <button onClick={() => setLinha(linha === p.id ? null : p.id)} className="flex w-full items-center gap-3 text-left text-sm">
                       <span className="w-12 shrink-0 text-xs text-slate-400">{fmtCurto(dataDe(p)).replace(/^\w+, /, '')}</span>
                       <span className="min-w-0 flex-1 truncate font-semibold text-slate-800">
-                        {p.cliente}
+                        {/* venda registrada pelo Pix da comissão (sem cliente): nome mais limpo */}
+                        {/^Venda \(Pix comiss[aã]o (\d{2}\/\d{2})\)$/.test(p.cliente) ? `💸 Pix da comissão · ${p.cliente.match(/\d{2}\/\d{2}/)[0]}` : p.cliente}
                         {p.cidade && <span className="font-normal text-slate-400"> · {p.cidade}</span>}
                         {tipo === 'perdido' && p.motivoPerda && <span className="font-normal text-slate-400"> · {p.motivoPerda}</span>}
                       </span>
@@ -663,6 +705,11 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
                     )}
                   </div>
                 ))}
+              </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -758,34 +805,51 @@ function ComoFui({ pedidos, cfg }) {
     const ps = pedidos.filter((p) => p.stage !== 'perdido' && (dataFechamento(p) || '').startsWith(m));
     return { m, n: ps.length, vendido: ps.reduce((s, p) => s + (valoresPedido(p).total || 0), 0), comissao: ps.reduce((s, p) => s + comissaoDe(p, cfg), 0) };
   });
-  const max = Math.max(...dados.map((d) => d.vendido), 1);
+  const max = Math.max(...dados.map((d) => d.comissao), 1);
   const total = dados.reduce((s, d) => s + d.comissao, 0);
   const comVenda = dados.filter((d) => d.n).length;
+  const melhor = dados.reduce((a, d) => (d.comissao > a.comissao ? d : a), dados[0]);
+  // valor curto em cima da barra: "2,8 mil" / "245"
+  const curtoBrl = (v) => (v >= 1000 ? `${(v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil` : Math.round(v).toLocaleString('pt-BR'));
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">📈 Como fui · últimos 12 meses</h2>
-        <span className="text-xs text-slate-500">
-          comissão <b className="text-emerald-600">{brl(total)}</b>
-          {comVenda > 0 && <> · média de {brl(total / comVenda)} nos meses com venda</>}
-        </span>
+    <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">📈 Quanto ganhei · últimos 12 meses</h2>
+          <p className="text-xs text-slate-400">Comissão de cada mês. Passe o mouse na barra para ver vendas e valor vendido.</p>
+        </div>
+        <div className="flex gap-5 text-right">
+          <div>
+            <div className="text-xl font-extrabold text-emerald-600">{brl(total)}</div>
+            <div className="text-[11px] text-slate-400">nos 12 meses</div>
+          </div>
+          {comVenda > 0 && (
+            <div>
+              <div className="text-xl font-extrabold text-slate-700">{brl(total / comVenda)}</div>
+              <div className="text-[11px] text-slate-400">média por mês com venda</div>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="flex h-32 items-end gap-1.5">
+      <div className="flex h-40 items-end gap-1.5">
         {dados.map((d) => (
-          <div key={d.m} className="flex min-w-0 flex-1 flex-col items-center gap-1" title={`${nomeMes(d.m)}: ${d.n} ${d.n === 1 ? 'venda' : 'vendas'} · ${brl(d.vendido)} · comissão ${brl(d.comissao)}`}>
-            <span className="text-[10px] font-bold text-slate-500">{d.n || ''}</span>
-            <div className={`w-full rounded-t-md ${d.m === today().slice(0, 7) ? 'bg-sky-500' : 'bg-sky-200'}`} style={{ height: `${Math.max(d.vendido ? 4 : 0, (d.vendido / max) * 96)}px` }} />
+          <div key={d.m} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1" title={`${nomeMes(d.m)}: comissão ${brl(d.comissao)} · ${d.n} ${d.n === 1 ? 'venda' : 'vendas'} · ${brl(d.vendido)} vendidos`}>
+            <span className="text-[10px] font-bold text-slate-600">{d.comissao ? curtoBrl(d.comissao) : ''}</span>
+            <div
+              className={`w-full rounded-t-md ${d.m === today().slice(0, 7) ? 'bg-emerald-500' : d === melhor && d.comissao ? 'bg-emerald-400' : 'bg-emerald-200'}`}
+              style={{ height: `${Math.max(d.comissao ? 4 : 0, (d.comissao / max) * 120)}px` }}
+            />
           </div>
         ))}
       </div>
-      <div className="flex gap-1.5 text-[10px] text-slate-400">
+      <div className="flex gap-1.5 border-t border-slate-100 pt-1 text-[10px] text-slate-400">
         {dados.map((d) => (
-          <span key={d.m} className="min-w-0 flex-1 text-center">
+          <span key={d.m} className="min-w-0 flex-1 text-center leading-tight">
             {MESES_NOME[Number(d.m.slice(5)) - 1].slice(0, 3)}
+            {(d.m.endsWith('-01') || d === dados[0]) && <span className="block font-semibold text-slate-500">{d.m.slice(0, 4)}</span>}
           </span>
         ))}
       </div>
-      <p className="text-xs text-slate-400">Altura da barra = valor vendido no mês; o número em cima = quantas vendas. Passe o mouse para ver a comissão.</p>
     </section>
   );
 }
