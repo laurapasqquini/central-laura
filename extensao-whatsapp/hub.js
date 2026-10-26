@@ -126,13 +126,13 @@ function lerProgramacao() {
 let enviando = false;
 const jaAvisado = new Set();
 let avisouFalha = false;
-async function mandar(tipo, dados, chave, texto) {
+async function mandar(tipo, dados, chave, texto, quieto = false) {
   const hoje = new Date().toLocaleDateString('sv-SE'); // AAAA-MM-DD
   const assinatura = hoje + JSON.stringify(dados);
   const salvo = (await chrome.storage.local.get(chave))[chave];
   if (salvo === assinatura) {
-    // já mandou isso hoje: avisa uma vez por tela, para não ficar a dúvida
-    if (!jaAvisado.has(chave)) {
+    // já mandou isso hoje: avisa uma vez por tela, para não ficar a dúvida (leitura em segundo plano não avisa)
+    if (!quieto && !jaAvisado.has(chave)) {
       jaAvisado.add(chave);
       aviso(`✓ ${texto.replace(/^✓\s*/, '').replace(/ na Central$/, '')} já está na Central (nada novo)`, 4000);
     }
@@ -521,11 +521,48 @@ const dadosPix = () =>
         : null,
     )
     .catch(() => null);
+// Programação do sorteio diário de todas as cidades e esportes, direto da API do Hub (a mesma da tela
+// Sorteio › Programação): patrocinador novo chega na Central sem precisar abrir a tela certa
+const CIDADES_PROG = { maringa: 'Maringá', londrina: 'Londrina', curitiba: 'Curitiba' };
+const ESPORTES_PROG = { tenis: 'Tênis', beach_tennis: 'Beach Tennis', padel: 'Padel' };
+const DIAS_PROG = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+let ultimaProgApi = 0;
+async function lerProgramacoesApi() {
+  if (Date.now() - ultimaProgApi < 30 * 60e3) return;
+  ultimaProgApi = Date.now();
+  for (const [c, cidade] of Object.entries(CIDADES_PROG))
+    for (const [e, esporte] of Object.entries(ESPORTES_PROG)) {
+      const j = await fetch(`/api/torneios/sorteio-programacao?cidade=${c}&esporte=${e}`, { credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      if (!j?.itens?.length) continue;
+      const dias = {};
+      const diaDe = (n) => (dias[DIAS_PROG[n % 7]] ||= { titulo: '', patrocinadores: [] });
+      for (const m of j.marcas || []) {
+        // texto livre ("DA CURTINHA") já vem com o artigo; marca de patrocinador usa o artigo escolhido (DA/DO)
+        const marca = m.titulo_livre?.trim() ? m.titulo_livre.trim() : m.empresa ? `${m.artigo || 'DO'} ${m.empresa}` : '';
+        if (marca) diaDe(m.dia_semana).titulo = `${DIAS_PROG[m.dia_semana % 7].toUpperCase()} ${marca.toUpperCase()}`;
+      }
+      for (const i of j.itens)
+        diaDe(i.dia_semana).patrocinadores.push({
+          nome: i.empresa,
+          premio: i.premio_descricao || '',
+          local: i.premio_local || '',
+          insta: (i.instagram || '').replace(/^@/, ''),
+          contato: i.premio_contato_nome || '',
+          telefone: i.premio_contato_whatsapp || '',
+        });
+      for (const [nome, d] of Object.entries(dias)) if (!d.patrocinadores.length) delete dias[nome];
+      await mandar('programacao', { cidade, esporte, dias }, `ultimoProg-${cidade}-${esporte}`, `✓ Programação ${cidade} · ${esporte} na Central`, true);
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+}
+
 let ultimoPix = 0;
 function lerPix() {
   if (Date.now() - ultimoPix < 30 * 60e3) return;
   ultimoPix = Date.now();
-  dadosPix().then((p) => p && mandar('pix', p, 'ultimoPix', `✓ ${p.itens.length} cobranças Pix na Central`));
+  dadosPix().then((p) => p && mandar('pix', p, 'ultimoPix', `✓ ${p.itens.length} cobranças Pix na Central`, true));
 }
 
 // Descrição das tarefas da Laura: na lista dela o Hub abre "Editar tarefa"; lê a descrição e
@@ -612,6 +649,7 @@ async function tentar() {
       .catch(() => {});
   }
   lerPix();
+  lerProgramacoesApi();
   if (location.pathname === '/atividades') {
     if (!lerAtividadesLaura()) return;
     enviando = true; // segura outras leituras enquanto conclui
