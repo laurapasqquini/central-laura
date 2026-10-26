@@ -654,7 +654,7 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
                     <div key={m} className="border-t border-slate-100">
                       <button onClick={() => setAbertos((o) => ({ ...o, [m]: !ab }))} className={`grid w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-slate-50 ${COLS} ${ab ? 'bg-slate-50' : ''}`}>
                         <span className="min-w-0">
-                          <span className="block text-sm font-semibold text-slate-800">{MESES_NOME[Number(m.slice(5)) - 1]}</span>
+                          <span className="block text-sm font-semibold capitalize text-slate-800">{MESES_NOME[Number(m.slice(5)) - 1]}</span>
                           <span className="mt-1 block h-1.5 max-w-xs rounded-full bg-slate-100">
                             <span className={`block h-full rounded-full ${tipo === 'fechado' ? 'bg-emerald-400' : 'bg-slate-300'}`} style={{ width: `${Math.max(4, (valorMes(m) / maxMes) * 100)}%` }} />
                           </span>
