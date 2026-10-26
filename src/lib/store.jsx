@@ -17,7 +17,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 31,
+    version: 32,
     createdAt: hoje,
     lolisAvisos: [AVISO_JOGOS],
     lolisBanco: bancoInicial(),
@@ -276,6 +276,10 @@ function migrate(s) {
   // v31: a lista do Pagamento Pix chegou como tarefa ("RANKEN Hub · Pagamento Pix: {…}") antes da Central saber ler: sai
   if (s.version < 31) {
     s = { ...s, version: 31, tasks: s.tasks.filter((t) => !/^RANKEN Hub · Pagamento Pix: \{/.test(t.title || '')) };
+  }
+  // v32: idem, mas o título dessas tarefas começa com "💬 " (a v31 não pegava)
+  if (s.version < 32) {
+    s = { ...s, version: 32, tasks: s.tasks.filter((t) => !/^(💬 )?RANKEN Hub · Pagamento Pix: \{/.test(t.title || '')) };
   }
   return s;
 }
