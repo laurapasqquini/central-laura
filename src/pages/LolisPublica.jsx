@@ -492,7 +492,7 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
   const quem = nome.trim() || '[nome do ganhador]';
   const prazo = p.prazo ? `${fmtLongo(p.prazo).split(',')[0]}, ${fmtCurto(p.prazo).slice(5)}` : 'daqui a 7 dias';
   const premios = p.patrocinadores.map((x) => x.premio).join(' + ');
-  const voucher = p.patrocinadores.find((x) => x.canva);
+  const voucher = p.patrocinadores.find((x) => x.canva || modeloVoucher(x.nome));
   const retirada = p.patrocinadores.map((x) => (x.local ? `${x.nome}: ${x.local}` : '')).filter(Boolean);
   const [aberto, setAberto] = useState(!feito);
   useEffect(() => {
@@ -568,7 +568,7 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
             {p.patrocinadores.filter((x) => modeloVoucher(x.nome)).map((x) => (
               <BotaoVoucher key={x.nome} patrocinador={x.nome} nome={nome} data={data} />
             ))}
-            {voucher && !modeloVoucher(voucher.nome) && <BotaoCanva c={voucher.canva} />}
+            {voucher?.canva && !modeloVoucher(voucher.nome) && <BotaoCanva c={voucher.canva} />}
           </div>
           {p.patrocinadores.filter((x) => x.regra && !avisa(x)).map((x) => (
             <p key={`r-${x.nome}`} className="rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">{x.nome}: {x.regra}</p>

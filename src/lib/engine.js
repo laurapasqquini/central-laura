@@ -710,9 +710,10 @@ function blocoPosts(state, date) {
 // O que fazer com cada patrocinador quando sai o ganhador (combinado pela Laura)
 // Regras de cada patrocinador (combinadas com a Laura em 08/10):
 // regra = o que a Lolis faz · avisar = a Lolis manda mensagem ao patrocinador · contatoAtleta = o ganhador recebe o contato dele
-// local = onde retirar (sobrepõe o texto do Hub) · laura = quem avisa é a Laura (Primor: o Leo gera o voucher)
+// local = onde retirar (sobrepõe o texto do Hub) · laura = quem avisa é a Laura
 const REGRAS_PATROCINADOR = [
-  { re: /primor/i, regra: 'Mandar para o Leo o nome do ganhador: ele gera o voucher.', avisar: true, pedeVoucher: true, apelido: 'Leo', local: 'o voucher chega por aqui em breve' },
+  // Primor: desde 27/10 o voucher é feito aqui (igual Burgo e Jacaré); o ganhador agenda o café com o Leonardo
+  { re: /primor/i, regra: 'Fazer o voucher e mandar no privado do ganhador.', contatoAtleta: true, instrucao: 'para agendar o seu café colonial' },
   { re: /bonna/i, regra: 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para combinar a retirada da sua pizza' },
   { re: /olaia/i, regra: 'Avisar a Olaia Grill no privado quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para fazer o pedido da sua marmita' },
   { re: /burgo|jacar[eé]/i, regra: 'Fazer o voucher e mandar no privado do ganhador.' },

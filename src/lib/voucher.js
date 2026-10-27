@@ -1,9 +1,10 @@
-// Voucher do sorteio diário (Burgo e Jacaré Vermelho): o modelo do Canva sem nome e data
+// Voucher do sorteio diário (Burgo, Jacaré Vermelho e Primor): o modelo do Canva sem nome e data
 // (public/vouchers, feito por scripts/voucher-em-branco.cjs) + o nome do ganhador e a data do sorteio.
 const COR = [0.0745, 0.1608, 0.2039]; // azul-escuro do Canva
 export const MODELOS_VOUCHER = [
   { re: /burgo/i, arquivo: 'burgo.pdf', nome: 'BURGO' },
   { re: /jacar[eé]/i, arquivo: 'jacare.pdf', nome: 'JACARÉ VERMELHO' },
+  { re: /primor/i, arquivo: 'primor.pdf', nome: 'PRIMOR' }, // feito a partir do Burgo (scripts/voucher-primor.cjs)
 ];
 export const modeloVoucher = (patrocinador = '') => MODELOS_VOUCHER.find((m) => m.re.test(patrocinador)) || null;
 
