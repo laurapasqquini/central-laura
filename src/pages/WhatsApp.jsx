@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { pendenciasWhats, linkConversa } from '../lib/whats';
 import { today } from '../lib/dates';
+import { TaskModal } from '../components/ui';
 
 const GRUPOS = [
   ['prometi', '🔁 Prometi e não voltei', 'Sua última mensagem foi uma promessa ("vou ver", "já te falo"…) e ficou nisso.', 'ring-red-200 bg-red-50/40'],
@@ -31,6 +32,7 @@ export default function WhatsApp() {
           Para começar: deixe o WhatsApp do RANKEN aberto no Chrome (web.whatsapp.com) com a extensão da central logada e marcada como <b>RANKEN</b> no ícone dela.
         </div>
       )}
+      <MinhasTarefas />
       {GRUPOS.map(([id, titulo, ajuda, cor]) => (
         <section key={id} className="space-y-2">
           <div className="flex items-baseline justify-between gap-2 px-1">
@@ -51,6 +53,44 @@ export default function WhatsApp() {
         </section>
       ))}
     </div>
+  );
+}
+
+// Tarefas que a Laura tirou do WhatsApp: ficam só aqui (fora da lista do dia). Marca com #whats ou pelo botão.
+function MinhasTarefas() {
+  const { state, toggleTask, updateTask } = useStore();
+  const [editando, setEditando] = useState(null);
+  const lista = state.tasks.filter((t) => t.whats && !t.done).sort((a, b) => (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0) || (a.createdAt || '').localeCompare(b.createdAt || ''));
+  return (
+    <section className="space-y-2">
+      {editando && <TaskModal id={editando} onClose={() => setEditando(null)} />}
+      <h3 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">
+        📌 Minhas tarefas do WhatsApp <span className="text-slate-400">({lista.length})</span>
+      </h3>
+      <p className="px-1 text-xs text-slate-400">Ficam só aqui, fora da lista do dia. Para mandar uma pra cá: "📝 Tarefa pra mim" numa conversa abaixo, ou escreva #whats na anotação rápida.</p>
+      {lista.length === 0 ? (
+        <p className="rounded-xl bg-white px-4 py-3 text-sm text-slate-400 ring-1 ring-slate-200">Nada aqui ✓</p>
+      ) : (
+        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-sky-200">
+          {lista.map((t) => (
+            <div key={t.id} className="flex items-start gap-3 px-4 py-3">
+              <button onClick={() => toggleTask(t.id)} title="Feito" className="mt-0.5 h-5 w-5 shrink-0 rounded-full ring-2 ring-slate-300 hover:ring-emerald-500" />
+              <button onClick={() => setEditando(t.id)} className="min-w-0 flex-1 text-left">
+                <span className="text-sm font-semibold text-slate-800">{t.title}</span>
+                {t.urgent && <span className="ml-1.5 rounded-full bg-red-100 px-1.5 text-[11px] font-bold text-red-700">urgente</span>}
+                {t.due && t.due < today() && <span className="ml-1.5 text-[11px] font-semibold text-red-500">desde {t.due.slice(8, 10)}/{t.due.slice(5, 7)}</span>}
+              </button>
+              <button
+                onClick={() => updateTask(t.id, { whats: false, who: 'lolis', due: today(), entradaId: t.entradaId || `whats:${t.id}` })}
+                className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-sky-700 ring-1 ring-sky-200 hover:bg-sky-50"
+              >
+                🙋 Pra Lolis
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -104,7 +144,7 @@ function Item({ c }) {
                 due: today(),
                 urgent: c.tipo === 'prometi',
                 notes: `Veio da aba 💬 WhatsApp (${c.tipo === 'prometi' ? 'a Laura prometeu' : c.tipo === 'responder' ? 'esperando resposta' : 'esperando o outro'})`,
-                ...(who === 'lolis' ? { entradaId: `whats:${c.nome}` } : {}),
+                ...(who === 'lolis' ? { entradaId: `whats:${c.nome}` } : { whats: true }), // a minha fica só aqui na aba
               });
               resolverWhats(c.nome, c.prev);
             }}

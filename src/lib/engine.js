@@ -176,7 +176,7 @@ const sortItems = (a, b) =>
 
 export function buildDay(state, date, filter) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
-  const tasks = state.tasks.filter((t) => t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state));
+  const tasks = state.tasks.filter((t) => !t.whats && t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state)); // as do WhatsApp ficam só na aba 💬 WhatsApp
   const routines = state.routines.filter((r) => r.tipo !== 'lolis-lista' && occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date), lembretesBrinde(state, date));
   // "mandar a lista pra Lolis" já leva a mensagem do dia
   if (filter.who !== 'lolis') {
@@ -196,7 +196,7 @@ export function buildDay(state, date, filter) {
 // (Rotina diária não acumula: amanhã ela aparece de novo.)
 export function buildOverdue(state, filter, ref = today()) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
-  const tasks = state.tasks.filter((t) => !t.done && t.due && dataEfetiva(state, t) < ref).map((t) => fromTask(t, state.projects, state));
+  const tasks = state.tasks.filter((t) => !t.whats && !t.done && t.due && dataEfetiva(state, t) < ref).map((t) => fromTask(t, state.projects, state));
   const routines = [];
   for (let d = 1; d <= 14; d++) {
     const date = addDays(ref, -d);
@@ -213,7 +213,7 @@ export function buildOverdue(state, filter, ref = today()) {
 
 export const noDate = (state, filter) =>
   state.tasks
-    .filter((t) => !t.done && !t.due && (filter.area === 'all' || t.area === filter.area) && (filter.who === 'all' || t.who === filter.who))
+    .filter((t) => !t.whats && !t.done && !t.due && (filter.area === 'all' || t.area === filter.area) && (filter.who === 'all' || t.who === filter.who))
     .map((t) => fromTask(t, state.projects, state));
 
 // Campanhas push dos próximos dias que ainda não foram agendadas no backoffice

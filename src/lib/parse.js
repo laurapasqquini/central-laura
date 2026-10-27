@@ -20,7 +20,7 @@ const AREAS = { ranken: 'ranken', gralha: 'gralha', pessoal: 'pessoal', eu: 'pes
 export function parseQuick(text, defaults = {}) {
   const ref = today();
   let rest = ` ${text.trim()} `;
-  const out = { due: null, who: 'laura', area: defaults.area || 'ranken', urgent: false, hub: false };
+  const out = { due: null, who: 'laura', area: defaults.area || 'ranken', urgent: false, hub: false, whats: false };
 
   const take = (re, fn) => {
     rest = rest.replace(re, (...m) => {
@@ -38,6 +38,10 @@ export function parseQuick(text, defaults = {}) {
   take(/\s#(\p{L}+)(?=\s)/giu, (_, a) => {
     if (norm(a) === 'hub') {
       out.hub = true;
+      out.area = 'ranken';
+    } else if (['whats', 'wpp', 'zap', 'whatsapp'].includes(norm(a))) {
+      // #whats = fica só na aba 💬 WhatsApp do RANKEN (fora da lista do dia)
+      out.whats = true;
       out.area = 'ranken';
     } else if (AREAS[norm(a)]) out.area = AREAS[norm(a)];
   });

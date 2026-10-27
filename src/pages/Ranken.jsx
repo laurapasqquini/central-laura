@@ -19,7 +19,7 @@ export const SUBABAS_RANKEN = [
 
 export default function Ranken({ sub = 'tarefas', setSub, go }) {
   const { state } = useStore();
-  const whats = totalWhats(state); // prometi + esperando resposta
+  const whats = totalWhats(state) + state.tasks.filter((t) => t.whats && !t.done).length; // prometi + esperando resposta + tarefas da aba
   return (
     <div className="space-y-5">
       <header className="space-y-3">

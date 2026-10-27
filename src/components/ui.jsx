@@ -256,7 +256,7 @@ export function QuickAdd({ defaultArea }) {
       )}
       {!text && (
         <div className="hidden px-2 pb-1 text-[11px] text-slate-400 sm:block">
-          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>@lolis</b> delega · <b>!urgente</b> · sem data escrita = hoje · amanhã, sexta, 15/10, em 3 dias · <b>sem data</b> = sem dia · <b>gastei 45 ifood</b> / <b>recebi 300 pix</b> = Financeiro
+          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>#whats</b> = aba WhatsApp · <b>@lolis</b> delega · <b>!urgente</b> · sem data escrita = hoje · amanhã, sexta, 15/10, em 3 dias · <b>sem data</b> = sem dia · <b>gastei 45 ifood</b> / <b>recebi 300 pix</b> = Financeiro
         </div>
       )}
     </form>
@@ -315,7 +315,7 @@ export function TaskModal({ id, onClose }) {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = () => {
-    updateTask(id, { title: form.title, area: form.area, who: form.area === 'gralha' ? 'laura' : form.who, due: form.due || null, urgent: form.urgent, hub: !!form.hub, notes: form.notes });
+    updateTask(id, { title: form.title, area: form.area, who: form.area === 'gralha' ? 'laura' : form.who, due: form.due || null, urgent: form.urgent, hub: !!form.hub, whats: !!form.whats, notes: form.notes });
     onClose();
   };
 
@@ -344,6 +344,9 @@ export function TaskModal({ id, onClose }) {
         </label>
         <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
           <input type="checkbox" checked={!!form.hub} onChange={(e) => set('hub')(e.target.checked)} className="h-4 w-4 accent-emerald-600" /> Fazer no RANKEN Hub
+        </label>
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <input type="checkbox" checked={!!form.whats} onChange={(e) => set('whats')(e.target.checked)} className="h-4 w-4 accent-emerald-600" /> 💬 Só na aba WhatsApp (fora da lista do dia)
         </label>
         <Field label="Notas">
           <textarea rows={3} className={inputCls} value={form.notes || ''} onChange={(e) => set('notes')(e.target.value)} placeholder="Detalhes, contato, link…" />
