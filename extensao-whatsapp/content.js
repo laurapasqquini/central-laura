@@ -114,6 +114,8 @@ function lerConversa(it) {
 async function lerListaConversas() {
   const p = document.querySelector('#pane-side');
   if (!p) return null;
+  // com uma busca aberta a lista mostra resultados ("Grupos em comum", "Fulano está no grupo"), não as conversas
+  if (/Grupos em comum|Mensagens\b/.test(p.textContent) && [...p.querySelectorAll('div, span')].some((e) => !e.childElementCount && /^(Conversas|Grupos em comum)$/.test(e.textContent.trim()))) return null;
   const topo = p.scrollTop;
   const limite = iso(new Date(Date.now() - 7 * 864e5)); // só a última semana
   const vistos = new Map();

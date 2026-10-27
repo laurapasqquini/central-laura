@@ -55,7 +55,7 @@ export default function WhatsApp() {
 }
 
 function Item({ c }) {
-  const { addTask, resolverWhats, ignorarWhats } = useStore();
+  const { resolverWhats, ignorarWhats } = useStore();
   const [copiado, setCopiado] = useState(false);
   const link = linkConversa(c.nome);
   const parado = c.parado === 0 ? 'hoje' : c.parado === 1 ? 'há 1 dia' : `há ${c.parado} dias`;
@@ -90,15 +90,6 @@ function Item({ c }) {
             {copiado ? 'Copiado ✓' : '📋 Copiar nome (pra buscar no WhatsApp)'}
           </button>
         )}
-        <button
-          onClick={() => {
-            addTask({ title: `WhatsApp · ${c.nome}: ${c.prev.slice(0, 120)}`, due: today(), urgent: c.tipo === 'prometi', notes: `Veio da aba 💬 WhatsApp (${c.tipo === 'prometi' ? 'você prometeu' : c.tipo === 'responder' ? 'esperando sua resposta' : 'esperando o outro'})` });
-            resolverWhats(c.nome, c.prev);
-          }}
-          className="rounded-lg px-2.5 py-1 text-sky-700 ring-1 ring-sky-200 hover:bg-sky-50"
-        >
-          📝 Virar tarefa
-        </button>
         <button onClick={() => resolverWhats(c.nome, c.prev)} className="rounded-lg px-2.5 py-1 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50">
           ✓ Resolvido
         </button>

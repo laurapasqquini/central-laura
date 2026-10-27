@@ -11,7 +11,7 @@ const PROMESSA = /(vou (ver|verificar|resolver|conferir|olhar|checar|falar|manda
 // avisos automáticos e conversas que não são de gente
 const SISTEMA = /^(WhatsApp( Business)?|Meta AI)$/i;
 // reação a uma mensagem aparece na prévia como o texto entre aspas ("…"): também fecha
-const AUTOMATICA = /^Novidade no RANKEN|^🏆|^Reagiu|^Figurinha|^Liga[cç][aã]o (de voz|de v[ií]deo|perdida)|"$/i;
+const AUTOMATICA = /^Novidade no RANKEN|^🏆|^Reagiu|^Figurinha|^Liga[cç][aã]o (de voz|de v[ií]deo|perdida)|"$|est(á|a|ão|ao) no grupo$/i; // "Fulano está no grupo" = tela de busca
 
 export function pendenciasWhats(state, ref = today()) {
   const w = state.whats;
