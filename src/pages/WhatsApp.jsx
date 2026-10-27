@@ -84,6 +84,8 @@ function MinhasTarefas() {
                 <span className="text-sm font-semibold text-slate-800">{t.title}</span>
                 {t.urgent && <span className="ml-1.5 rounded-full bg-red-100 px-1.5 text-[11px] font-bold text-red-700">urgente</span>}
                 {t.due && t.due < today() && <span className="ml-1.5 text-[11px] font-semibold text-red-500">desde {t.due.slice(8, 10)}/{t.due.slice(5, 7)}</span>}
+                {/* contexto (quem é, número, o que aconteceu) sem precisar abrir */}
+                {t.notes && !/^Veio da aba/.test(t.notes) && <span className="mt-1 block whitespace-pre-line text-xs text-slate-500 line-clamp-4">{t.notes}</span>}
               </button>
               <button
                 onClick={() => updateTask(t.id, { whats: false, who: 'lolis', due: today(), entradaId: t.entradaId || `whats:${t.id}` })}
