@@ -79,8 +79,18 @@ const fromTask = (t, projects, state) => ({
   hubPath: t.hubPath,
   anexos: t.anexos?.length ? t.anexos : undefined,
   doWhats: !!t.entradaId, // veio do WhatsApp da Laura (botão da extensão)
+  ...mensagemDasNotas(t),
   ...cobrancaPix(t),
 });
+
+// Tarefa com "💬 Mensagem:" nas notas: ganha o botão da mensagem pronta (e o número, se estiver nas notas antes dela)
+function mensagemDasNotas(t) {
+  const notas = t.notes || '';
+  const i = notas.indexOf('💬 Mensagem:');
+  if (i < 0) return {};
+  const tel = (notas.slice(0, i).match(/\(?\d{2}\)?\s?9?\d{4}-?\d{4}/) || [])[0] || '';
+  return { mensagem: notas.slice(i + '💬 Mensagem:'.length).trim(), ...(tel ? { telefone: tel } : {}) };
+}
 
 // Tarefa de Pix que vem do Hub ("Cobrar mensalidade Pix — Nome (Esporte) — vence em 08/10"):
 // ganha a mensagem padrão de cobrança com o primeiro nome da atleta (e o WhatsApp, se estiver na descrição)
