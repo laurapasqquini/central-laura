@@ -4,14 +4,14 @@
 import { today, diffDays } from './dates';
 
 // a última mensagem fecha o assunto (não precisa responder): curta, sem pergunta e com palavra de fechamento
-const PALAVRA_FECHA = /(obrigad|\bobg\b|brigad|valeu|\bvlw\b|\bblz\b|beleza|\bbele\b|\bok\b|\bokk|okay|\bcerto\b|\bshow\b|\btop\b|perfeito|combinado|massa|de nada|\btmj\b|👍|🙏|❤|😘|😍|🥰|kkk|fechou|maravilha|[oó]timo|tranquilo|\bobri\b|uhu|amei|\bfeito\b|\bpronto\b|fica em paz|magina|entendi|de boa|retirei|aguardo|estou indo|t[oô] indo|^sim\b|^isso\b|t[aá] bom|pode ser)/i;
+const PALAVRA_FECHA = /(obrigad|\bobg\b|brigad|valeu|\bvlw\b|\bblz\b|beleza|\bbele\b|\bok\b|\bokk|okay|\bcerto\b|\bshow\b|\btop\b|perfeito|combinado|massa|de nada|por nada|\btmj\b|👍|🙏|❤|😘|😍|🥰|kkk|fechou|maravilha|[oó]timo|tranquilo|\bobri\b|uhu|amei|\bfeito\b|\bpronto\b|fica em paz|magina|entendi|de boa|retirei|aguardo|estou indo|t[oô] indo|^sim\b|^isso\b|t[aá] bom|pode ser)/i;
 const fecha = (t) => t.length <= 80 && !t.includes('?') && PALAVRA_FECHA.test(t);
 // promessa: "vou ver", "já te falo", "deixa comigo"…
-const PROMESSA = /(vou (ver|verificar|resolver|conferir|olhar|checar|falar|mandar|te mandar|passar|confirmar|arrumar|ajustar|lan[cç]ar|corrigir|pedir|perguntar|levar|dar um jeito|dar uma olhada)|j[aá] te (falo|aviso|mando|retorno|chamo|envio)|deixa comigo|te retorno|te aviso|\baviso\b|me avisa|assim que|daqui a pouco|mais tarde|amanh[aã] te|j[aá] vejo|vou ver pra)/i;
+const PROMESSA = /(vou (ver|verificar|resolver|conferir|olhar|checar|falar|mandar|te mandar|passar|confirmar|arrumar|ajustar|lan[cç]ar|corrigir|pedir|perguntar|levar|dar um jeito|dar uma olhada)|j[aá] te (falo|aviso|mando|retorno|chamo|envio)|deixa comigo|te retorno|te aviso|\baviso\b|me avisa|daqui a pouco|mais tarde|amanh[aã] te|j[aá] vejo|vou ver pra)/i;
 // avisos automáticos e conversas que não são de gente
 const SISTEMA = /^(WhatsApp( Business)?|Meta AI)$/i;
 // reação a uma mensagem aparece na prévia como o texto entre aspas ("…"): também fecha
-const AUTOMATICA = /^Novidade no RANKEN|^🏆|^Reagiu|^Figurinha|^Liga[cç][aã]o (de voz|de v[ií]deo|perdida)|"$|est(á|a|ão|ao) no grupo$/i; // "Fulano está no grupo" = tela de busca
+const AUTOMATICA = /^Novidade no RANKEN|^🏆|^Reagiu|^Figurinha|^Liga[cç][aã]o (de voz|de v[ií]deo|perdida)|"$|est(á|a|ão|ao) no grupo$|entrou usando um link|^Passando pra lembrar|lembrar que a mensalidade|(saiu|entrou|adicionou|removeu)( do grupo)?$/i; // "Fulano está no grupo" = tela de busca
 
 export const leituraDeBusca = (itens = []) =>
   itens.some((c) => /est(á|a|ão|ao) no grupo$/i.test((c.prev || '').trim())) || itens.filter((c) => !c.dia).length > itens.length / 2;
