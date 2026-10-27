@@ -14,7 +14,8 @@ export async function gerarVoucher(patrocinador, ganhador, dataISO) {
   const [{ PDFDocument, rgb }, { default: fontkit }] = await Promise.all([import('pdf-lib'), import('@pdf-lib/fontkit')]);
   const base = import.meta.env.BASE_URL;
   const [pdfBytes, fonteBytes] = await Promise.all([
-    fetch(`${base}vouchers/${modelo.arquivo}`, { cache: 'no-cache' }) // modelo trocado aparece na hora (sem a cópia velha do navegador).then((r) => r.arrayBuffer()),
+    // no-cache: modelo trocado aparece na hora (sem a cópia velha do navegador)
+    fetch(`${base}vouchers/${modelo.arquivo}`, { cache: 'no-cache' }).then((r) => r.arrayBuffer()),
     fetch(`${base}fonts/Poppins-Regular.ttf`).then((r) => r.arrayBuffer()),
   ]);
   const doc = await PDFDocument.load(pdfBytes);
