@@ -4,7 +4,7 @@ const COR = [0.0745, 0.1608, 0.2039]; // azul-escuro do Canva
 export const MODELOS_VOUCHER = [
   { re: /burgo/i, arquivo: 'burgo.pdf', nome: 'BURGO' },
   { re: /jacar[eé]/i, arquivo: 'jacare.pdf', nome: 'JACARÉ VERMELHO' },
-  { re: /primor/i, arquivo: 'primor.pdf', nome: 'PRIMOR' }, // feito a partir do Burgo (scripts/voucher-primor.cjs)
+  { re: /primor/i, arquivo: 'primor.pdf', nome: 'PRIMOR', soData: true }, // esqueleto do Canva (scripts/voucher-primor.cjs): já traz 'DATA DO SORTEIO:'
 ];
 export const modeloVoucher = (patrocinador = '') => MODELOS_VOUCHER.find((m) => m.re.test(patrocinador)) || null;
 
@@ -26,7 +26,8 @@ export async function gerarVoucher(patrocinador, ganhador, dataISO) {
 
   // data do sorteio, no canto de cima (mesma posição do Canva)
   const [, mes, dia] = dataISO.split('-');
-  pagina.drawText(`DATA DO SORTEIO: ${dia}/${mes}`, { x: 731, y: 576, size: 12, font: fonte, color: cor });
+  if (modelo.soData) pagina.drawText(`${dia}/${mes}`, { x: 859, y: 576, size: 12, font: fonte, color: cor });
+  else pagina.drawText(`DATA DO SORTEIO: ${dia}/${mes}`, { x: 731, y: 576, size: 12, font: fonte, color: cor });
 
   // nome do ganhador, centralizado no espaço do Canva (diminui a letra se o nome for longo)
   const nome = ganhador.trim().toUpperCase();
