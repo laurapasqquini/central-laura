@@ -14,7 +14,7 @@ export async function gerarArte6x0(cidade, nomes) {
   const [{ PDFDocument, rgb }, { default: fontkit }] = await Promise.all([import('pdf-lib'), import('@pdf-lib/fontkit')]);
   const base = import.meta.env.BASE_URL;
   const [pdfBytes, fonteBytes] = await Promise.all([
-    fetch(`${base}artes/${modelo.arquivo}`).then((r) => r.arrayBuffer()),
+    fetch(`${base}artes/${modelo.arquivo}`, { cache: 'no-cache' }).then((r) => r.arrayBuffer()),
     fetch(`${base}fonts/Poppins-Regular.ttf`).then((r) => r.arrayBuffer()),
   ]);
   const doc = await PDFDocument.load(pdfBytes);
