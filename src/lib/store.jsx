@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState } from 
 import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
+import { leituraDeBusca } from './whats';
 import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES, chaveApoiador, PIX_HUB } from './engine';
 import { apagarAnexos, linksAnexos } from './anexos';
 import { INDICADORES_PADRAO } from './chefes';
@@ -638,7 +639,7 @@ export function StoreProvider({ user, children }) {
           } catch {
             /* ignora */
           }
-          if (!Array.isArray(d?.itens)) continue;
+          if (!Array.isArray(d?.itens) || leituraDeBusca(d.itens)) continue; // lida na tela de busca: ignora (fica a leitura anterior)
           const nomes = new Set(d.itens.map((c) => c.nome));
           s = { ...s, whats: { em: d.em || new Date().toISOString(), itens: d.itens }, whatsResolvidos: Object.fromEntries(Object.entries(s.whatsResolvidos || {}).filter(([n]) => nomes.has(n))) };
         }

@@ -27,6 +27,11 @@ export default function WhatsApp() {
           A extensão olha a lista de conversas do WhatsApp Web a cada 30 min (sem abrir nenhuma, então nada fica como lido). Para ver o que cada pessoa pediu, peça ao Claude: "varre meu WhatsApp".
         </p>
       </header>
+      {p.invalida && (
+        <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
+          A última leitura foi feita com uma <b>busca aberta</b> no WhatsApp (mostra resultados antigos, não as conversas), então foi descartada. A próxima leitura corrige sozinha. Se a extensão estiver na versão 1.26, isso não acontece mais.
+        </div>
+      )}
       {!hora && (
         <div className="rounded-2xl bg-white p-4 text-sm text-slate-600 shadow-sm ring-1 ring-slate-200">
           Para começar: deixe o WhatsApp do RANKEN aberto no Chrome (web.whatsapp.com) com a extensão da central logada e marcada como <b>RANKEN</b> no ícone dela.

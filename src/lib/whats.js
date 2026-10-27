@@ -13,10 +13,16 @@ const SISTEMA = /^(WhatsApp( Business)?|Meta AI)$/i;
 // reação a uma mensagem aparece na prévia como o texto entre aspas ("…"): também fecha
 const AUTOMATICA = /^Novidade no RANKEN|^🏆|^Reagiu|^Figurinha|^Liga[cç][aã]o (de voz|de v[ií]deo|perdida)|"$|est(á|a|ão|ao) no grupo$/i; // "Fulano está no grupo" = tela de busca
 
+export const leituraDeBusca = (itens = []) =>
+  itens.some((c) => /est(á|a|ão|ao) no grupo$/i.test((c.prev || '').trim())) || itens.filter((c) => !c.dia).length > itens.length / 2;
+
 export function pendenciasWhats(state, ref = today()) {
   const w = state.whats;
   const vazio = { prometi: [], responder: [], aguardando: [], em: w?.em || null };
   if (!Array.isArray(w?.itens)) return vazio;
+  // leitura feita com uma busca aberta no WhatsApp (resultados, não as conversas de verdade): descarta tudo
+  // para não mostrar pendência que já foi resolvida
+  if (leituraDeBusca(w.itens)) return { ...vazio, invalida: true };
   const resolvidos = state.whatsResolvidos || {};
   const ignorados = state.whatsIgnorados || {};
   for (const c of w.itens) {
