@@ -11,14 +11,6 @@ export default function Etapas() {
   const [aba, setAba] = useState('rodadas');
   const ref = today();
   const pend = gerarCampanhas(ref).filter((c) => statusCampanha(state.campanhas || {}, c) === 'pendente').length; // mesma conta de "Para criar"
-  const cidades = [...new Set(CALENDARIOS.map((c) => c.cidade))];
-
-  // Próximos domingos com sorteio (todas as cidades)
-  const domingos = [];
-  for (let d = ref; domingos.length < 8 && d <= addDays(ref, 120); d = addDays(d, 1)) {
-    const ms = marcosDoDia(d).filter((m) => m.key.startsWith('cal:s:'));
-    if (ms.length) domingos.push({ d, ms });
-  }
 
   return (
     <div className="space-y-8">
@@ -36,11 +28,24 @@ export default function Etapas() {
         ]}
       />
 
-      {aba === 'campanhas' ? (
-        <Campanhas />
-      ) : (
-        <>
+      {aba === 'campanhas' ? <Campanhas /> : <EtapasRodadas />}
+    </div>
+  );
+}
 
+// Rodadas de todas as categorias + próximos sorteios. Só lê o calendário (sem dados da Laura):
+// também aparece na página da Lolis (aba 🏆 Etapas).
+export function EtapasRodadas() {
+  const ref = today();
+  const cidades = [...new Set(CALENDARIOS.map((c) => c.cidade))];
+  // Próximos domingos com sorteio (todas as cidades)
+  const domingos = [];
+  for (let d = ref; domingos.length < 8 && d <= addDays(ref, 120); d = addDays(d, 1)) {
+    const ms = marcosDoDia(d).filter((m) => m.key.startsWith('cal:s:'));
+    if (ms.length) domingos.push({ d, ms });
+  }
+  return (
+    <div className="space-y-8">
       {cidades.map((cidade) => (
         <section key={cidade} className="space-y-3">
           <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">{cidade}</h2>
@@ -70,8 +75,6 @@ export default function Etapas() {
           ))}
         </div>
       </section>
-        </>
-      )}
     </div>
   );
 }

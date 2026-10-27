@@ -68,6 +68,7 @@ chrome.runtime.onMessage.addListener((msg, sender, responder) => {
     : msg.tipo === 'seiszero' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · 6x0 6x0' }, 'seiszero')
     : msg.tipo === 'telefones' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Cadastros' }, 'telefones')
     : msg.tipo === 'hub-laura' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Atividades (Laura)' }, 'hub-laura')
+    : msg.tipo === 'whatsapp' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'WhatsApp · lista de conversas' }, 'whatsapp')
     : msg.tipo === 'pix' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Pagamento Pix' }, 'pix')
     : msg.tipo === 'hub-concluir-lista' ? listaConcluir()
     : Promise.resolve();

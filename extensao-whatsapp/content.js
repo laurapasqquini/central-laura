@@ -77,6 +77,78 @@ new MutationObserver(() => {
 }).observe(document.body, { childList: true, subtree: true });
 marcar();
 
+// ── Pendências (aba 💬 WhatsApp da Central): a cada 30 min lê a LISTA de conversas, sem abrir nenhuma
+// (nada fica como lido): nome, última mensagem, se foi a Laura que mandou e quando. Só no Chrome da Laura
+// (extensão logada) e com este WhatsApp marcado como RANKEN. Não mexe na lista enquanto ela está usando.
+const DIAS_SEMANA = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+const iso = (d) => d.toLocaleDateString('sv-SE');
+function diaDaHora(h = '') {
+  if (!h) return null;
+  const hoje = new Date();
+  if (/^\d{1,2}:\d{2}$/.test(h)) return iso(hoje);
+  if (/^ontem$/i.test(h)) return iso(new Date(hoje - 864e5));
+  const w = DIAS_SEMANA.findIndex((d) => d.startsWith(h.toLowerCase().split('-')[0]));
+  if (w >= 0) return iso(new Date(hoje - (((hoje.getDay() - w + 7) % 7) || 7) * 864e5));
+  const m = h.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
+}
+function lerConversa(it) {
+  const tits = [...it.querySelectorAll('span[title]')].map((s) => s.getAttribute('title'));
+  if (!tits.length) return null;
+  // textContent das folhas (o innerText vem vazio com a aba em segundo plano)
+  const linhas = [...it.querySelectorAll('span, div')].filter((e) => !e.childElementCount).map((e) => e.textContent.trim()).filter(Boolean);
+  const hora = linhas.find((l) => /^(\d{1,2}:\d{2}|Ontem|domingo|segunda|terça|quarta|quinta|sexta|sábado|\d{2}\/\d{2}\/\d{4})/i.test(l)) || '';
+  return {
+    nome: tits[0],
+    prev: (tits[1] || '').replace(/[‪-‮]/g, '').slice(0, 200),
+    hora,
+    dia: diaDaHora(hora),
+    // ✓✓ na prévia = a última mensagem é da Laura
+    eu: [...it.querySelectorAll('svg title')].some((t) => /wds-ic-(read|delivered|sent|pending|msg)/.test(t.textContent)),
+    // reação da pessoa a uma mensagem: a prévia mostra o texto reagido entre aspas (o assunto está fechado)
+    reacao: !!tits[1] && linhas.some((l) => l.endsWith('"') && l.startsWith(tits[1].replace(/[‪-‮]/g, '').slice(0, 15))),
+    // em grupo a prévia vem com o nome de quem escreveu ("Fulano" + ":" separado) ou com ~apelido
+    grupo: !!it.querySelector('[data-icon*="group"]') || linhas.some((l) => /^~/.test(l) || l === ':'),
+  };
+}
+async function lerListaConversas() {
+  const p = document.querySelector('#pane-side');
+  if (!p) return null;
+  const topo = p.scrollTop;
+  const limite = iso(new Date(Date.now() - 7 * 864e5)); // só a última semana
+  const vistos = new Map();
+  p.scrollTop = 0;
+  await new Promise((r) => setTimeout(r, 500));
+  for (let i = 0; i < 60; i++) {
+    for (const it of p.querySelectorAll('[role="listitem"], [role="row"]')) {
+      const c = lerConversa(it);
+      if (c && !vistos.has(c.nome)) vistos.set(c.nome, c);
+    }
+    const ultimos = [...vistos.values()].slice(-3);
+    if (ultimos.length === 3 && ultimos.every((c) => c.dia && c.dia < limite)) break;
+    const antes = p.scrollTop;
+    p.scrollTop += 500;
+    await new Promise((r) => setTimeout(r, 350));
+    if (p.scrollTop === antes) break;
+  }
+  p.scrollTop = topo;
+  return [...vistos.values()].filter((c) => !c.dia || c.dia >= limite);
+}
+let ultimaLeitura = 0;
+let ultimoUso = Date.now();
+for (const ev of ['keydown', 'wheel', 'mousedown']) addEventListener(ev, () => (ultimoUso = Date.now()), true);
+async function lerPendencias() {
+  if (!chrome.runtime?.id || Date.now() - ultimaLeitura < 30 * 60e3) return;
+  if (!document.hidden && Date.now() - ultimoUso < 60e3) return; // ela está mexendo: tenta de novo depois
+  const { sessao, conta = 'ranken' } = await chrome.storage.local.get(['sessao', 'conta']);
+  if (!sessao || conta !== 'ranken') return;
+  ultimaLeitura = Date.now();
+  const itens = await lerListaConversas();
+  if (itens?.length) chrome.runtime.sendMessage({ tipo: 'whatsapp', dados: { em: new Date().toISOString(), itens } });
+}
+setTimeout(lerPendencias, 20e3);
+setInterval(lerPendencias, 60e3);
+
 if (globalThis.chrome?.runtime?.onMessage)
   chrome.runtime.onMessage.addListener((msg, _s, responder) => {
     if (msg.tipo === 'contato') responder({ contato: nomeDaConversa() });

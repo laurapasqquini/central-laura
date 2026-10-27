@@ -5,6 +5,7 @@ import { gerarVoucher, modeloVoucher } from '../lib/voucher';
 import { gerarArte6x0, MODELOS_6X0 } from '../lib/arte6x0';
 import { pontoHoje, baterPonto, resumoDia, hora, duracao, JORNADA_MAX } from '../lib/ponto';
 import { quemFala } from '../lib/engine';
+import { EtapasRodadas } from './Etapas';
 import { EntregasLolis } from '../components/Entregas';
 
 // Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
@@ -312,7 +313,7 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
     ...lembretes.map((b) => [b.key, `${b.tipo === 'lembrete' ? 'Lembrete do prazo' : 'Conferir se deu certo'} · ${b.linha}`]),
   ]);
 
-  const ABAS = [['tarefas', '📝 Tarefas', pendTarefas], ...(itensSorteio.length ? [['sorteio', '🎾 Sorteio diário', pendSorteio]] : [])];
+  const ABAS = [['tarefas', '📝 Tarefas', pendTarefas], ...(itensSorteio.length ? [['sorteio', '🎾 Sorteio diário', pendSorteio]] : []), ['etapas', '🏆 Etapas', 0]];
 
   return (
     <div className="space-y-5">
@@ -328,7 +329,9 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
         ))}
       </div>
 
-      {aba === 'tarefas' ? (
+      {aba === 'etapas' ? (
+        <EtapasRodadas />
+      ) : aba === 'tarefas' ? (
         <>
           {dia.atrasadas.length > 0 && (
             <Secao titulo="⚠️ Atrasadas (prioridade)">

@@ -629,6 +629,19 @@ export function StoreProvider({ user, children }) {
         // para a Lolis na Central, continua ligada ao Hub); as que saíram de "em aberto" ganham baixa
         // Pagamento Pix (Hub › Torneios): quem está "a cobrar" vira cobrança do dia (engine.cobrancasPixDoDia);
         // as tarefas "Cobrar mensalidade Pix" copiadas das Atividades do Hub saem, para não ficar em dobro
+        // WhatsApp do RANKEN (lista de conversas lida pela extensão): vira a aba 💬 WhatsApp; os resolvidos
+        // de conversas que sumiram da lista são esquecidos
+        for (const r of rows.filter((x) => x.conta === 'whatsapp')) {
+          let d = null;
+          try {
+            d = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!Array.isArray(d?.itens)) continue;
+          const nomes = new Set(d.itens.map((c) => c.nome));
+          s = { ...s, whats: { em: d.em || new Date().toISOString(), itens: d.itens }, whatsResolvidos: Object.fromEntries(Object.entries(s.whatsResolvidos || {}).filter(([n]) => nomes.has(n))) };
+        }
         for (const r of rows.filter((x) => x.conta === 'pix')) {
           let d = null;
           try {
@@ -741,7 +754,7 @@ export function StoreProvider({ user, children }) {
         }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero', 'pix'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero', 'pix', 'whatsapp'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {
@@ -828,6 +841,9 @@ export function StoreProvider({ user, children }) {
           ],
         })),
       updateTask: (id, patch) => patchTask(id, () => patch),
+      // WhatsApp: resolvido some até chegar mensagem nova naquela conversa; ignorar = nunca mais mostra
+      resolverWhats: (nome, prev) => setState((s) => ({ ...s, whatsResolvidos: { ...(s.whatsResolvidos || {}), [nome]: prev } })),
+      ignorarWhats: (nome) => setState((s) => ({ ...s, whatsIgnorados: { ...(s.whatsIgnorados || {}), [nome]: true } })),
       // tarefa que veio das Atividades do Hub: feita aqui entra na fila para a extensão concluir lá também
       toggleTask: (id) =>
         setState((s) => {
