@@ -712,8 +712,8 @@ function blocoPosts(state, date) {
 // regra = o que a Lolis faz · avisar = a Lolis manda mensagem ao patrocinador · contatoAtleta = o ganhador recebe o contato dele
 // local = onde retirar (sobrepõe o texto do Hub) · laura = quem avisa é a Laura
 const REGRAS_PATROCINADOR = [
-  // Primor: desde 27/10 o voucher é feito aqui (igual Burgo e Jacaré); o ganhador agenda o café com o Leonardo
-  { re: /primor/i, regra: 'Fazer o voucher e mandar no privado do ganhador.', contatoAtleta: true, instrucao: 'para agendar o seu café colonial' },
+  // Primor: desde 27/10 o voucher é feito aqui (igual Burgo e Jacaré); é só apresentar o voucher na Primor
+  { re: /primor/i, regra: 'Fazer o voucher e mandar no privado do ganhador.', local: 'é só apresentar o voucher na Primor' },
   { re: /bonna/i, regra: 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para combinar a retirada da sua pizza' },
   { re: /olaia/i, regra: 'Avisar a Olaia Grill no privado quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para fazer o pedido da sua marmita' },
   { re: /burgo|jacar[eé]/i, regra: 'Fazer o voucher e mandar no privado do ganhador.' },
