@@ -502,7 +502,7 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
     // Primor: mensagem curta e informal, só com o nome do ganhador (o Leo gera o voucher)
     x.pedeVoucher
       ? `Oii ${x.apelido || (x.contato?.trim() ? nomeProprio(x.contato) : '')}, tudo bem? Segue o nome do ganhador de hoje: ${quem} 💚`
-      : `Oii${x.contato?.trim() ? ` ${nomeProprio(x.contato)}` : ''}, tudo bem?\nPassando pra avisar que quem ganhou o sorteio diário do ranken de hoje foi ${quem}, que vai retirar ${x.premio}.\nValeuuu pela parceria 👊🏻`;
+      : `Oii${x.apelido ? ` ${x.apelido}` : x.contato?.trim() ? ` ${nomeProprio(x.contato)}` : ''}, tudo bem?\nPassando pra avisar que quem ganhou o sorteio diário do ranken de hoje foi ${quem}, que vai retirar ${x.premio}.\nValeuuu pela parceria 👊🏻`;
   const msgGanhador = [
     `Oiii ${primeiro}, tudo bem? Parabéns, você foi sorteado(a) hoje no sorteio diário do ranken 🎉`,
     '',
