@@ -349,7 +349,7 @@ export function TaskModal({ id, onClose }) {
           <input type="checkbox" checked={!!form.whats} onChange={(e) => set('whats')(e.target.checked)} className="h-4 w-4 accent-emerald-600" /> 💬 Só na aba WhatsApp (fora da lista do dia)
         </label>
         <Field label="Notas">
-          <textarea rows={3} className={inputCls} value={form.notes || ''} onChange={(e) => set('notes')(e.target.value)} placeholder="Detalhes, contato, link…" />
+          <textarea rows={10} className={`${inputCls} min-h-[14rem] resize-y leading-relaxed`} value={form.notes || ''} onChange={(e) => set('notes')(e.target.value)} placeholder="Detalhes, contato, link…" />
         </Field>
         <Field label="Imagens">
           <Anexos taskId={id} anexos={t.anexos || []} userId={user?.id} onChange={(anexos) => updateTask(id, { anexos })} />
