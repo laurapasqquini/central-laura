@@ -66,7 +66,7 @@ export function ItemRow({ item, showDate = false, onEdit }) {
       <span className={`mt-0.5 h-6 w-1 shrink-0 rounded-full ${AREAS[item.area].bar}`} />
       <Check done={item.done} onClick={toggle} area={item.area} />
       <button onClick={() => item.kind === 'task' && onEdit?.(item.id)} className="min-w-0 flex-1 text-left">
-        <div className={`text-[15px] leading-snug font-medium ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>
+        <div title={item.title} className={`line-clamp-2 text-[15px] leading-snug font-medium ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>
           {item.title}
           {item.anexos?.length > 0 && <span className="ml-1 text-xs text-slate-400" title="Tem imagem anexada">📎{item.anexos.length > 1 ? item.anexos.length : ''}</span>}
         </div>
@@ -181,6 +181,7 @@ export function QuickAdd({ defaultArea }) {
   const [fotos, setFotos] = useState([]); // imagens coladas, sobem ao criar a tarefa
   const [enviando, setEnviando] = useState(false);
   const [lancado, setLancado] = useState('');
+  const [focado, setFocado] = useState(false); // os atalhos só aparecem com o campo em uso
   const gasto = text.trim() ? gastoRapido(text) : null;
   const preview = text.trim() && !gasto ? parseQuick(text, { area: defaultArea }) : null;
 
@@ -218,6 +219,8 @@ export function QuickAdd({ defaultArea }) {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onFocus={() => setFocado(true)}
+          onBlur={() => setFocado(false)}
           onPaste={(e) => {
             const imgs = imagensDoEvento(e);
             if (imgs.length) {
@@ -255,7 +258,7 @@ export function QuickAdd({ defaultArea }) {
           {preview.hub && <Pill className="bg-emerald-600 text-white ring-transparent">🔗 fazer no Hub</Pill>}
         </div>
       )}
-      {!text && (
+      {!text && focado && (
         <div className="hidden px-2 pb-1 text-[11px] text-slate-400 sm:block">
           <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>#whats</b> = aba WhatsApp · <b>@lolis</b> delega · <b>!urgente</b> · sem data escrita = hoje · amanhã, sexta, 15/10, em 3 dias · <b>sem data</b> = sem dia · <b>gastei 45 ifood</b> / <b>recebi 300 pix</b> = Financeiro
         </div>

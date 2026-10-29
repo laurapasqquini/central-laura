@@ -158,7 +158,7 @@ function Colar({ chave, titulo, placeholder, cor }) {
           {relatos[data] && <span className="text-xs font-semibold text-emerald-600">✓ já tem neste dia (editando)</span>}
         </div>
         <textarea rows={4} className={inputCls} placeholder={placeholder} value={texto} onChange={(e) => setTexto(e.target.value)} />
-        <button onClick={salvar} disabled={texto.trim() === (relatos[data] || '')} className={`w-full rounded-xl py-2.5 text-sm font-bold text-white disabled:opacity-40 ${cor}`}>
+        <button onClick={salvar} disabled={texto.trim() === (relatos[data] || '')} className={`w-full rounded-xl py-2.5 text-sm font-bold text-white disabled:bg-slate-100 disabled:text-slate-400 ${cor}`}>
           {salvo ? 'Salvo ✓' : 'Salvar'}
         </button>
         {baixas && baixas.length > 0 && (

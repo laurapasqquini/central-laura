@@ -5,6 +5,8 @@ import { today, addDays, weekday, fmtCurto } from '../lib/dates';
 import { periodo, montarRelatorio, textoRelatorio } from '../lib/relatorio';
 import { Modal } from './ui';
 import { RelatorioChefes } from '../pages/Plano';
+import { plano } from '../lib/chefes';
+import { radar } from '../data/radar';
 
 // Revisão de sexta: 5 minutos para fechar a semana e preparar a próxima.
 export function Revisao({ item, go, onClose }) {
@@ -28,6 +30,10 @@ export function Revisao({ item, go, onClose }) {
   const camp = campanhasPendentes(state, ref, 10).filter((c) => c.data <= sexta);
   const parados = pedidosParados(state, ref);
   const contas = Array.from({ length: 10 }, (_, i) => addDays(ref, i + 1)).flatMap((d) => contasDoDia(state, d)).filter((x) => !x.done);
+  // sugestões do Radar com prazo ideal nas próximas 2 semanas que ainda não viraram iniciativa
+  const pl = plano(state);
+  const aceitas = new Set(pl.iniciativas.map((i) => i.radarId).filter(Boolean));
+  const radarPerto = radar(ref).filter((r) => !pl.ocultos.includes(r.id) && !aceitas.has(r.id) && r.prazo && r.prazo <= addDays(ref, 14));
 
   const copiar = async () => {
     const per = periodo('semana', ref);
@@ -120,6 +126,14 @@ export function Revisao({ item, go, onClose }) {
             <li className="flex items-center justify-between gap-2">
               <span>🎯 Atualize o status das iniciativas e os números do Beach da semana</span>
               <Btn onClick={() => ir('plano')}>Abrir</Btn>
+            </li>
+            <li className="flex items-center justify-between gap-2">
+              <span>
+                {radarPerto.length
+                  ? `📡 Radar: ${radarPerto.length} ${radarPerto.length === 1 ? 'sugestão' : 'sugestões'} com prazo ideal até ${fmtCurto(addDays(ref, 14))} — ${radarPerto.map((r) => r.titulo).join(' · ')}`
+                  : '📡 Radar: nada com prazo nas próximas 2 semanas ✓'}
+              </span>
+              {radarPerto.length > 0 && <Btn onClick={() => ir('plano')}>Puxar</Btn>}
             </li>
             <li className="flex items-center justify-between gap-2">
               <span>📋 Relatório detalhado (você + Lolis)</span>

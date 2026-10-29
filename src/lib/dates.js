@@ -42,6 +42,7 @@ export const relativo = (s, ref = today()) => {
   if (n === 1) return 'amanhã';
   if (n === -1) return 'ontem';
   if (n > 1 && n < 7) return DIAS[weekday(s)];
+  if (n === 7) return `próxima ${DIAS[weekday(s)]}`;
   if (n < 0) return `há ${-n} dias`;
   return `em ${n} dias`;
 };

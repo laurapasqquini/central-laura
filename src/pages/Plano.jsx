@@ -36,7 +36,9 @@ export default function Plano() {
         <p className="text-sm text-slate-500">O que você está fazendo acontecer, por frente. Ideias viram propostas, propostas viram passos na sua lista.</p>
       </header>
 
+      <FechamentoMes />
       <Metas />
+      {Number(today().slice(8)) >= 26 && <Metas mes={proximoMes(today())} />}
 
       {sugestoes.length > 0 && (
         <Section title="📡 Radar: o que você poderia estar puxando" count={sugestoes.length}>
@@ -188,9 +190,34 @@ function Iniciativa({ i, aberta, onToggle }) {
   );
 }
 
-function Metas() {
+const mesDe = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+const proximoMes = (ref) => mesDe(new Date(Number(ref.slice(0, 4)), Number(ref.slice(5, 7)), 1));
+const nomeDoMes = (mes) => new Date(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)) - 1, 1).toLocaleDateString('pt-BR', { month: 'long' });
+
+// Nos primeiros dias do mês: como fecharam as metas do mês passado; as que ficaram podem passar para este
+function FechamentoMes() {
   const { state, setPlano } = useStore();
-  const mes = today().slice(0, 7);
+  const ref = today();
+  if (Number(ref.slice(8)) > 7) return null;
+  const d = new Date(Number(ref.slice(0, 4)), Number(ref.slice(5, 7)) - 2, 1);
+  const antes = mesDe(d);
+  const mes = ref.slice(0, 7);
+  const metas = (plano(state).metas[antes] || []).filter((m) => m.texto);
+  if (!metas.length) return null;
+  const abertas = metas.filter((m) => !m.feita && !(plano(state).metas[mes] || []).some((x) => x.texto === m.texto)); // as já passadas não contam de novo
+  const passar = () => setPlano((pl) => ({ ...pl, metas: { ...pl.metas, [mes]: [...(pl.metas[mes] || []).filter((m) => m.texto), ...abertas.map((m) => ({ texto: m.texto, feita: false }))].slice(0, 3) } }));
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-indigo-50 px-4 py-3 text-sm text-indigo-900 ring-1 ring-indigo-100">
+      <span className="min-w-0 flex-1">
+        <b className="capitalize">{nomeDoMes(antes)}</b> fechou com {metas.length - abertas.length} de {metas.length} metas feitas{abertas.length ? `. Ficou: ${abertas.map((m) => m.texto).join(' · ')}` : ' 🎉'}
+      </span>
+      {abertas.length > 0 && <button onClick={passar} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Passar para {nomeDoMes(mes)}</button>}
+    </div>
+  );
+}
+
+function Metas({ mes = today().slice(0, 7) }) {
+  const { state, setPlano } = useStore();
   const metas = plano(state).metas[mes] || [];
   const lista = [...metas, ...Array.from({ length: Math.max(0, 3 - metas.length) }, () => ({ texto: '', feita: false }))].slice(0, 3);
   const set = (n, patch) =>
@@ -200,7 +227,7 @@ function Metas() {
       atual[n] = { ...atual[n], ...patch };
       return { ...pl, metas: { ...pl.metas, [mes]: atual } };
     });
-  const nomeMes = new Date().toLocaleDateString('pt-BR', { month: 'long' });
+  const nomeMes = nomeDoMes(mes);
 
   return (
     <Section title={`🏁 Metas de ${nomeMes} (até 3)`}>

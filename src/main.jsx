@@ -19,11 +19,18 @@ if (!import.meta.env.DEV) {
         if (document.hidden) return atualizar(true);
         document.addEventListener('visibilitychange', () => document.hidden && atualizar(true));
         const aviso = document.createElement('button');
-        aviso.textContent = '🔄 Tem versão nova da central: clique para atualizar';
+        aviso.textContent = '🔄 Versão nova: atualizar';
         aviso.style.cssText =
           'position:fixed;bottom:20px;right:20px;z-index:9999;padding:12px 18px;border:0;border-radius:14px;background:#1e1b4b;color:#fff;font:600 14px Inter,system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.3);cursor:pointer';
         aviso.onclick = () => atualizar(true);
         document.body.appendChild(aviso);
+        // sem mexer na central por 1 minuto (e sem nada sendo digitado), atualiza sozinha
+        let mexeu = Date.now();
+        for (const ev of ['pointerdown', 'keydown', 'scroll']) addEventListener(ev, () => (mexeu = Date.now()), { passive: true, capture: true });
+        setInterval(() => {
+          const digitando = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+          if (!digitando && Date.now() - mexeu > 60e3) atualizar(true);
+        }, 15e3);
       },
       onRegisteredSW(_url, reg) {
         if (reg) setInterval(() => reg.update(), 10 * 60 * 1000);

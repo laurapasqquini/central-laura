@@ -145,12 +145,19 @@ function Shell() {
 const SYNC = {
   loading: ['bg-slate-400', 'carregando…'],
   saving: ['bg-amber-400', 'salvando…'],
-  ok: ['bg-emerald-400', 'salvo na nuvem'],
+  ok: ['bg-emerald-400', 'salvo ✓'],
   offline: ['bg-red-400', 'sem conexão: salvo só aqui'],
 };
 
 function SyncDot({ sync, dark }) {
-  const [cls, label] = SYNC[sync];
+  // salvar leva menos de 1 s: o "salvando…" só aparece se demorar, para não parecer travado
+  const [visto, setVisto] = useState(sync);
+  useEffect(() => {
+    if (sync !== 'saving') return setVisto(sync);
+    const t = setTimeout(() => setVisto('saving'), 2500);
+    return () => clearTimeout(t);
+  }, [sync]);
+  const [cls, label] = SYNC[visto];
   return (
     <div className={`flex items-center gap-2 ${dark ? 'text-[11px] text-slate-400' : 'pb-2'}`}>
       <span className={`h-2 w-2 rounded-full ${cls}`} />

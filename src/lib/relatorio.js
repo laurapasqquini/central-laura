@@ -24,11 +24,38 @@ const nomeCampanha = (id) => {
   return `Campanha agendada: ${c ? `${c.cidade} ${c.curto}` : calId} ${rod} (${TIPOS[tipo]?.nome || tipo})`;
 };
 
-// Itens marcados como feitos num dia, por pessoa e área
+// Título limpo para o relatório: sem emoji, telefone nem rótulo interno do Hub
+const SEM_EMOJI = /[\p{Extended_Pictographic}️‍]/gu;
+export function tituloLimpo(t) {
+  let s = t.replace(SEM_EMOJI, '').replace(/\s*·\s*\(?\d{2}\)?\s?\d{4,5}-?\d{4}/g, '').replace(/\s+/g, ' ').trim();
+  let m;
+  if ((m = s.match(/^Bot do WhatsApp — (.+?)(?: \((.+)\))?$/))) return { grupo: 'Atendimentos do WhatsApp', item: m[2] ? `${m[1]} (${m[2].replace(/\s*\(insistiu\)/, '')})` : m[1] };
+  if ((m = s.match(/^Recado do WhatsApp d[oa] \S+ — (.+)$/))) return { grupo: 'Recados do WhatsApp', item: m[1] };
+  if ((m = s.match(/^Cobrar (?:mensalidade|renova[cç][aã]o) Pix — (.+?) \((.+?)\)/i))) return { grupo: 'Cobranças Pix', item: `${m[1]} (${m[2]})` };
+  if ((m = s.match(/^\[Expansão (.+?)\] (.+)$/))) return { grupo: `Expansão ${m[1]}`, item: m[2] };
+  if ((m = s.match(/^Melhores da rodada · (.+)$/))) return { grupo: 'Melhores da rodada', item: m[1].replace(/\s*\(Instagram d[oa] \w+\)/, '') };
+  return { grupo: null, item: s };
+}
+
+// Junta os itens do mesmo tipo numa linha só ("Cobranças Pix (3): Ana, Beto, Caio")
+export function agrupar(titulos) {
+  const grupos = new Map();
+  const soltos = [];
+  for (const t of titulos) {
+    const { grupo, item } = tituloLimpo(t);
+    if (!grupo) soltos.push(item);
+    else grupos.set(grupo, [...(grupos.get(grupo) || []), item]);
+  }
+  return [...[...grupos].map(([g, its]) => (its.length > 1 ? `${g} (${its.length}): ${its.join('; ')}` : `${g}: ${its[0]}`)), ...soltos];
+}
+
+// Itens marcados como feitos num dia, por pessoa e área.
+// Fica de fora o que a central fechou sozinha (saiu do Hub sem você marcar) e o pedido feito ao Thales.
+const naoContaNoRelatorio = (t) => /Saiu de "em aberto" no Hub/.test(t.notes || '') || /^Pedido do HUB ·/i.test(t.title);
 export function feitosDoDia(state, date, who, area) {
   const okArea = (a) => area === 'all' || a === area;
   const out = [];
-  for (const t of state.tasks) if (t.done && t.doneAt === date && t.who === who && okArea(t.area)) out.push(t.title);
+  for (const t of state.tasks) if (t.done && t.doneAt === date && t.who === who && okArea(t.area) && !naoContaNoRelatorio(t)) out.push(t.title);
   for (const x of buildDay(state, date, { area, who })) if (x.kind === 'routine' && x.done) out.push(semHora(x.title));
   if (who === 'laura' && okArea('ranken'))
     for (const [id, v] of Object.entries(state.campanhas || {})) if (v.status === 'agendada' && v.em === date) out.push(nomeCampanha(id));
@@ -58,10 +85,17 @@ export function montarRelatorio(state, [de, ate], area) {
     const lolisFeitos = feitosDoDia(state, d, 'lolis', area);
     const notaEu = (state.relatosLaura || {})[d] || '';
     const lolis = [(state.relatosLolis || {})[d] || '', ...notasLolis(state, d)].filter(Boolean).join('\n');
-    if (eu.length || lolisFeitos.length || notaEu || lolis) dias.push({ date: d, eu, notaEu, lolis, lolisFeitos });
+    if (eu.length || lolisFeitos.length || notaEu || lolis) dias.push({ date: d, eu: agrupar(eu), notaEu, lolis, lolisFeitos: agrupar(lolisFeitos), nEu: eu.length, nLolis: lolisFeitos.length });
   }
   return dias;
 }
+
+// Totais do período, para o topo do relatório
+export const totais = (dias) => ({ eu: dias.reduce((s, d) => s + d.nEu, 0), lolis: dias.reduce((s, d) => s + d.nLolis, 0) });
+const linhaTotais = (dias, inclui) => {
+  const t = totais(dias);
+  return [inclui.eu && `Laura: ${t.eu} ${t.eu === 1 ? 'item concluído' : 'itens concluídos'}`, inclui.lolis && `Lolis: ${t.lolis} ${t.lolis === 1 ? 'item concluído' : 'itens concluídos'}`].filter(Boolean).join(' · ');
+};
 
 const AREA_NOME = { all: 'Geral', ranken: 'RANKEN', gralha: 'Gralha Azul', pessoal: 'Pessoal' };
 const br = (s) => s.split('-').reverse().slice(0, 2).join('/');
@@ -69,17 +103,17 @@ export const tituloRelatorio = ([de, ate], area) => `Relatório ${AREA_NOME[area
 
 // Texto para colar no WhatsApp (negrito com *)
 export function textoRelatorio(dias, per, area, inclui) {
-  const linhas = [`*${tituloRelatorio(per, area).toUpperCase()}*`];
+  const linhas = [`*${tituloRelatorio(per, area).toUpperCase()}*`, linhaTotais(dias, inclui)];
   for (const d of [...dias].reverse()) {
     const bloco = [];
     if (inclui.eu && (d.eu.length || d.notaEu)) {
       bloco.push('_Laura_');
-      bloco.push(...d.eu.map((t) => `✓ ${t}`));
+      bloco.push(...d.eu.map((t) => `• ${t}`));
       if (d.notaEu) bloco.push(d.notaEu);
     }
     if (inclui.lolis && (d.lolis || d.lolisFeitos.length)) {
       bloco.push('_Lolis_');
-      bloco.push(...d.lolisFeitos.map((t) => `✓ ${t}`));
+      bloco.push(...d.lolisFeitos.map((t) => `• ${t}`));
       if (d.lolis) bloco.push(d.lolis);
     }
     if (bloco.length) linhas.push('', `*${fmtCurto(d.date)}*`, ...bloco);
@@ -92,7 +126,10 @@ export async function baixarPdf(dias, per, area, inclui) {
   pdfMake.addVirtualFileSystem(vfs);
   pdfMake.setUrlAccessPolicy(() => false);
   const titulo = tituloRelatorio(per, area);
-  const content = [{ text: titulo, fontSize: 16, bold: true, color: '#1e1b4b', margin: [0, 0, 0, 12] }];
+  const content = [
+    { text: titulo, fontSize: 16, bold: true, color: '#1e1b4b', margin: [0, 0, 0, 2] },
+    { text: linhaTotais(dias, inclui), color: '#64748b', margin: [0, 0, 0, 12] },
+  ];
   const quem = (nome, itens, texto) => {
     const out = [{ text: nome, bold: true, color: '#475569', margin: [0, 4, 0, 2] }];
     if (itens.length) out.push({ ul: [...itens], margin: [0, 0, 0, 3] });
@@ -105,7 +142,7 @@ export async function baixarPdf(dias, per, area, inclui) {
     if (inclui.lolis && (d.lolis || d.lolisFeitos.length)) bloco.push(...quem('Lolis', d.lolisFeitos, d.lolis));
     if (bloco.length) content.push({ text: fmtCurto(d.date), fontSize: 12, bold: true, color: '#4f46e5', margin: [0, 10, 0, 2] }, ...bloco);
   }
-  if (content.length === 1) content.push({ text: 'Nada registrado neste período.', color: '#94a3b8' });
+  if (content.length === 2) content.push({ text: 'Nada registrado neste período.', color: '#94a3b8' });
   const blob = await pdfMake.createPdf({ content, defaultStyle: { fontSize: 10, lineHeight: 1.2 }, pageMargins: [40, 40, 40, 40] }).getBlob();
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

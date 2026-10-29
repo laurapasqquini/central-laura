@@ -2,6 +2,7 @@ import { marcosDoDia, rotinasDoDia } from '../data/calendarios';
 import { gerarCampanhas, statusCampanha } from '../data/campanhas';
 import { FERIADOS } from '../data/feriados';
 import { today, addDays, weekday, fromStr, lastDayOfMonth, diffDays, fmtCurto, relativo } from './dates';
+import { PIX_HUB } from './hubLaura.js';
 
 export const AREAS = {
   ranken: { label: 'RANKEN', dot: 'bg-emerald-500', soft: 'bg-emerald-50 text-emerald-700 ring-emerald-200', bar: 'bg-emerald-500', text: 'text-emerald-600' },
@@ -114,7 +115,9 @@ function cobrancaPix(t) {
 // Cobranças Pix lidas do Hub (Torneios › Pagamento Pix): cada atleta "a cobrar" vira uma cobrança
 // por dia até pagar (quem pagou sai da lista do Hub e não volta no dia seguinte)
 const ESPORTE_PIX = { beach_tennis: 'Beach Tennis', tenis: 'Tênis', padel: 'Padel' };
-export const PIX_HUB = /^Cobrar (mensalidade|renova[cç][aã]o) Pix/i;
+export { PIX_HUB } from './hubLaura.js';
+export const PIX_URGENTE_DIAS = 7;
+export const ehPix = (x) => x.freq === 'pix' || PIX_HUB.test(x.title || '');
 export function cobrancasPixDoDia(state, date) {
   const p = state.pixCobrar;
   if (!p?.itens?.length || date !== today() || p.dia < addDays(date, -3)) return [];
@@ -128,7 +131,7 @@ export function cobrancasPixDoDia(state, date) {
       title,
       area: 'ranken',
       who: 'laura',
-      urgent: i.vencimento < date,
+      urgent: i.vencimento < addDays(date, -PIX_URGENTE_DIAS), // cobrança de rotina só vira urgente depois de uma semana vencida
       date,
       done: !!state.routineDone[`pix:${i.id}:${date}`],
       freq: 'pix',
@@ -262,8 +265,20 @@ export function suggestions(state, ref = today()) {
 
   // Confraternização: o regulamento exige anunciar 30 dias antes, com os valores
   const temConfra = state.projects.some((p) => p.templateId === 'confra') || [...state.tasks, ...state.marcos].some((t) => /confra.*(festa|dia da)|dia da confra/i.test(t.title) && (t.due || t.date));
-  if (!temConfra) {
-    out.push({ tone: 'amber', icon: '🎉', text: 'A confraternização ainda não tem data. As etapas terminam em 13/12 e 20/12, e o anúncio precisa sair 30 dias antes da festa. Quando decidir, anote "Dia da confra" com a data.' });
+  // com uma tarefa aberta para decidir a data, o aviso sai da tela (a tarefa é que lembra)
+  const decidindoConfra = state.tasks.some((t) => !t.done && /confra/i.test(t.title));
+  if (!temConfra && !decidindoConfra) {
+    out.push({
+      tone: 'amber',
+      icon: '🎉',
+      text: 'A confraternização ainda não tem data. As etapas terminam em 13/12 e 20/12, e o anúncio precisa sair 30 dias antes da festa.',
+      tarefa: {
+        title: 'Decidir a data da confraternização',
+        area: 'ranken',
+        due: addDays(ref, 2),
+        notes: 'As etapas terminam em 13/12 (beach) e 20/12 (tênis). O regulamento pede o anúncio 30 dias antes da festa, com os valores. Depois de decidir, anote "Dia da confra" com a data.',
+      },
+    });
   }
 
   for (let d = 1; d <= 3; d++) {

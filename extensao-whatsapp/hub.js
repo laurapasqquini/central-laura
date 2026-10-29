@@ -594,23 +594,25 @@ function lerPix() {
 // Só abre as tarefas na aba automática: com a Laura usando a tela, usa só o que já tem guardado
 // (para nunca fechar uma tarefa que ela esteja editando).
 let lendoLaura = false;
-// hora em que cada tarefa entrou no Hub e a descrição dela (criado_em e descricao da API de Atividades).
-// A descrição da API é a da própria tarefa; a lida na janela "Editar tarefa" saía trocada entre tarefas.
-async function comCriacao(n) {
-  const j = await fetch('/api/atividades?filtro=minhas', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  const lista = Array.isArray(j) ? j : j?.atividades || Object.values(j || {}).find(Array.isArray) || [];
-  // com títulos repetidos (ex.: a mesma cobrança em dois meses), vale a que está em aberto
-  const abertasPrimeiro = [...lista].sort((x, y) => (x.status === 'concluida') - (y.status === 'concluida'));
-  const daApi = (a) => abertasPrimeiro.find((x) => (x.titulo || '').trim() === a.titulo.trim());
-  return {
-    ...n,
-    abertas: n.abertas.map((a) => {
-      const x = daApi(a);
-      if (!x) return a;
-      return { ...a, ...(x.criado_em ? { criadoEm: x.criado_em } : {}), ...(x.descricao?.trim() ? { descricao: x.descricao.trim() } : {}) };
-    }),
-  };
+// As tarefas em aberto da Laura direto da API de Atividades (título, prazo, urgência, descrição e hora em que
+// entraram). Não depende do filtro que está na tela nem de abrir janela: a leitura da tela já trocou descrição
+// entre tarefas e leu o "Deleguei" como se fosse dela. Sem a API, volta para a leitura da tela.
+async function abertasDaApi() {
+  const j = await fetch('/api/atividades?filtro=minhas', { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const lista = Array.isArray(j) ? j : j?.atividades || Object.values(j || {}).find(Array.isArray);
+  if (!Array.isArray(lista)) return null;
+  const abertas = lista
+    .filter((x) => x.titulo && x.status !== 'concluida' && !x.arquivada_em && !x.parent_id)
+    .map((x) => ({
+      titulo: x.titulo.trim(),
+      prazo: x.prazo ? x.prazo.slice(0, 10) : null,
+      urgente: !!x.urgente,
+      descricao: (x.descricao || '').trim(),
+      ...(x.criado_em ? { criadoEm: x.criado_em } : {}),
+    }));
+  return { dia: new Date().toLocaleDateString('sv-SE'), abertas, fonte: 'api' };
 }
+const completarLaura = async (n, buscar) => comTelefonePix((await abertasDaApi()) || (await comDescricaoLaura(n, buscar)));
 
 async function comDescricaoLaura(n, buscar) {
   // descLaura2: as descrições guardadas antes da correção (algumas trocadas entre tarefas) são lidas de novo
@@ -658,7 +660,7 @@ async function rodarAutoLaura() {
       }
       const pix = await dadosPix();
       if (pix) await new Promise((r) => chrome.runtime.sendMessage({ tipo: 'pix', dados: pix }, r));
-      const completo = await comTelefonePix(await comDescricaoLaura(await comCriacao(n), true));
+      const completo = await completarLaura(n, true);
       chrome.runtime.sendMessage({ tipo: 'hub-laura', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
     }
@@ -711,7 +713,7 @@ async function tentar() {
       .finally(() => {
         enviando = false;
         const n = lerAtividadesLaura();
-        if (n) comCriacao(n).then((c) => comDescricaoLaura(c, false)).then(comTelefonePix).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
+        if (n) completarLaura(n, false).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${c.abertas.length} tarefas suas em aberto na Central`));
       });
     return;
   }

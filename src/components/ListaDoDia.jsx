@@ -1,15 +1,13 @@
 // Lista completa de uma frente (RANKEN, Gralha ou Pessoal): hoje, atrasadas, rotinas, sem data e próximos dias.
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, suggestions, AREAS, folgaDe, isWorkday } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, AREAS, folgaDe, isWorkday, ehPix, PIX_URGENTE_DIAS } from '../lib/engine';
 import { today, addDays, fmtCurto, relativo } from '../lib/dates';
 import { ItemRow, Empty, QuickAdd, TaskModal, Segmented } from './ui';
 
 // de qual frente é cada aviso (pelo ícone); sem frente = aviso geral
 const FRENTE_AVISO = { '💸': 'pessoal', '💜': 'pessoal', '🐦': 'gralha', '📣': 'ranken', '🙋': 'ranken', '🎉': 'ranken', '📅': 'ranken', '🚧': 'ranken' };
 export const frenteDoAviso = (t) => FRENTE_AVISO[t.icon] || null;
-
-const TONE_DOT ={ red: 'bg-red-500', amber: 'bg-amber-500', violet: 'bg-violet-500', sky: 'bg-sky-500' };
 
 // Um grupo dentro do bloco "Hoje"
 function Grupo({ icone, titulo, conta, cor = 'text-slate-700', children }) {
@@ -27,10 +25,10 @@ function Grupo({ icone, titulo, conta, cor = 'text-slate-700', children }) {
 
 export default function ListaDoDia({ area }) {
   const { state } = useStore();
-  const [filter, setFilter] = useState({ area, who: 'all' });
+  const [filter, setFilter] = useState({ area, who: 'laura' }); // começa no que é seu; Todos e Lolis ficam a um clique
   const [editing, setEditing] = useState(null);
   const [verFeitos, setVerFeitos] = useState(false);
-  const [verDicas, setVerDicas] = useState(false);
+  const [verPix, setVerPix] = useState(false);
   const ref = today();
 
   const overdue = buildOverdue(state, filter, ref);
@@ -38,9 +36,11 @@ export default function ListaDoDia({ area }) {
   const marcos = hoje.filter((x) => x.kind === 'marco');
   // "melhores da rodada" e afins (vêm do calendário) contam como tarefa, não como rotina
   const ehTarefa = (x) => x.kind === 'task' || x.freq === 'calendario' || !!x.hora || !!x.mensagem; // compromissos com horário também
-  const prioridades = [...overdue, ...hoje.filter((x) => ehTarefa(x) && x.urgent && !x.done)];
-  const idsPrioridade = new Set(prioridades.map((x) => x.key));
-  const tarefas = hoje.filter((x) => ehTarefa(x) && !idsPrioridade.has(x.key));
+  // cobranças Pix ficam juntas num bloco só (uma linha por atleta, com a mensagem pronta)
+  const pix = [...overdue, ...hoje].filter((x) => ehPix(x) && !x.done);
+  const prioridades = [...overdue, ...hoje.filter((x) => ehTarefa(x) && x.urgent && !x.done)].filter((x) => !ehPix(x));
+  const idsPrioridade = new Set([...prioridades, ...pix].map((x) => x.key));
+  const tarefas = hoje.filter((x) => ehTarefa(x) && !idsPrioridade.has(x.key) && !(ehPix(x) && !x.done));
   const rotinas = hoje.filter((x) => x.kind === 'routine' && !ehTarefa(x));
   const paraFazer = [...tarefas, ...rotinas];
   const feitosLista = paraFazer.filter((x) => x.done);
@@ -51,8 +51,6 @@ export default function ListaDoDia({ area }) {
 
   const next = Array.from({ length: 7 }, (_, i) => addDays(ref, i + 1)).map((d) => ({ d, items: buildDay(state, d, filter) }));
   const semData = noDate(state, filter);
-  // avisos só desta frente (os gerais, como "itens atrasados", ficam no Início)
-  const dicas = suggestions(state, ref).filter((t) => frenteDoAviso(t) === area);
   const folgaHoje = !isWorkday(state, ref);
 
   return (
@@ -100,6 +98,19 @@ export default function ListaDoDia({ area }) {
             </Grupo>
           )}
 
+          {pix.length > 0 && (
+            <Grupo icone="💰" titulo="Cobranças Pix" conta={pix.length} cor="text-emerald-700">
+              <button onClick={() => setVerPix(!verPix)} className="flex w-full items-center justify-between rounded-xl bg-emerald-50/70 px-3 py-2.5 text-left text-sm ring-1 ring-emerald-100 hover:ring-emerald-200">
+                <span className="text-slate-700">
+                  {pix.length} {pix.length === 1 ? 'atleta' : 'atletas'} para cobrar
+                  {pix.some((x) => x.urgent) && <span className="font-semibold text-red-600"> · {pix.filter((x) => x.urgent).length} vencida{pix.filter((x) => x.urgent).length > 1 ? 's' : ''} há mais de {PIX_URGENTE_DIAS} dias</span>}
+                </span>
+                <span className="text-xs font-semibold text-emerald-700">{verPix ? 'esconder' : 'abrir e cobrar'}</span>
+              </button>
+              {verPix && pix.map((x) => <ItemRow key={x.key} item={x} onEdit={setEditing} />)}
+            </Grupo>
+          )}
+
           {/* uma lista só: tarefas avulsas, depois rotinas (com a etiqueta ↻ rotina); as feitas descem pro fim */}
           <Grupo icone="📝" titulo="Para fazer" conta={paraFazer.filter((x) => !x.done).length}>
             {paraFazer.length ? (
@@ -130,23 +141,7 @@ export default function ListaDoDia({ area }) {
 
         {/* ---------------- DEPOIS ---------------- */}
         <aside className="space-y-5">
-          {dicas.length > 0 && (
-            <section className="space-y-2 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">💡 Atenção</h2>
-              {(verDicas ? dicas : dicas.slice(0, 3)).map((t, i) => (
-                <div key={i} className="flex gap-2.5 text-sm leading-snug text-slate-700">
-                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TONE_DOT[t.tone]}`} />
-                  <span>{t.text}</span>
-                </div>
-              ))}
-              {dicas.length > 3 && (
-                <button onClick={() => setVerDicas(!verDicas)} className="text-xs font-semibold text-slate-500">
-                  {verDicas ? 'mostrar menos' : `+ ${dicas.length - 3} avisos`}
-                </button>
-              )}
-            </section>
-          )}
-
+          {/* os avisos (Atenção) ficam só no Início, para não repetir */}
           <section className="space-y-3 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-sm font-bold uppercase tracking-wide text-indigo-700">Próximos dias</h2>
             {next.map(({ d, items }) => {
@@ -166,7 +161,7 @@ export default function ListaDoDia({ area }) {
                     )}
                   </div>
                   {ms.map((m) => (
-                    <div key={m.key} className="text-xs font-medium text-indigo-700">📌 {m.title}</div>
+                    <div key={m.key} className="text-sm font-medium text-indigo-700">📌 {m.title}</div>
                   ))}
                   {ts.map((x) => (
                     <button key={x.key} onClick={() => x.kind === 'task' && setEditing(x.id)} className="flex w-full items-start gap-2 text-left text-sm text-slate-700 hover:text-ink">

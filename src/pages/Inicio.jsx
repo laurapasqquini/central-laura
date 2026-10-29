@@ -2,7 +2,7 @@
 // A lista completa de cada frente fica na aba dela (RANKEN, Gralha, Pessoal).
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, suggestions, pedidosParados, contasDoDia, isWorkday, folgaDe } from '../lib/engine';
+import { buildDay, buildOverdue, suggestions, pedidosParados, contasDoDia, isWorkday, folgaDe, ehPix } from '../lib/engine';
 import { cfgComissao, comissaoDe, dataFechamento } from '../lib/gralha';
 import { today, addDays, fmtLongo, fmtCurto, relativo } from '../lib/dates';
 import { ItemRow, QuickAdd, TaskModal } from '../components/ui';
@@ -16,7 +16,7 @@ const TONE_DOT = { red: 'bg-red-500', amber: 'bg-amber-500', violet: 'bg-violet-
 const ehTarefa = (x) => x.kind === 'task' || x.freq === 'calendario' || !!x.hora || !!x.mensagem;
 
 export default function Inicio({ go }) {
-  const { state } = useStore();
+  const { state, addTask } = useStore();
   const [editing, setEditing] = useState(null);
   const [verDicas, setVerDicas] = useState(false);
   const ref = today();
@@ -29,9 +29,12 @@ export default function Inicio({ go }) {
   const parados = pedidosParados(state, ref);
 
   // Foco de agora: atrasadas (mais antigas primeiro), depois urgentes de hoje, depois pedido parado da Gralha
-  const urgentesHoje = meusHoje.filter((x) => ehTarefa(x) && x.urgent && !x.done);
-  const foco = [...atrasadas, ...urgentesHoje].slice(0, 3);
-  const focoParados = parados.slice(0, Math.max(0, 3 - foco.length));
+  // as cobranças Pix entram como uma linha só ("4 cobranças Pix"), para não tomarem o foco inteiro
+  const urgentesHoje = meusHoje.filter((x) => ehTarefa(x) && x.urgent && !x.done && !ehPix(x));
+  const pixAbertos = [...atrasadas, ...meusHoje].filter((x) => ehPix(x) && !x.done);
+  const foco = [...atrasadas.filter((x) => !ehPix(x)), ...urgentesHoje].slice(0, pixAbertos.length ? 2 : 3);
+  const focoParados = parados.slice(0, Math.max(0, 3 - foco.length - (pixAbertos.length ? 1 : 0)));
+  const resto = atrasadas.filter((x) => !ehPix(x)).length + urgentesHoje.length - foco.length;
 
   // um cartão por frente
   const frente = (area) => {
@@ -91,17 +94,27 @@ export default function Inicio({ go }) {
       <section className="space-y-2 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="text-lg font-bold text-ink">🎯 Foco de agora</h2>
-          {atrasadas.length + urgentesHoje.length > 3 && (
+          {resto > 0 && (
             <button onClick={() => go?.('ranken')} className="text-xs font-semibold text-slate-500 hover:text-ink">
-              + {atrasadas.length + urgentesHoje.length - 3} na lista →
+              + {resto} na lista →
             </button>
           )}
         </div>
-        {foco.length || focoParados.length ? (
+        {foco.length || focoParados.length || pixAbertos.length ? (
           <div className="space-y-1.5">
             {foco.map((x) => (
               <ItemRow key={x.key} item={x} showDate onEdit={setEditing} />
             ))}
+            {pixAbertos.length > 0 && (
+              <button onClick={() => go?.('ranken')} className="flex w-full items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-left shadow-sm ring-1 ring-slate-200/70 hover:ring-slate-300">
+                <span className="h-6 w-1 shrink-0 rounded-full bg-emerald-500" />
+                <span className="min-w-0 flex-1 text-[15px] font-medium text-slate-800">
+                  💰 {pixAbertos.length} {pixAbertos.length === 1 ? 'cobrança Pix' : 'cobranças Pix'} para fazer
+                  {pixAbertos.some((x) => x.urgent) && <span className="text-sm font-semibold text-red-600"> · {pixAbertos.filter((x) => x.urgent).length} há mais de uma semana</span>}
+                </span>
+                <span className="text-xs font-semibold text-emerald-700">cobrar →</span>
+              </button>
+            )}
             {focoParados.map((p) => (
               <button key={p.id} onClick={() => go?.('gralha')} className="flex w-full items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-left shadow-sm ring-1 ring-slate-200/70 hover:ring-slate-300">
                 <span className="h-6 w-1 shrink-0 rounded-full bg-sky-500" />
@@ -165,7 +178,11 @@ export default function Inicio({ go }) {
                 <span className="w-24 shrink-0 font-semibold capitalize text-slate-700">
                   {relativo(d, ref)} <span className="text-xs font-normal text-slate-400">{fmtCurto(d)}</span>
                 </span>
-                <span className="min-w-0 text-slate-600">{[...ms.map((m) => m.title), ...(folga ? [`🌴 ${folga}`] : [])].join(' · ')}</span>
+                <span className="min-w-0 space-y-0.5 text-slate-600">
+                  {[...ms.map((m) => m.title), ...(folga ? [`🌴 ${folga}`] : [])].map((t, i) => (
+                    <span key={i} className="block">{t}</span>
+                  ))}
+                </span>
               </div>
             ))
           ) : (
@@ -181,7 +198,12 @@ export default function Inicio({ go }) {
           {(verDicas ? dicas : dicas.slice(0, 3)).map((t, i) => (
             <div key={i} className="flex gap-2.5 text-sm leading-snug text-slate-700">
               <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TONE_DOT[t.tone]}`} />
-              <span>{t.text}</span>
+              <span className="min-w-0 flex-1">{t.text}</span>
+              {t.tarefa && (
+                <button onClick={() => addTask(t.tarefa)} className="h-fit shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-amber-700 ring-1 ring-amber-200 hover:bg-amber-50">
+                  + Criar tarefa
+                </button>
+              )}
             </div>
           ))}
           {dicas.length > 3 && (
