@@ -48,10 +48,10 @@ export default function PontoLolis() {
   const [res, recarregar] = usePonto(desde);
   const [editando, setEditando] = useState(null);
 
-  if (!res) return <div className="rounded-2xl bg-white p-4 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">Carregando o ponto…</div>;
+  if (!res) return <div className="rounded-lg bg-white p-4 text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">Carregando o ponto…</div>;
   if (res.erro)
     return (
-      <section className="space-y-2 rounded-2xl bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
+      <section className="space-y-2 rounded-lg bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200">
         <div className="font-bold">Falta ligar o ponto no banco (uma vez só)</div>
         <p>
           No Supabase, abra <b>SQL Editor</b>, cole o conteúdo do arquivo <code>supabase/lolis-ponto.sql</code> e clique em <b>Run</b>. Depois disso, os botões "Cheguei" e "Saí" aparecem na página da Lolis.
@@ -85,7 +85,7 @@ export default function PontoLolis() {
         <Numero rotulo="Horas no mês" valor={duracao(horas)} />
       </section>
 
-      <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <div className="flex items-center justify-between gap-2">
           <button onClick={() => setSemana(addDays(semana, -7))} className="rounded-lg px-2 py-1 text-slate-500 ring-1 ring-slate-200">◀</button>
           <h2 className="text-sm font-bold text-ink">
@@ -188,7 +188,7 @@ function Corrigir({ dia, reg, onPronto }) {
 }
 
 const Numero = ({ rotulo, valor, tom }) => (
-  <div className={`rounded-2xl p-3 shadow-sm ring-1 ${tom === 'red' ? 'bg-red-50 ring-red-200' : tom === 'amber' ? 'bg-amber-50 ring-amber-200' : 'bg-white ring-slate-200'}`}>
+  <div className={`rounded-lg p-3 shadow-sm ring-1 ${tom === 'red' ? 'bg-red-50 ring-red-200' : tom === 'amber' ? 'bg-amber-50 ring-amber-200' : 'bg-white ring-slate-200'}`}>
     <div className="text-xs text-slate-500">{rotulo}</div>
     <div className={`text-xl font-bold ${tom === 'red' ? 'text-red-700' : tom === 'amber' ? 'text-amber-800' : 'text-ink'}`}>{valor}</div>
   </div>
@@ -208,7 +208,7 @@ export function AvisoPontoLolis() {
         ? `⏰ A Lolis já passou das 4 horas (chegou às ${hora(r.entrada)}) e não marcou a saída.`
         : '';
   if (!msg) return null;
-  return <div className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">{msg} <span className="font-normal">Veja em Ranken › Lolis › Ponto.</span></div>;
+  return <div className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 ring-1 ring-amber-200">{msg} <span className="font-normal">Veja em Ranken › Lolis › Ponto.</span></div>;
 }
 
 // Linha curta para o cartão "Lolis hoje" do Início

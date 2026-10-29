@@ -29,7 +29,7 @@ export default function Login() {
 
   return (
     <div className="grid min-h-screen place-items-center bg-ink px-4">
-      <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-3xl bg-paper p-7 shadow-2xl">
+      <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-xl bg-paper p-7 shadow-2xl">
         <div className="flex items-center gap-3">
           <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-11 w-11" />
           <div>

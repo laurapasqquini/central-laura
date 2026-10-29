@@ -53,10 +53,10 @@ export function NotifCard() {
   };
 
   return (
-    <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <div className="space-y-4 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="font-bold text-ink">🔔 Notificações</div>
+          <div className="font-bold text-ink">Notificações</div>
           <p className="text-sm text-slate-500">A Central te cutuca sozinha, mesmo com o app fechado.</p>
         </div>
         {st === 'ligado' && <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">✓ ativas aqui</span>}

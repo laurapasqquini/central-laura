@@ -45,7 +45,7 @@ export default function BancoLolis() {
         {abertas.map((b, i) => {
           const regs = registros(b.id);
           return (
-            <div key={b.id} className={`rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 ${b.ativo === false ? 'opacity-50' : ''}`}>
+            <div key={b.id} className={`rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200 ${b.ativo === false ? 'opacity-50' : ''}`}>
               {editando === b.id ? (
                 <div className="space-y-2">
                   <input className={inputCls} value={b.titulo} onChange={(e) => mudar(b.id, { titulo: e.target.value })} />
@@ -102,7 +102,7 @@ export default function BancoLolis() {
         {!abertas.length && <Empty>A lista está vazia: adicione abaixo o que ela pode puxar quando acabar o do dia.</Empty>}
       </section>
 
-      <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">+ Adicionar</h2>
         <input
           className={inputCls}
@@ -124,7 +124,7 @@ export default function BancoLolis() {
       </section>
 
       {feitas.length > 0 && (
-        <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
           <button onClick={() => setVerFeitas(!verFeitas)} className="flex w-full items-center justify-between text-left">
             <h2 className="text-sm font-bold uppercase tracking-wide text-emerald-700">
               ✓ Concluídas <span className="text-slate-400">{feitas.length}</span>

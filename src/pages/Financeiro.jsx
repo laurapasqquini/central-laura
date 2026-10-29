@@ -131,7 +131,7 @@ export default function Financeiro() {
       </div>
 
       {anexar && (
-        <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs text-slate-500">
               <b className="text-slate-700">Nubank:</b> CSV da conta, CSV do cartão, PDF da conta ou extrato de custódia (saldo das caixinhas). <b className="text-slate-700">PicPay:</b> CSV. Pode mandar vários de uma vez.
@@ -208,7 +208,7 @@ function Mes({ r, antes, mes, fin, store, contas, totalGuardado, brl, brl0, irGu
         <div className="rounded-xl bg-amber-50 px-3.5 py-2.5 text-sm text-amber-900 ring-1 ring-amber-100">💡 {avisos.join(' · ')}</div>
       )}
 
-      <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <h2 className="text-sm font-bold text-slate-700">Pra onde foi</h2>
         <div className="flex h-3.5 overflow-hidden rounded-full bg-slate-100">
           {r.gastosPorCat.slice(0, 6).map((x, i) => (
@@ -245,7 +245,7 @@ function Mes({ r, antes, mes, fin, store, contas, totalGuardado, brl, brl0, irGu
       </section>
 
       {r.entradasPorCat.length > 0 && (
-        <section className="rounded-2xl bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200">
+        <section className="rounded-lg bg-white px-4 py-3 text-sm shadow-sm ring-1 ring-slate-200">
           <span className="font-bold text-slate-700">De onde veio: </span>
           <span className="text-slate-600">{r.entradasPorCat.map((x) => `${CATEGORIAS[x.cat].icone} ${CATEGORIAS[x.cat].nome} ${brl0(x.total)}`).join('  ·  ')}</span>
         </section>
@@ -261,8 +261,8 @@ function Mes({ r, antes, mes, fin, store, contas, totalGuardado, brl, brl0, irGu
 // ── Gastos muito acima do comum, pra ela avaliar: "fora do comum" (sai da média) ou "é normal" ──
 function Incomuns({ lista, brl, setTransacao }) {
   return (
-    <section className="space-y-2 rounded-2xl bg-orange-50 p-4 ring-1 ring-orange-100">
-      <h2 className="text-sm font-bold text-orange-800">🔎 Gasto{lista.length > 1 ? 's' : ''} fora do comum pra avaliar</h2>
+    <section className="space-y-2 rounded-lg bg-orange-50 p-4 ring-1 ring-orange-100">
+      <h2 className="text-sm font-bold text-orange-800">Gasto{lista.length > 1 ? 's' : ''} fora do comum pra avaliar</h2>
       {lista.map((t) => (
         <div key={t.id} className="flex flex-wrap items-center gap-2 rounded-xl bg-white px-3 py-2 text-sm ring-1 ring-orange-100">
           <span className="text-xs text-slate-400">{dm(t.data)}</span>
@@ -294,9 +294,9 @@ function Ciclo({ fin, contas, brl0 }) {
   const passou = c.anterior > 0 && c.aberta > c.anterior;
   const salario = c.ultSal?.valor || 0;
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-bold text-slate-700">💳 Ciclo do salário</h2>
+        <h2 className="text-sm font-bold text-slate-700">Ciclo do salário</h2>
         <span className="text-xs text-slate-400">
           {c.ultSal ? `salário de ${fmt(c.ultSal.data)} até o próximo, ~${fmt(c.proxSalario)}` : `próximo salário ~${fmt(c.proxSalario)}`}
         </span>
@@ -417,7 +417,7 @@ function Ano({ fin, ano, brl0, oculto, onMes }) {
         <Numero titulo="Sobrou" valor={brl0(soma('sobrou'))} cor="text-ink" />
         <Numero titulo="Guardou (líquido)" valor={brl0(soma('guardou') - soma('tirou'))} cor="text-violet-700" />
       </div>
-      <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-700">Mês a mês</h2>
           <span className="flex gap-3 text-xs text-slate-500">
@@ -438,7 +438,7 @@ function Ano({ fin, ano, brl0, oculto, onMes }) {
         </div>
         <p className="text-xs text-slate-400">Clique num mês para abrir.</p>
       </section>
-      <section className="space-y-1.5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <section className="space-y-1.5 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <h2 className="text-sm font-bold text-slate-700">O que mais pesou no ano</h2>
         {top.map(([cat, v]) => (
           <div key={cat} className="flex justify-between text-sm">
@@ -464,7 +464,7 @@ function Guardado({ fin, meses, brl, brl0, store }) {
   const maxH = Math.max(1, ...hist.map((x) => Math.max(x.guardou, x.tirou)));
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl bg-violet-50 p-4 ring-1 ring-violet-100">
+      <div className="rounded-lg bg-violet-50 p-4 ring-1 ring-violet-100">
         <div className="text-xs font-semibold uppercase tracking-wide text-violet-500">Total guardado hoje</div>
         <div className="text-3xl font-bold text-violet-800">{total ? brl(total) : '—'}</div>
         <div className="text-xs text-violet-500">Não entra em "Saiu" nem em "Entrou": é dinheiro seu mudando de lugar.</div>
@@ -475,10 +475,10 @@ function Guardado({ fin, meses, brl, brl0, store }) {
           const s = saldos[l];
           const meta = metas[l];
           return (
-            <div key={l} className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <div key={l} className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="text-sm font-bold text-slate-700">🐷 {l}</div>
+                  <div className="text-sm font-bold text-slate-700">{l}</div>
                   <div className="text-2xl font-bold text-ink">{s ? brl(s.valor) : '—'}</div>
                   <div className="text-xs text-slate-400">
                     {s ? `em ${s.em.split('-').reverse().join('/')}` : 'sem saldo ainda'}
@@ -522,7 +522,7 @@ function Guardado({ fin, meses, brl, brl0, store }) {
       </div>
 
       {hist.some((x) => x.guardou || x.tirou) && (
-        <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
           <h2 className="text-sm font-bold text-slate-700">Guardou e tirou por mês</h2>
           {hist.map((x) => (
             <div key={x.m} className="flex items-center gap-2 text-xs">
@@ -606,7 +606,7 @@ const limpa = (desc) => desc.replace(/^Compra no débito - /, '').replace(/ - �
 
 function Numero({ titulo, valor, cor, sub }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{titulo}</div>
       <div className={`whitespace-nowrap text-lg font-bold lg:text-xl ${cor}`}>{valor}</div>
       {sub && <div className="text-xs text-slate-400">{sub}</div>}
@@ -661,8 +661,8 @@ function Manual({ add }) {
   };
   const cats = Object.entries(CATEGORIAS).filter(([, c]) => c.tipo === (f.tipo === 'gasto' ? 'gasto' : 'entrada'));
   return (
-    <form onSubmit={salvar} className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div className="text-sm font-bold text-slate-700">✍️ Lançar à mão</div>
+    <form onSubmit={salvar} className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="text-sm font-bold text-slate-700">Lançar à mão</div>
       <div className="flex flex-wrap items-center gap-2">
         <select value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value, cat: e.target.value === 'gasto' ? 'outros' : 'outras_entradas' })} className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm">
           <option value="gasto">Gasto</option>

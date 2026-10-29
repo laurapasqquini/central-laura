@@ -58,7 +58,7 @@ export default function Relatorios() {
       </div>
 
       <Section title="Ver e exportar">
-        <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+        <div className="space-y-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200">
           <Segmented value={tipo} onChange={setTipo} options={PERIODOS} />
           {tipo === 'livre' && (
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
@@ -76,8 +76,8 @@ export default function Relatorios() {
             </label>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={copiar} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">📋 Copiar texto</button>
-            <button onClick={pdf} className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white">⬇ Baixar PDF</button>
+            <button onClick={copiar} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">Copiar texto</button>
+            <button onClick={pdf} className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white">Baixar PDF</button>
             {msg && <span className="self-center text-sm font-medium text-slate-600">{msg}</span>}
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function Relatorios() {
         {!dias.length && <Empty>Nada registrado neste período.</Empty>}
         <div className="space-y-3">
           {dias.map((d) => (
-            <div key={d.date} className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200/70">
+            <div key={d.date} className="rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200/70">
               <div className="mb-2 text-sm font-bold capitalize text-slate-700">
                 {relativo(d.date, ref)} <span className="font-normal normal-case text-slate-400">· {fmtCurto(d.date)}</span>
               </div>
@@ -151,7 +151,7 @@ function Colar({ chave, titulo, placeholder, cor }) {
 
   return (
     <Section title={titulo}>
-      <div className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+      <div className="space-y-2 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200">
         <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
           Dia
           <input type="date" className={`${inputBase} w-40`} value={data} onChange={(e) => trocarData(e.target.value || ref)} />

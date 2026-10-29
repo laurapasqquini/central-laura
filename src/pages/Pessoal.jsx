@@ -18,8 +18,8 @@ export default function Pessoal() {
           value={aba}
           onChange={setAba}
           options={[
-            ['tarefas', '📝 Tarefas e contas', 'bg-violet-500 text-white ring-transparent'],
-            ['financeiro', '💰 Financeiro', 'bg-violet-500 text-white ring-transparent'],
+            ['tarefas', 'Tarefas e contas', 'bg-violet-500 text-white ring-transparent'],
+            ['financeiro', 'Financeiro', 'bg-violet-500 text-white ring-transparent'],
           ]}
         />
       </header>

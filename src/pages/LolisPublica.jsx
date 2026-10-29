@@ -76,7 +76,7 @@ export default function LolisPublica({ token, embutida }) {
         </Protecao>
 
         {(dados.avisos || []).length > 0 && (
-          <section className="space-y-1.5 rounded-2xl bg-red-50 px-4 py-3 ring-2 ring-red-200">
+          <section className="space-y-1.5 rounded-lg bg-red-50 px-4 py-3 ring-2 ring-red-200">
             <div className="text-xs font-bold uppercase tracking-wide text-red-700">📌 Sempre lembrar</div>
             {dados.avisos.map((a) => (
               <p key={a} className="text-[15px] font-bold text-red-900">
@@ -139,7 +139,7 @@ function CartaoPonto({ token, embutida }) {
   const falta = r.status === 'trabalhando' ? Math.max(0, JORNADA_MAX - r.minutos) : 0;
 
   return (
-    <section className={`space-y-2 rounded-2xl p-4 shadow-sm ring-1 ${deu4h ? 'bg-amber-50 ring-amber-300' : 'bg-white ring-slate-200'}`}>
+    <section className={`space-y-2 rounded-lg p-4 shadow-sm ring-1 ${deu4h ? 'bg-amber-50 ring-amber-300' : 'bg-white ring-slate-200'}`}>
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-2xl">⏰</span>
         <div className="min-w-0 flex-1">
@@ -193,7 +193,7 @@ const itensExpansao = (e) => (e ? e.itens || (e.atual ? [e.atual, ...(e.depois |
 function Expansao({ itens, feitos, marcas, marcar }) {
   const [aberto, setAberto] = useState(null);
   return (
-    <div className="space-y-1 rounded-2xl bg-amber-50 p-3 ring-1 ring-amber-200">
+    <div className="space-y-1 rounded-lg bg-amber-50 p-3 ring-1 ring-amber-200">
       <div className="text-xs font-bold uppercase tracking-wide text-amber-800">🏖️ Cidades novas · na ordem do prazo</div>
       {itens.map((a) => {
         const feito = feitos.includes(a.key);
@@ -320,7 +320,7 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
       {pedindo && <CaixaMarca titulo={titulos[pedindo] || ''} onSalvar={salvarMarca} onFechar={() => setPedindo(null)} />}
       <h2 className="text-sm font-semibold text-slate-500 first-letter:uppercase">{fmtLongo(dia.date)}</h2>
 
-      <div className="flex gap-1 rounded-2xl bg-white p-1 shadow-sm ring-1 ring-slate-200">
+      <div className="flex gap-1 rounded-lg bg-white p-1 shadow-sm ring-1 ring-slate-200">
         {ABAS.map(([id, nome, n]) => (
           <button key={id} onClick={() => setAba(id)} className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition ${aba === id ? 'bg-ink text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
             {nome}
@@ -374,7 +374,7 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
                   : <>Os ganhadores chegam do Hub na quarta à tarde (Torneios › 6x0 6x0, só os jogos <b>no prazo</b>).</>}
               </p>
               {dia.seisZero.map((c) => (
-                <div key={c.cidade} className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+                <div key={c.cidade} className="space-y-2 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200">
                   <div className="text-sm font-bold text-slate-800">
                     {c.cidade} <span className="font-normal text-slate-500">· {c.premios.join(' + ')}</span>
                   </div>
@@ -425,7 +425,7 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
             <section className="space-y-2">
               <button
                 onClick={() => setVerBanco(!verBanco)}
-                className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left shadow-sm ring-1 ${verBanco ? 'bg-amber-100 ring-amber-300' : 'bg-white ring-slate-200 hover:ring-amber-300'}`}
+                className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left shadow-sm ring-1 ${verBanco ? 'bg-amber-100 ring-amber-300' : 'bg-white ring-slate-200 hover:ring-amber-300'}`}
               >
                 <span className="text-xl">🙌</span>
                 <span className="min-w-0 flex-1">
@@ -525,7 +525,7 @@ function Post({ p: post, data, feito, marca, onMarcar }) {
   ].join('\n');
 
   return (
-    <div id={idGrupo(p)} className={`scroll-mt-4 space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 ${feito ? 'opacity-60' : ''}`}>
+    <div id={idGrupo(p)} className={`scroll-mt-4 space-y-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200 ${feito ? 'opacity-60' : ''}`}>
       <div className="flex items-center gap-2">
         <Marca feito={feito} marca={marca} onClick={onMarcar} />
         <button onClick={() => setAberto(!aberto)} className="flex flex-1 items-center gap-2 text-left">
@@ -639,7 +639,7 @@ function Texto({ rotulo, texto }) {
 
 function Mensagem({ b, feito, marca, onMarcar, semCopiar }) {
   return (
-    <div className={`space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200 ${feito ? 'opacity-50' : ''}`}>
+    <div className={`space-y-2 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200 ${feito ? 'opacity-50' : ''}`}>
       <div className="flex items-start gap-2">
         <Marca feito={feito} marca={marca} onClick={onMarcar} />
         <div className="min-w-0 flex-1">
@@ -825,7 +825,7 @@ function CaixaMarca({ titulo, onSalvar, onFechar }) {
   const [nota, setNota] = useState('');
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 sm:items-center" onClick={onFechar}>
-      <div className="w-full max-w-lg space-y-3 rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg space-y-3 rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-xl" onClick={(e) => e.stopPropagation()}>
         <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">Marcar</div>
         <div className="text-[15px] font-semibold text-ink">{titulo}</div>
         <textarea

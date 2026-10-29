@@ -31,9 +31,9 @@ export function ContasCard() {
   };
 
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-violet-700">💸 Contas fixas</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-violet-700">Contas fixas</h2>
         {ativas.length > 0 && (
           <span className="text-sm text-slate-500">
             Este mês: <b className="text-emerald-600">{brl(pago)}</b> pago de <b className="text-slate-700">{brl(total)}</b>

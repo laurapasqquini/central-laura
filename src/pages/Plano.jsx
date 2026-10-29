@@ -46,7 +46,7 @@ export default function Plano() {
             {sugestoes.map((r) => {
               const dias = r.prazo ? diffDays(r.prazo, ref) : null;
               return (
-                <div key={r.id} className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+                <div key={r.id} className="space-y-2 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200">
                   <div className="flex items-start gap-2">
                     <span className="text-lg leading-none">{frente(r.frente).icone}</span>
                     <div className="min-w-0 flex-1">
@@ -93,7 +93,7 @@ export default function Plano() {
             {STATUS.map((st) => {
               const lista = inis.filter((i) => i.status === st.id && (st.id !== 'feito' || diffDays(ref, i.feitoEm || ref) <= 30));
               return (
-                <div key={st.id} className="space-y-2 rounded-2xl bg-slate-100/70 p-2">
+                <div key={st.id} className="space-y-2 rounded-lg bg-slate-100/70 p-2">
                   <div className="px-1 text-xs font-bold uppercase tracking-wide text-slate-600">
                     {st.icone} {st.nome} <span className="text-slate-400">{lista.length}</span>
                   </div>
@@ -207,7 +207,7 @@ function FechamentoMes() {
   const abertas = metas.filter((m) => !m.feita && !(plano(state).metas[mes] || []).some((x) => x.texto === m.texto)); // as já passadas não contam de novo
   const passar = () => setPlano((pl) => ({ ...pl, metas: { ...pl.metas, [mes]: [...(pl.metas[mes] || []).filter((m) => m.texto), ...abertas.map((m) => ({ texto: m.texto, feita: false }))].slice(0, 3) } }));
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-indigo-50 px-4 py-3 text-sm text-indigo-900 ring-1 ring-indigo-100">
+    <div className="flex flex-wrap items-center gap-2 rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-900 ring-1 ring-indigo-100">
       <span className="min-w-0 flex-1">
         <b className="capitalize">{nomeDoMes(antes)}</b> fechou com {metas.length - abertas.length} de {metas.length} metas feitas{abertas.length ? `. Ficou: ${abertas.map((m) => m.texto).join(' · ')}` : ' 🎉'}
       </span>
@@ -233,7 +233,7 @@ function Metas({ mes = today().slice(0, 7) }) {
     <Section title={`🏁 Metas de ${nomeMes} (até 3)`}>
       <div className="grid gap-2 sm:grid-cols-3">
         {lista.map((m, n) => (
-          <div key={n} className={`flex items-center gap-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ${m.feita ? 'ring-emerald-200' : 'ring-slate-200'}`}>
+          <div key={n} className={`flex items-center gap-2 rounded-lg bg-white p-3 shadow-sm ring-1 ${m.feita ? 'ring-emerald-200' : 'ring-slate-200'}`}>
             <Check done={m.feita} onClick={() => m.texto && set(n, { feita: !m.feita })} area="ranken" />
             <input className={`min-w-0 flex-1 bg-transparent text-sm font-medium outline-none ${m.feita ? 'text-slate-400 line-through' : 'text-slate-800'}`} placeholder={['Ex.: fechar a reunião de alinhamento', 'Ex.: proposta de patrocínio 2027', 'Ex.: plano de reinscrição do Beach'][n]} value={m.texto} onChange={(e) => set(n, { texto: e.target.value })} />
           </div>
@@ -255,7 +255,7 @@ function Numeros() {
 
   return (
     <Section title="📊 Números da semana">
-      <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+      <div className="space-y-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200">
         <p className="text-xs text-slate-500">Os números do Beach chegam sozinhos quando você abre a tela <b>Beach Tênis</b> do Hub (pela extensão). Os outros você preenche à mão. Entram no relatório para os chefes com a variação.</p>
         {atual.length > 0 && (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -334,13 +334,13 @@ export function RelatorioChefes({ compacto = false }) {
 
   return (
     <Section title="📣 Relatório para os chefes">
-      <div className="space-y-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+      <div className="space-y-3 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200">
         <Segmented value={tipo} onChange={setTipo} options={[['semana', 'Esta semana'], ['semana-passada', 'Semana passada']]} />
         {!compacto && <pre className="max-h-80 overflow-y-auto whitespace-pre-wrap rounded-xl bg-slate-50 p-3 font-sans text-sm text-slate-700">{texto}</pre>}
         {r.entregue.length + r.andamento.length + r.propostas.length === 0 && <Empty>Ainda vazio: puxe iniciativas do Radar e marque o que entregou.</Empty>}
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={copiar} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">📋 Copiar texto</button>
-          <button onClick={() => pdfChefes(r).then(() => aviso('PDF baixado ✓'))} className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white">⬇ Baixar PDF</button>
+          <button onClick={copiar} className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white">Copiar texto</button>
+          <button onClick={() => pdfChefes(r).then(() => aviso('PDF baixado ✓'))} className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white">Baixar PDF</button>
           {msg && <span className="text-sm font-medium text-slate-600">{msg}</span>}
         </div>
       </div>

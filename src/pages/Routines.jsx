@@ -42,7 +42,7 @@ export default function Routines() {
                     <div className="text-[15px] font-medium text-slate-800">{r.title}</div>
                     <div className="mt-1 flex flex-wrap gap-1.5">
                       <Pill className="bg-slate-50 text-slate-500 ring-slate-200">{when(r)}</Pill>
-                      {r.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">🙋 Lolis</Pill>}
+                      {r.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">Lolis</Pill>}
                     </div>
                   </button>
                   <button

@@ -176,7 +176,7 @@ export default function Contrato({ pedido, cat, onVoltar }) {
         </button>
         <span className="text-xs text-slate-400">O rascunho é salvo sozinho. As fotos ficam neste aparelho.</span>
       </div>
-      <h1 className="text-2xl font-bold tracking-tight text-ink">📄 Contrato · {c.pedido || pedido.cliente}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-ink">Contrato · {c.pedido || pedido.cliente}</h1>
 
       {/* 1. Cliente */}
       <Bloco n="1" titulo="Cliente">
@@ -221,7 +221,7 @@ export default function Contrato({ pedido, cat, onVoltar }) {
               ],
             })
           }
-          className="w-full rounded-2xl border-2 border-dashed border-slate-200 py-3 text-sm font-semibold text-slate-500 hover:border-sky-300 hover:text-sky-600"
+          className="w-full rounded-lg border-2 border-dashed border-slate-200 py-3 text-sm font-semibold text-slate-500 hover:border-sky-300 hover:text-sky-600"
         >
           + Produto
         </button>
@@ -268,7 +268,7 @@ export default function Contrato({ pedido, cat, onVoltar }) {
       </Bloco>
 
       {/* 4. Baixar */}
-      <div className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
         {faltando.length > 0 && <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-800">Falta: {faltando.join(', ')}.</p>}
         <div className="flex flex-wrap gap-2">
           <button disabled={busy || faltando.length > 0} onClick={() => baixar('pdf')} className="rounded-xl bg-ink px-5 py-3 text-sm font-bold text-white disabled:opacity-40">
@@ -291,7 +291,7 @@ export default function Contrato({ pedido, cat, onVoltar }) {
 
 function Bloco({ n, titulo, children }) {
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <h2 className="flex items-center gap-2 font-bold text-ink">
         <span className="grid h-6 w-6 place-items-center rounded-full bg-sky-500 text-xs text-white">{n}</span>
         {titulo}
@@ -333,7 +333,7 @@ function Item({ n, it, fotos, set, remover, addFotos, tiraFoto, prod }) {
   }, [foco, addFotos]);
 
   return (
-    <div className="space-y-3 rounded-2xl p-3 ring-1 ring-slate-200">
+    <div className="space-y-3 rounded-lg p-3 ring-1 ring-slate-200">
       <div className="flex items-center justify-between">
         <span className="font-bold text-slate-800">
           ITEM {n} — {(it.titulo || it.produto || 'novo produto').toUpperCase()}

@@ -45,7 +45,7 @@ export default function Campanhas() {
 
   return (
     <div className="space-y-5">
-      <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <div className="flex items-baseline justify-between gap-3">
           <div className="font-bold text-ink">
             {n.criadas} de {todas.length} campanhas criadas
@@ -81,7 +81,7 @@ export default function Campanhas() {
       {!lista.length && <Empty>{ver === 'criar' ? 'Nada para criar aqui. 🎉' : ver === 'criadas' ? 'Nenhuma campanha marcada como criada ainda.' : 'Nada aqui.'}</Empty>}
 
       {Object.entries(grupos).map(([etapa, g]) => (
-        <section key={etapa} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+        <section key={etapa} className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
           <div className="border-b border-slate-100 bg-slate-50 px-4 py-2.5">
             <div className="text-sm font-bold text-slate-800">
               {g.cidade} · {g.categoria}

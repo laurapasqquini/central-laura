@@ -55,7 +55,7 @@ export function Revisao({ item, go, onClose }) {
   };
 
   const Bloco = ({ n, titulo, children }) => (
-    <section className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-2 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200">
       <h4 className="text-sm font-bold text-slate-700">
         <span className="mr-1.5 inline-grid h-5 w-5 place-items-center rounded-full bg-ink text-[11px] text-white">{n}</span>
         {titulo}

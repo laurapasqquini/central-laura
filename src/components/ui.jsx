@@ -8,8 +8,11 @@ import { subirAnexo, apagarAnexos, linksAnexos } from '../lib/anexos';
 
 export const HUB_URL = 'https://ranken-financeiro.vercel.app/';
 
+// emoji no começo de um título (os do Hub vêm com 🤖, 📩…): na tela fica só o texto
+export const semEmoji = (s = '') => s.replace(/^(?:[\p{Extended_Pictographic}\uFE0F\u200D]|\s)+/u, '');
+
 export const Pill = ({ className = '', children }) => (
-  <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${className}`}>{children}</span>
+  <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ring-1 ring-inset ${className}`}>{children}</span>
 );
 
 export const AreaPill = ({ area }) => <Pill className={AREAS[area].soft}>{AREAS[area].label}</Pill>;
@@ -19,7 +22,7 @@ export function Check({ done, onClick, area }) {
     <button
       onClick={onClick}
       aria-label={done ? 'Desmarcar' : 'Concluir'}
-      className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition ${
+      className={`grid h-5 w-5 shrink-0 place-items-center rounded-[5px] border-[1.5px] transition ${
         done ? `${AREAS[area].bar} border-transparent pop` : 'border-slate-300 hover:border-slate-500 bg-white'
       }`}
     >
@@ -67,13 +70,13 @@ export function ItemRow({ item, showDate = false, onEdit }) {
       <Check done={item.done} onClick={toggle} area={item.area} />
       <button onClick={() => item.kind === 'task' && onEdit?.(item.id)} className="min-w-0 flex-1 text-left">
         <div title={item.title} className={`line-clamp-2 text-[15px] leading-snug font-medium ${item.done ? 'line-through text-slate-500' : 'text-slate-800'}`}>
-          {item.title}
+          {semEmoji(item.title)}
           {item.anexos?.length > 0 && <span className="ml-1 text-xs text-slate-400" title="Tem imagem anexada">📎{item.anexos.length > 1 ? item.anexos.length : ''}</span>}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           {item.urgent && !item.done && <Pill className="bg-red-50 text-red-600 ring-red-200">urgente</Pill>}
-          {item.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">🙋 Lolis</Pill>}
-          {item.kind === 'routine' && item.freq !== 'calendario' && <Pill className="bg-slate-50 text-slate-500 ring-slate-200">↻ rotina</Pill>}
+          {item.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">Lolis</Pill>}
+          {item.kind === 'routine' && item.freq !== 'calendario' && <Pill className="bg-slate-50 text-slate-500 ring-slate-200">Rotina</Pill>}
           {item.project && <Pill className="bg-indigo-50 text-indigo-600 ring-indigo-200">{item.project}</Pill>}
           {(showDate || late) && item.date && (
             <span className={`text-xs font-medium ${late ? 'text-red-500' : 'text-slate-400'}`}>
@@ -81,23 +84,23 @@ export function ItemRow({ item, showDate = false, onEdit }) {
             </span>
           )}
           {item.movedFrom && <span className="text-xs font-medium text-slate-400">↪ era {fmtCurto(item.movedFrom)}</span>}
-          {item.hubCriadoEm && <span className="text-xs font-medium text-slate-400" title="Quando a tarefa entrou no RANKEN Hub">📥 {quandoEntrou(item.hubCriadoEm)}</span>}
-          {item.notes && <span className="text-xs text-slate-400">📝</span>}
+          {item.hubCriadoEm && <span className="text-xs font-medium text-slate-400" title="Quando a tarefa entrou no RANKEN Hub">{quandoEntrou(item.hubCriadoEm)}</span>}
+          {item.notes && <span className="text-xs text-slate-400">· com nota</span>}
         </div>
       </button>
       {item.hub && !item.done && (
-        <a href={HUB_URL + (item.hubPath || '')} target="_blank" rel="noreferrer" title="Abrir o RANKEN Hub" className="mt-0.5 shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700">
-          🔗 Hub
+        <a href={HUB_URL + (item.hubPath || '')} target="_blank" rel="noreferrer" title="Abrir o RANKEN Hub" className="mt-0.5 shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200 hover:bg-emerald-50">
+          Hub ↗
         </a>
       )}
       {item.acao === 'revisao' && !item.done && (
-        <button onClick={() => window.dispatchEvent(new CustomEvent('abrir-revisao', { detail: item }))} className="mt-0.5 shrink-0 rounded-full bg-ink px-2.5 py-1 text-[11px] font-bold text-white hover:opacity-90">
-          🧭 Abrir revisão
+        <button onClick={() => window.dispatchEvent(new CustomEvent('abrir-revisao', { detail: item }))} className="mt-0.5 shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
+          Abrir revisão
         </button>
       )}
       {item.mensagem && !item.done && (
-        <button onClick={() => setVerMsg((v) => !v)} title="Ver a mensagem pronta" className="mt-0.5 shrink-0 rounded-full bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700">
-          💬 Mensagem
+        <button onClick={() => setVerMsg((v) => !v)} title="Ver a mensagem pronta" className="mt-0.5 shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200 hover:bg-emerald-50">
+          Mensagem
         </button>
       )}
       {item.kind === 'task' && !item.done && (
@@ -114,7 +117,7 @@ export function ItemRow({ item, showDate = false, onEdit }) {
       <div className="mx-1 -mt-1 space-y-2 rounded-b-xl bg-[#e7ffdb] p-3 ring-1 ring-emerald-100">
         <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800">{item.mensagem}</pre>
         <button onClick={copiar} className="w-full rounded-lg bg-emerald-600 py-2 text-sm font-bold text-white hover:bg-emerald-700">
-          {copiado ? 'Copiado ✓' : '📋 Copiar mensagem'}
+          {copiado ? 'Copiado ✓' : 'Copiar mensagem'}
         </button>
         {item.telefone && <CopiarNumero tel={item.telefone} />}
       </div>
@@ -153,7 +156,7 @@ export function Section({ title, count, tone = 'slate', children, right }) {
     <section className="space-y-2">
       <div className="flex items-baseline justify-between px-1">
         <h2 className={`text-sm font-bold uppercase tracking-wide ${tones[tone]}`}>
-          {title} {count != null && <span className="ml-1 font-semibold text-slate-400">{count}</span>}
+          {semEmoji(title)} {count != null && <span className="ml-1 font-semibold text-slate-400">{count}</span>}
         </h2>
         {right}
       </div>
@@ -213,9 +216,9 @@ export function QuickAdd({ defaultArea }) {
   };
 
   return (
-    <form onSubmit={submit} className="rounded-2xl bg-white p-2 shadow-sm ring-1 ring-slate-200">
+    <form onSubmit={submit} className="rounded-lg bg-white p-2 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-center gap-2">
-        <span className="pl-2 text-lg">✨</span>
+        <span className="pl-2 text-slate-400">＋</span>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -253,9 +256,9 @@ export function QuickAdd({ defaultArea }) {
           <b className="text-slate-700">{preview.title}</b>
           <AreaPill area={preview.area} />
           <Pill className="bg-slate-50 text-slate-600 ring-slate-200">{preview.due ? (preview.due === today() ? 'hoje' : fmtCurto(preview.due)) : 'sem data'}</Pill>
-          {preview.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">🙋 Lolis</Pill>}
+          {preview.who === 'lolis' && <Pill className="bg-amber-50 text-amber-700 ring-amber-200">Lolis</Pill>}
           {preview.urgent && <Pill className="bg-red-50 text-red-600 ring-red-200">urgente</Pill>}
-          {preview.hub && <Pill className="bg-emerald-600 text-white ring-transparent">🔗 fazer no Hub</Pill>}
+          {preview.hub && <Pill className="bg-emerald-600 text-white ring-transparent">fazer no Hub</Pill>}
         </div>
       )}
       {!text && focado && (
@@ -300,7 +303,7 @@ export const areaOptions = Object.entries(AREAS).map(([k, a]) => [k, a.label, `$
 export function Modal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 sm:items-center sm:p-4" onClick={onClose}>
-      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-paper p-5 shadow-2xl sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-paper p-5 shadow-2xl sm:rounded-xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold text-ink">{title}</h3>
           <button onClick={onClose} className="rounded-full px-2 text-2xl leading-none text-slate-400 hover:text-slate-700">×</button>

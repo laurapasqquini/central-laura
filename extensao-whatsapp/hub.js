@@ -501,9 +501,18 @@ async function concluirNoHub() {
         const btn = card.querySelector('button[aria-label="Concluir tarefa"]');
         if (!btn || btn.disabled) continue;
         btn.click();
-        n++;
         await new Promise((r) => setTimeout(r, 900));
-        if (document.querySelector('[role="dialog"]')) break;
+        const janela = document.querySelector('[role="dialog"]');
+        if (janela) {
+          // tarefa atrasada: o Hub pergunta "O que foi feito?" (nota opcional) → confirma em "✓ Resolvido".
+          // Qualquer outra janela: para e não mexe em mais nada.
+          const resolvido = [...janela.querySelectorAll('button')].find((b) => b.textContent.trim() === '✓ Resolvido');
+          if (!/O que foi feito\?/.test(janela.textContent) || !resolvido) break;
+          resolvido.click();
+          await new Promise((r) => setTimeout(r, 900));
+          if (document.querySelector('[role="dialog"]')) break;
+        }
+        n++;
       }
       return n;
     };

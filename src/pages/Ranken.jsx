@@ -9,12 +9,12 @@ import { useStore } from '../lib/store';
 import { totalWhats } from '../lib/whats';
 
 export const SUBABAS_RANKEN = [
-  { id: 'tarefas', label: '📝 Tarefas' },
-  { id: 'whatsapp', label: '💬 WhatsApp' },
-  { id: 'etapas', label: '🏆 Etapas' },
-  { id: 'plano', label: '🎯 Plano' },
-  { id: 'lolis', label: '🙋 Lolis' },
-  { id: 'relatorios', label: '📊 Relatórios' },
+  { id: 'tarefas', label: 'Tarefas' },
+  { id: 'whatsapp', label: 'WhatsApp' },
+  { id: 'etapas', label: 'Etapas' },
+  { id: 'plano', label: 'Plano' },
+  { id: 'lolis', label: 'Lolis' },
+  { id: 'relatorios', label: 'Relatórios' },
 ];
 
 export default function Ranken({ sub = 'tarefas', setSub, go }) {

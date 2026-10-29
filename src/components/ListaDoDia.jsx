@@ -14,7 +14,6 @@ function Grupo({ icone, titulo, conta, cor = 'text-slate-700', children }) {
   return (
     <div className="space-y-2">
       <div className={`flex items-center gap-2 px-1 text-[13px] font-bold uppercase tracking-wide ${cor}`}>
-        <span className="text-base">{icone}</span>
         {titulo}
         {conta != null && <span className="font-semibold text-slate-400">{conta}</span>}
       </div>
@@ -59,14 +58,14 @@ export default function ListaDoDia({ area }) {
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         {/* ---------------- HOJE ---------------- */}
-        <section className="space-y-5 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
+        <section className="space-y-5 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
           <div className="space-y-3">
             <div className="flex items-baseline justify-between gap-3">
               <h2 className="text-xl font-bold text-ink">Hoje</h2>
               <p className="text-sm font-medium text-slate-500">{folgaHoje ? `Folga: ${folgaDe(state, ref) || 'fim de semana'} 🌴` : `${feitos} de ${doable.length} feitos`}</p>
             </div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-sky-500 to-violet-500 transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-emerald-700 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
             {/* a Gralha é só da Laura: sem filtro de Lolis */}
             {area !== 'gralha' && (
@@ -74,7 +73,7 @@ export default function ListaDoDia({ area }) {
                 <Segmented
                   value={filter.who}
                   onChange={(who) => setFilter((f) => ({ ...f, who }))}
-                  options={[['all', 'Todos'], ['laura', 'Só eu'], ['lolis', '🙋 Lolis', 'bg-amber-500 text-white ring-transparent']]}
+                  options={[['all', 'Todos'], ['laura', 'Só eu'], ['lolis', 'Lolis', 'bg-amber-500 text-white ring-transparent']]}
                 />
               </div>
             )}
@@ -90,7 +89,7 @@ export default function ListaDoDia({ area }) {
 
           {prioridades.length > 0 && (
             <Grupo icone="🔥" titulo="Resolver primeiro" conta={prioridades.length} cor="text-red-600">
-              <div className="space-y-1.5 rounded-2xl bg-red-50/70 p-1.5 ring-1 ring-red-100">
+              <div className="space-y-1.5 rounded-lg bg-red-50/70 p-1.5 ring-1 ring-red-100">
                 {prioridades.map((x) => (
                   <ItemRow key={x.key} item={x} onEdit={setEditing} />
                 ))}
@@ -142,7 +141,7 @@ export default function ListaDoDia({ area }) {
         {/* ---------------- DEPOIS ---------------- */}
         <aside className="space-y-5">
           {/* os avisos (Atenção) ficam só no Início, para não repetir */}
-          <section className="space-y-3 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <section className="space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <h2 className="text-sm font-bold uppercase tracking-wide text-indigo-700">Próximos dias</h2>
             {next.map(({ d, items }) => {
               const folga = !isWorkday(state, d);
@@ -161,7 +160,7 @@ export default function ListaDoDia({ area }) {
                     )}
                   </div>
                   {ms.map((m) => (
-                    <div key={m.key} className="text-sm font-medium text-indigo-700">📌 {m.title}</div>
+                    <div key={m.key} className="text-sm font-medium text-indigo-700">{m.title}</div>
                   ))}
                   {ts.map((x) => (
                     <button key={x.key} onClick={() => x.kind === 'task' && setEditing(x.id)} className="flex w-full items-start gap-2 text-left text-sm text-slate-700 hover:text-ink">

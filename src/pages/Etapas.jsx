@@ -59,7 +59,7 @@ export function EtapasRodadas() {
 
       <section className="space-y-2">
         <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-indigo-700">Próximos sorteios</h2>
-        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+        <div className="divide-y divide-slate-100 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
           {domingos.map(({ d, ms }) => (
             <div key={d} className="flex gap-4 px-4 py-3">
               <div className="w-20 shrink-0">
@@ -98,7 +98,7 @@ function Card({ c, ref0 }) {
       tabIndex={0}
       onClick={() => setAberto(!aberto)}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setAberto(!aberto))}
-      className={`cursor-pointer space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 transition hover:ring-slate-300 ${aberto ? 'ring-indigo-300 sm:col-span-2' : 'ring-slate-200'}`}
+      className={`cursor-pointer space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 transition hover:ring-slate-300 ${aberto ? 'ring-indigo-300 sm:col-span-2' : 'ring-slate-200'}`}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -171,7 +171,7 @@ function Card({ c, ref0 }) {
           <p className="pt-2 text-xs text-slate-400">Clique no cartão para fechar.</p>
         </div>
       ) : (
-        <p className="text-xs font-semibold text-indigo-500">📅 Ver calendário da etapa</p>
+        <p className="text-xs font-semibold text-indigo-500">Ver calendário da etapa</p>
       )}
     </div>
   );

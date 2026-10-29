@@ -19,7 +19,7 @@ export default function WhatsApp() {
   return (
     <div className="space-y-5">
       <header className="space-y-1">
-        <h2 className="text-xl font-bold text-ink">💬 WhatsApp do RANKEN</h2>
+        <h2 className="text-xl font-bold text-ink">WhatsApp do RANKEN</h2>
         <p className="text-sm text-slate-500">
           {hora
             ? `Lido ${p.em.slice(0, 10) === today() ? 'hoje' : `em ${p.em.slice(8, 10)}/${p.em.slice(5, 7)}`} às ${hora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`
@@ -28,12 +28,12 @@ export default function WhatsApp() {
         </p>
       </header>
       {p.invalida && (
-        <div className="rounded-2xl bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
+        <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-800 ring-1 ring-amber-200">
           A última leitura foi feita com uma <b>busca aberta</b> no WhatsApp (mostra resultados antigos, não as conversas), então foi descartada. A próxima leitura corrige sozinha. Se a extensão estiver na versão 1.26, isso não acontece mais.
         </div>
       )}
       {!hora && (
-        <div className="rounded-2xl bg-white p-4 text-sm text-slate-600 shadow-sm ring-1 ring-slate-200">
+        <div className="rounded-lg bg-white p-4 text-sm text-slate-600 shadow-sm ring-1 ring-slate-200">
           Para começar: deixe o WhatsApp do RANKEN aberto no Chrome (web.whatsapp.com) com a extensão da central logada e marcada como <b>RANKEN</b> no ícone dela.
         </div>
       )}
@@ -49,7 +49,7 @@ export default function WhatsApp() {
           {p[id].length === 0 ? (
             <p className="rounded-xl bg-white px-4 py-3 text-sm text-slate-400 ring-1 ring-slate-200">Nada aqui ✓</p>
           ) : (
-            <div className={`divide-y divide-slate-100 overflow-hidden rounded-2xl shadow-sm ring-1 ${cor}`}>
+            <div className={`divide-y divide-slate-100 overflow-hidden rounded-lg shadow-sm ring-1 ${cor}`}>
               {p[id].map((c) => (
                 <Item key={c.nome} c={c} />
               ))}
@@ -76,7 +76,7 @@ function MinhasTarefas() {
       {lista.length === 0 ? (
         <p className="rounded-xl bg-white px-4 py-3 text-sm text-slate-400 ring-1 ring-slate-200">Nada aqui ✓</p>
       ) : (
-        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-sky-200">
+        <div className="divide-y divide-slate-100 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-sky-200">
           {lista.map((t) => (
             <div key={t.id} className="flex items-start gap-3 px-4 py-3">
               <button onClick={() => toggleTask(t.id)} title="Feito" className="mt-0.5 h-5 w-5 shrink-0 rounded-full ring-2 ring-slate-300 hover:ring-emerald-500" />

@@ -30,9 +30,9 @@ export function FolgasCard() {
   };
 
   return (
-    <div className="space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <div className="space-y-4 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div>
-        <div className="font-bold text-ink">🌴 Feriados e folgas</div>
+        <div className="font-bold text-ink">Feriados e folgas</div>
         <p className="text-sm text-slate-500">
           Sábado, domingo, feriado e folga não recebem tarefa nem notificação: o que cairia neles vai para o próximo dia útil.
         </p>

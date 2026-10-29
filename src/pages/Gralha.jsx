@@ -133,7 +133,7 @@ function Novo({ cat, onSaved, pedido }) {
           {Object.values(cidades).map((c) => <option key={c.nome} value={c.nome} />)}
         </datalist>
 
-        <div className="space-y-2 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-200">
+        <div className="space-y-2 rounded-lg bg-white p-3 shadow-sm ring-1 ring-slate-200">
           <input autoFocus className={inputCls} placeholder="Buscar… vários de uma vez com vírgula: camiseta algodão, samba, body" value={q} onChange={(e) => setQ(e.target.value)} />
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             {abas.map((a) => (
@@ -180,7 +180,7 @@ function Novo({ cat, onSaved, pedido }) {
         {linhas.map((l) => {
           const { proxima, abaixoMinimo } = priceFor(l.p, l.qtd);
           return (
-            <div key={l.key} className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <div key={l.key} className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="font-bold text-slate-800">{l.p.nome}</div>
@@ -214,8 +214,8 @@ function Novo({ cat, onSaved, pedido }) {
         })}
 
         {itens.length > 0 && (
-          <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-            <div className="text-sm font-semibold text-slate-700">🎯 Desconto de ativação <span className="font-normal text-slate-400">(opcional)</span></div>
+          <div className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <div className="text-sm font-semibold text-slate-700">Desconto de ativação <span className="font-normal text-slate-400">(opcional)</span></div>
             <div className="grid grid-cols-[minmax(0,1fr)_8rem] gap-2">
               <input className={inputBase} list="ativacoes-gralha" placeholder="Ativação / motivo (ex.: Jogos Universitários)" value={ativacao} onChange={(e) => setAtivacao(e.target.value)} />
               <input className={`${inputBase} text-right`} placeholder="R$ ou %" value={desconto} onChange={(e) => setDesconto(e.target.value)} />
@@ -228,7 +228,7 @@ function Novo({ cat, onSaved, pedido }) {
         )}
 
         {itens.length > 0 && !tabela && (
-          <div className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <div className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
             <div className="flex items-center justify-between gap-3 text-sm">
               <span className="text-slate-500">Frete</span>
               {isMaringa(cidade) ? (
@@ -240,7 +240,7 @@ function Novo({ cat, onSaved, pedido }) {
             {/* fretes já passados para esta cidade: referência (o valor muda com o volume) */}
             {!isMaringa(cidade) && cidadeSalva?.fretes.length > 0 && (
               <div className="space-y-1 rounded-lg bg-sky-50 px-2.5 py-2 text-xs text-sky-800">
-                <div className="font-semibold">🚚 Fretes já passados para {cidadeSalva.nome}:</div>
+                <div className="font-semibold">Fretes já passados para {cidadeSalva.nome}:</div>
                 {cidadeSalva.fretes.slice(0, 3).map((f, i) => (
                   <div key={i} className="flex items-center justify-between gap-2">
                     <span>
@@ -265,7 +265,7 @@ function Novo({ cat, onSaved, pedido }) {
         <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">Mensagem pro WhatsApp</h2>
         {msg ? (
           <>
-            <pre className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded-2xl bg-[#e7ffdb] p-4 font-sans text-sm text-slate-800 shadow-sm ring-1 ring-emerald-100">{msg}</pre>
+            <pre className="max-h-[60vh] overflow-y-auto whitespace-pre-wrap rounded-lg bg-[#e7ffdb] p-4 font-sans text-sm text-slate-800 shadow-sm ring-1 ring-emerald-100">{msg}</pre>
             <div className="grid grid-cols-2 gap-2">
               <button onClick={copy} className="rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white">{copied ? 'Copiado ✓' : 'Copiar mensagem'}</button>
               <button onClick={salvar} className="rounded-xl bg-ink py-3 text-sm font-bold text-white">{pedido ? 'Salvar alterações' : 'Salvar e acompanhar'}</button>
@@ -299,8 +299,8 @@ function Ativacoes({ pedidos }) {
   const lista = resumoAtivacoes(pedidos);
   if (!lista.length) return null;
   return (
-    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">🎯 Ativações</h2>
+    <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Ativações</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -369,10 +369,10 @@ function Pedidos({ onContrato, onEditar }) {
 
   return (
     <div className="space-y-5">
-      <section className="space-y-3 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 p-4 text-white shadow-sm">
+      <section className="space-y-3 rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600 p-4 text-white shadow-sm">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-sky-100">💰 Sua comissão em {MESES_NOME[Number(mes.slice(5)) - 1]}</div>
+            <div className="text-xs font-semibold uppercase tracking-wide text-sky-100">Sua comissão em {MESES_NOME[Number(mes.slice(5)) - 1]}</div>
             <div className="text-3xl font-bold">{brl(comissaoMes)}</div>
             <div className="text-xs text-sky-100">
               {fechadosMes.length} {fechadosMes.length === 1 ? 'pedido fechado' : 'pedidos fechados'} no mês
@@ -442,7 +442,7 @@ function Pedidos({ onContrato, onEditar }) {
           }}
           options={[
             ['andamento', `Em andamento (${andamento.length})`, 'bg-sky-500 text-white ring-transparent'],
-            ['fechados', `✅ Contratos fechados (${fechados.length})`, 'bg-emerald-600 text-white ring-transparent'],
+            ['fechados', `Contratos fechados (${fechados.length})`, 'bg-emerald-600 text-white ring-transparent'],
             ['perdidos', `Perdidos (${perdidos.length})`, 'bg-slate-500 text-white ring-transparent'],
             ['ativacoes', '🎯 Ativações', 'bg-violet-600 text-white ring-transparent'],
           ]}
@@ -515,12 +515,12 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
     setPerdendo(false);
   };
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <div className="rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex items-start justify-between gap-3">
         <button onClick={() => setAberto(!aberto)} className="min-w-0 text-left">
           <div className="font-bold text-slate-800">
             {p.cliente}
-            {parado && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">⏳ parado há {parado} dias</span>}
+            {parado && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">parado há {parado} dias</span>}
           </div>
           <div className="text-xs text-slate-500">
             {p.total == null && !p.contrato ? 'tabela de preços' : brl(valoresPedido(p).total)}
@@ -624,7 +624,7 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
         // colunas da tabela de meses (no celular só o mês e o valor principal)
         const COLS = 'grid-cols-[1fr_auto_1rem] sm:grid-cols-[1fr_4.5rem_8rem_8rem_1rem]';
         return (
-          <section key={ano} className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+          <section key={ano} className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
             <button onClick={() => setAbertos((x) => ({ ...x, [`ano:${ano}`]: !anoAberto }))} className="flex w-full flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-4 text-left hover:bg-slate-50">
               <span className="text-2xl font-extrabold text-slate-800">{ano}</span>
               <span className="text-sm text-slate-500">
@@ -812,10 +812,10 @@ function ComoFui({ pedidos, cfg }) {
   // valor curto em cima da barra: "2,8 mil" / "245"
   const curtoBrl = (v) => (v >= 1000 ? `${(v / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })} mil` : Math.round(v).toLocaleString('pt-BR'));
   return (
-    <section className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-4 rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">📈 Quanto ganhei · últimos 12 meses</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Quanto ganhei · últimos 12 meses</h2>
           <p className="text-xs text-slate-400">Comissão de cada mês. Passe o mouse na barra para ver vendas e valor vendido.</p>
         </div>
         <div className="flex gap-5 text-right">
@@ -979,7 +979,7 @@ function VendaAntiga() {
       </button>
     );
   return (
-    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-sky-200">
+    <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-sky-200">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-sm font-bold uppercase tracking-wide text-sky-700">Venda dos meses anteriores</h2>
         <button onClick={() => setAberto(false)} className="text-xs font-semibold text-slate-400">fechar</button>

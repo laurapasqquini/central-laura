@@ -61,7 +61,7 @@ export default function Lolis() {
         <BancoLolis />
       ) : vista === 'pagina' ? (
         state.lolisToken ? (
-          <div className="rounded-3xl bg-paper p-1 ring-1 ring-amber-200 sm:p-3">
+          <div className="rounded-xl bg-paper p-1 ring-1 ring-amber-200 sm:p-3">
             <LolisPublica token={state.lolisToken} embutida />
           </div>
         ) : (
@@ -80,7 +80,7 @@ export default function Lolis() {
 
       {late.length > 0 && (
         <Section title="Atrasadas: cobrar retorno" count={late.length} tone="red">
-          <div className="space-y-1.5 rounded-2xl bg-red-50/60 p-2 ring-1 ring-red-100">{late.map((x) => <ItemRow key={x.key} item={x} onEdit={setEditing} />)}</div>
+          <div className="space-y-1.5 rounded-lg bg-red-50/60 p-2 ring-1 ring-red-100">{late.map((x) => <ItemRow key={x.key} item={x} onEdit={setEditing} />)}</div>
         </Section>
       )}
       <Section title="Hoje" count={hoje.filter((x) => !x.done).length}>
@@ -131,7 +131,7 @@ function FeitasRecentes() {
   };
 
   return (
-    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
         <h2 className="text-sm font-bold uppercase tracking-wide text-emerald-700">✓ Feitas nos últimos 7 dias <span className="text-slate-400">{feitas.length}</span></h2>
         <span className="text-xs font-semibold text-slate-400">{aberto ? 'esconder' : 'ver'}</span>
@@ -168,8 +168,8 @@ function LinkLolis() {
     }
   };
   return (
-    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">🔗 Página da Lolis</h2>
+    <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">Página da Lolis</h2>
       <p className="text-sm text-slate-500">Um link só dela, sem login: as tarefas do dia, os lembretes de brinde e os posts do sorteio, cada mensagem com o seu botão Copiar. Atualiza sozinho quando a central salva.</p>
       <div className="space-y-1 rounded-xl bg-slate-50 p-3 text-sm">
         <div className="text-xs font-bold uppercase tracking-wide text-slate-500">O que já chegou do Hub (pela extensão)</div>
@@ -239,7 +239,7 @@ function HojeComLolis() {
   const NOME = { acao: '🤝 Patrocinador', lembrete: '🎁 Lembrete do prazo', conferir: '✅ Conferir se deu certo' };
 
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">Hoje com a Lolis</h2>
         <span className="text-sm text-slate-500">
@@ -299,9 +299,9 @@ function FrasesSorteio() {
   if (!progs.length) return null;
   const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
-        <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">✏️ Frases do parabéns do sorteio</h2>
+        <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">Frases do parabéns do sorteio</h2>
         <span className="text-xs font-semibold text-slate-500">{aberto ? 'fechar' : 'editar'}</span>
       </button>
       {aberto && (
@@ -349,8 +349,8 @@ function AvisosLolis() {
     setNovo('');
   };
   return (
-    <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-red-700">📌 Sempre lembrar (topo da página dela)</h2>
+    <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <h2 className="text-sm font-bold uppercase tracking-wide text-red-700">Sempre lembrar (topo da página dela)</h2>
       {avisos.map((a, i) => (
         <div key={i} className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-red-900">
           <span className="min-w-0 flex-1">{a}</span>
@@ -386,7 +386,7 @@ function ContatosApoiadores() {
   const tr = state.contatosApoiadores || {};
   const trocados = lista.filter(([k]) => tr[k]).length;
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
         <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">
           📞 Contato dos apoiadores {trocados > 0 && <span className="normal-case text-slate-400">· {trocados} trocado{trocados > 1 ? 's' : ''}</span>}
@@ -419,7 +419,7 @@ function Mensagem6x0() {
   const cidades = mensagens6x0(state);
   const editadas = cidades.filter((c) => (state.mensagens6x0 || {})[c.cidade]).length;
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between text-left">
         <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">
           🏆 Mensagem do 6x0 6x0 {editadas > 0 && <span className="normal-case text-slate-400">· {editadas} editada{editadas > 1 ? 's' : ''}</span>}

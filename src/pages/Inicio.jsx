@@ -80,7 +80,7 @@ export default function Inicio({ go }) {
           <div className="w-40 space-y-1 text-right">
             <div className="text-xs font-medium text-slate-500">{feitosHoje} de {meusHoje.length} feitos hoje</div>
             <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-              <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-sky-500 to-violet-500 transition-all duration-500" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-emerald-700 transition-all duration-500" style={{ width: `${pct}%` }} />
             </div>
           </div>
         )}
@@ -91,9 +91,9 @@ export default function Inicio({ go }) {
       <AvisoPontoLolis />
 
       {/* ---------- Foco de agora ---------- */}
-      <section className="space-y-2 rounded-3xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
+      <section className="space-y-2 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
         <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-lg font-bold text-ink">🎯 Foco de agora</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-700">Foco de agora</h2>
           {resto > 0 && (
             <button onClick={() => go?.('ranken')} className="text-xs font-semibold text-slate-500 hover:text-ink">
               + {resto} na lista →
@@ -109,7 +109,7 @@ export default function Inicio({ go }) {
               <button onClick={() => go?.('ranken')} className="flex w-full items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-left shadow-sm ring-1 ring-slate-200/70 hover:ring-slate-300">
                 <span className="h-6 w-1 shrink-0 rounded-full bg-emerald-500" />
                 <span className="min-w-0 flex-1 text-[15px] font-medium text-slate-800">
-                  💰 {pixAbertos.length} {pixAbertos.length === 1 ? 'cobrança Pix' : 'cobranças Pix'} para fazer
+                  {pixAbertos.length} {pixAbertos.length === 1 ? 'cobrança Pix' : 'cobranças Pix'} para fazer
                   {pixAbertos.some((x) => x.urgent) && <span className="text-sm font-semibold text-red-600"> · {pixAbertos.filter((x) => x.urgent).length} há mais de uma semana</span>}
                 </span>
                 <span className="text-xs font-semibold text-emerald-700">cobrar →</span>
@@ -118,7 +118,7 @@ export default function Inicio({ go }) {
             {focoParados.map((p) => (
               <button key={p.id} onClick={() => go?.('gralha')} className="flex w-full items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-left shadow-sm ring-1 ring-slate-200/70 hover:ring-slate-300">
                 <span className="h-6 w-1 shrink-0 rounded-full bg-sky-500" />
-                <span className="min-w-0 flex-1 text-[15px] font-medium text-slate-800">🐦 {p.cliente}: orçamento parado há {p.dias} dias</span>
+                <span className="min-w-0 flex-1 text-[15px] font-medium text-slate-800">{p.cliente}: orçamento parado há {p.dias} dias</span>
                 <span className="text-xs font-semibold text-sky-600">{p.etapa} →</span>
               </button>
             ))}
@@ -149,9 +149,9 @@ export default function Inicio({ go }) {
 
       <div className="grid items-start gap-3 sm:grid-cols-2">
         {/* ---------- Lolis ---------- */}
-        <button onClick={() => go?.('lolis')} className="space-y-2 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 hover:ring-slate-300">
+        <button onClick={() => go?.('lolis')} className="space-y-2 rounded-lg bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 hover:ring-slate-300">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">🙋 Lolis hoje</h2>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">Lolis hoje</h2>
             <span className="text-xs font-semibold text-slate-400">→</span>
           </div>
           {lolis.length ? (
@@ -170,8 +170,8 @@ export default function Inicio({ go }) {
         </button>
 
         {/* ---------- Próximos dias ---------- */}
-        <section className="space-y-1.5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-indigo-700">📅 Próximos dias</h2>
+        <section className="space-y-1.5 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-indigo-700">Próximos dias</h2>
           {proximos.length ? (
             proximos.map(({ d, ms, folga }) => (
               <div key={d} className="flex gap-2 text-sm">
@@ -193,8 +193,8 @@ export default function Inicio({ go }) {
 
       {/* ---------- Atenção ---------- */}
       {dicas.length > 0 && (
-        <section className="space-y-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">💡 Atenção</h2>
+        <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+          <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Atenção</h2>
           {(verDicas ? dicas : dicas.slice(0, 3)).map((t, i) => (
             <div key={i} className="flex gap-2.5 text-sm leading-snug text-slate-700">
               <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TONE_DOT[t.tone]}`} />
@@ -221,7 +221,7 @@ export default function Inicio({ go }) {
 
 function Cartao({ cor, titulo, numero, rotulo, onClick, children }) {
   return (
-    <button onClick={onClick} className="space-y-1 rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:ring-slate-300">
+    <button onClick={onClick} className="space-y-1 rounded-lg bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:ring-slate-300">
       <div className="flex items-center gap-2">
         <span className={`h-2.5 w-2.5 rounded-full ${cor}`} />
         <span className="text-sm font-bold text-slate-700">{titulo}</span>

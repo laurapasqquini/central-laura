@@ -35,7 +35,7 @@ export function EntregasLolis({ token }) {
     <section className="space-y-2">
       <button
         onClick={() => setAberto(!aberto)}
-        className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left shadow-sm ring-1 ${feitos === lista.length ? 'bg-emerald-50 ring-emerald-200' : 'bg-amber-50 ring-amber-300'}`}
+        className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left shadow-sm ring-1 ${feitos === lista.length ? 'bg-emerald-50 ring-emerald-200' : 'bg-amber-50 ring-amber-300'}`}
       >
         <span className="text-xl">🏆</span>
         <span className="min-w-0 flex-1">
@@ -155,7 +155,7 @@ export function EntregasResumo() {
     await supabase.from('lolis_entregas').update({ entregue, atualizado_em: new Date().toISOString() }).eq('id', e.id);
   };
   return (
-    <section className="space-y-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
       <button onClick={() => setAberto(!aberto)} className="flex w-full items-center justify-between gap-2 text-left">
         <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">
           🏆 Entregas <span className="normal-case text-slate-500">· {feitos} de {lista.length} com endereço · {entregues} entregues</span>

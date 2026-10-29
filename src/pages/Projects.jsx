@@ -22,7 +22,7 @@ export default function Projects() {
         <h2 className="px-1 text-sm font-bold uppercase tracking-wide text-slate-700">Começar um roteiro</h2>
         <div className="grid gap-3 sm:grid-cols-2">
           {TEMPLATES.map((t) => (
-            <button key={t.id} onClick={() => setCreating(t)} className="group rounded-2xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
+            <button key={t.id} onClick={() => setCreating(t)} className="group rounded-lg bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-md">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-ink">{t.name}</span>
                 <span className="text-xs font-semibold text-slate-400">{t.items.length} etapas</span>
@@ -56,7 +56,7 @@ function ProjectCard({ p, open, onToggle, onEdit }) {
   const late = tasks.filter((t) => !t.done && t.due < today()).length;
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+    <div className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
       <button onClick={onToggle} className="w-full p-4 text-left">
         <div className="flex items-start justify-between gap-3">
           <div>
