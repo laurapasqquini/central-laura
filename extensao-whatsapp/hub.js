@@ -589,12 +589,22 @@ function lerPix() {
 // Só abre as tarefas na aba automática: com a Laura usando a tela, usa só o que já tem guardado
 // (para nunca fechar uma tarefa que ela esteja editando).
 let lendoLaura = false;
-// hora em que cada tarefa entrou no Hub (criado_em da API de Atividades), para a Central mostrar "entrou 14:32"
+// hora em que cada tarefa entrou no Hub e a descrição dela (criado_em e descricao da API de Atividades).
+// A descrição da API é a da própria tarefa; a lida na janela "Editar tarefa" saía trocada entre tarefas.
 async function comCriacao(n) {
   const j = await fetch('/api/atividades?filtro=minhas', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
   const lista = Array.isArray(j) ? j : j?.atividades || Object.values(j || {}).find(Array.isArray) || [];
-  const quando = new Map(lista.filter((x) => x.titulo && x.criado_em).map((x) => [x.titulo.trim(), x.criado_em]));
-  return { ...n, abertas: n.abertas.map((a) => (quando.has(a.titulo.trim()) ? { ...a, criadoEm: quando.get(a.titulo.trim()) } : a)) };
+  // com títulos repetidos (ex.: a mesma cobrança em dois meses), vale a que está em aberto
+  const abertasPrimeiro = [...lista].sort((x, y) => (x.status === 'concluida') - (y.status === 'concluida'));
+  const daApi = (a) => abertasPrimeiro.find((x) => (x.titulo || '').trim() === a.titulo.trim());
+  return {
+    ...n,
+    abertas: n.abertas.map((a) => {
+      const x = daApi(a);
+      if (!x) return a;
+      return { ...a, ...(x.criado_em ? { criadoEm: x.criado_em } : {}), ...(x.descricao?.trim() ? { descricao: x.descricao.trim() } : {}) };
+    }),
+  };
 }
 
 async function comDescricaoLaura(n, buscar) {
@@ -604,7 +614,7 @@ async function comDescricaoLaura(n, buscar) {
   if (buscar && !lendoLaura) {
     lendoLaura = true;
     for (const a of n.abertas) {
-      if (descLaura[chave(a)] !== undefined) continue;
+      if (a.descricao || descLaura[chave(a)] !== undefined) continue; // já veio da API
       const botao = [...document.querySelectorAll('main div[class*="border-l-[3px]"] button')].find((b) => b.textContent.trim() === a.titulo);
       if (!botao) continue;
       botao.click(); // abre a tarefa
@@ -628,7 +638,7 @@ async function comDescricaoLaura(n, buscar) {
     await chrome.storage.local.set({ descLaura2: descLaura });
     lendoLaura = false;
   }
-  return { ...n, abertas: n.abertas.map((a) => ({ ...a, descricao: descLaura[chave(a)] || '' })) };
+  return { ...n, abertas: n.abertas.map((a) => ({ ...a, descricao: a.descricao || descLaura[chave(a)] || '' })) };
 }
 
 async function rodarAutoLaura() {
@@ -643,7 +653,7 @@ async function rodarAutoLaura() {
       }
       const pix = await dadosPix();
       if (pix) await new Promise((r) => chrome.runtime.sendMessage({ tipo: 'pix', dados: pix }, r));
-      const completo = await comCriacao(await comTelefonePix(await comDescricaoLaura(n, true)));
+      const completo = await comTelefonePix(await comDescricaoLaura(await comCriacao(n), true));
       chrome.runtime.sendMessage({ tipo: 'hub-laura', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
     }
@@ -696,7 +706,7 @@ async function tentar() {
       .finally(() => {
         enviando = false;
         const n = lerAtividadesLaura();
-        if (n) comDescricaoLaura(n, false).then(comTelefonePix).then(comCriacao).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
+        if (n) comCriacao(n).then((c) => comDescricaoLaura(c, false)).then(comTelefonePix).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
       });
     return;
   }
