@@ -36,7 +36,7 @@ export function Check({ done, onClick, area }) {
 }
 
 export function ItemRow({ item, showDate = false, onEdit }) {
-  const { toggleTask, toggleRoutine, postpone } = useStore();
+  const { toggleTask, toggleRoutine, postpone, pixPraLolis } = useStore();
   const [verMsg, setVerMsg] = useState(false);
   const [copiado, setCopiado] = useState(false);
 
@@ -101,6 +101,15 @@ export function ItemRow({ item, showDate = false, onEdit }) {
       {item.mensagem && !item.done && (
         <button onClick={() => setVerMsg((v) => !v)} title="Ver a mensagem pronta" className="mt-0.5 shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200 hover:bg-emerald-50">
           Mensagem
+        </button>
+      )}
+      {item.freq === 'pix' && !item.done && (
+        <button
+          onClick={() => pixPraLolis(item.id.replace(/^pix:/, ''), item.who !== 'lolis')}
+          title={item.who === 'lolis' ? 'Voltar a cobrança para você' : 'Passar a cobrança para a Lolis (vai para a página dela com a mensagem e o número)'}
+          className="mt-0.5 shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200 hover:bg-amber-50"
+        >
+          {item.who === 'lolis' ? 'Voltar pra mim' : 'Pra Lolis'}
         </button>
       )}
       {item.kind === 'task' && !item.done && (

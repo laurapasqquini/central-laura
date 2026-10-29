@@ -417,12 +417,17 @@ function aplicarFeitosLolis(s, rows) {
   const routineDone = { ...s.routineDone };
   const tarefas = new Set();
   const banco = {};
+  const pixFeitos = []; // cobrança Pix feita pela Lolis: a tarefa do Hub também é concluída lá (pela extensão)
   for (const [dia, chaves] of Object.entries(porDia)) {
     for (const k of chaves) {
       if ((antes[dia] || []).includes(k)) continue; // já aplicado
       if (k.startsWith('b:')) banco[k.slice(2)] ||= dia;
       else if (k.startsWith('t:')) tarefas.add(k.slice(2));
-      else if (k.startsWith('r:')) routineDone[k.slice(2)] = true;
+      else if (k.startsWith('r:')) {
+        routineDone[k.slice(2)] = true;
+        const nome = k.startsWith('r:pix:') && s.pixCobrar?.itens?.find((i) => k.startsWith(`r:pix:${i.id}:`))?.nome;
+        if (nome) pixFeitos.push({ pix: nome, em: dia });
+      }
       else if (k === 'sorteio' || (k.startsWith('sorteio:') && chaves.filter((c) => c.startsWith('sorteio:')).length >= postsSorteio(s, dia).length))
         // rotina do sorteio do dia: feita quando ela marca todos os sorteios do dia
         for (const r of s.routines) if (r.who === 'lolis' && /sorteio di[aá]rio/i.test(r.title)) routineDone[`${r.id}:${dia}`] = true;
@@ -454,6 +459,7 @@ function aplicarFeitosLolis(s, rows) {
     hubConcluir: [
       ...(s.hubConcluir || []),
       ...s.tasks.filter((t) => tarefas.has(t.id) && !t.done && t.hubLolis && !(s.hubConcluir || []).some((h) => h.titulo === t.title)).map((t) => ({ titulo: t.title, em: today(), lolis: true })),
+      ...pixFeitos.filter((p) => !(s.hubConcluir || []).some((h) => h.pix === p.pix)),
     ],
   };
 }
@@ -847,6 +853,14 @@ export function StoreProvider({ user, children }) {
             }
           }
           return { ...s, routineDone };
+        }),
+      // cobrança Pix (vem do Hub todo dia): passa para a Lolis ou volta para a Laura
+      pixPraLolis: (id, lolis) =>
+        setState((s) => {
+          const pixLolis = { ...(s.pixLolis || {}) };
+          if (lolis) pixLolis[id] = true;
+          else delete pixLolis[id];
+          return { ...s, pixLolis };
         }),
       addRoutine: (r) => setState((s) => ({ ...s, routines: [...s.routines, { id: uid(), active: true, createdAt: today(), ...r }] })),
       updateRoutine: (id, patch) => setState((s) => ({ ...s, routines: s.routines.map((r) => (r.id === id ? { ...r, ...patch } : r)) })),
