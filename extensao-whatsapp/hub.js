@@ -570,6 +570,14 @@ function lerPix() {
 // Só abre as tarefas na aba automática: com a Laura usando a tela, usa só o que já tem guardado
 // (para nunca fechar uma tarefa que ela esteja editando).
 let lendoLaura = false;
+// hora em que cada tarefa entrou no Hub (criado_em da API de Atividades), para a Central mostrar "entrou 14:32"
+async function comCriacao(n) {
+  const j = await fetch('/api/atividades?filtro=minhas', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const lista = Array.isArray(j) ? j : j?.atividades || Object.values(j || {}).find(Array.isArray) || [];
+  const quando = new Map(lista.filter((x) => x.titulo && x.criado_em).map((x) => [x.titulo.trim(), x.criado_em]));
+  return { ...n, abertas: n.abertas.map((a) => (quando.has(a.titulo.trim()) ? { ...a, criadoEm: quando.get(a.titulo.trim()) } : a)) };
+}
+
 async function comDescricaoLaura(n, buscar) {
   // descLaura2: as descrições guardadas antes da correção (algumas trocadas entre tarefas) são lidas de novo
   const { descLaura2: descLaura = {} } = await chrome.storage.local.get('descLaura2');
@@ -616,7 +624,7 @@ async function rodarAutoLaura() {
       }
       const pix = await dadosPix();
       if (pix) await new Promise((r) => chrome.runtime.sendMessage({ tipo: 'pix', dados: pix }, r));
-      const completo = await comTelefonePix(await comDescricaoLaura(n, true));
+      const completo = await comCriacao(await comTelefonePix(await comDescricaoLaura(n, true)));
       chrome.runtime.sendMessage({ tipo: 'hub-laura', dados: completo }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
       return;
     }
@@ -669,7 +677,7 @@ async function tentar() {
       .finally(() => {
         enviando = false;
         const n = lerAtividadesLaura();
-        if (n) comDescricaoLaura(n, false).then(comTelefonePix).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
+        if (n) comDescricaoLaura(n, false).then(comTelefonePix).then(comCriacao).then((c) => mandar('hub-laura', c, 'ultimoLaura', `✓ ${n.abertas.length} tarefas suas em aberto na Central`));
       });
     return;
   }

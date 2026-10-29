@@ -77,6 +77,7 @@ const fromTask = (t, projects, state) => ({
   notes: t.notes,
   hub: !!t.hub,
   hubPath: t.hubPath,
+  hubCriadoEm: t.hubCriadoEm || null,
   anexos: t.anexos?.length ? t.anexos : undefined,
   doWhats: !!t.entradaId, // veio do WhatsApp da Laura (botão da extensão)
   ...mensagemDasNotas(t),

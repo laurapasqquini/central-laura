@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { AREAS } from '../lib/engine';
 import { parseQuick } from '../lib/parse';
-import { fmtCurto, relativo, today } from '../lib/dates';
+import { fmtCurto, relativo, today, addDays } from '../lib/dates';
 import { imagensDoEvento } from '../lib/imagens';
 import { subirAnexo, apagarAnexos, linksAnexos } from '../lib/anexos';
 
@@ -81,6 +81,7 @@ export function ItemRow({ item, showDate = false, onEdit }) {
             </span>
           )}
           {item.movedFrom && <span className="text-xs font-medium text-slate-400">↪ era {fmtCurto(item.movedFrom)}</span>}
+          {item.hubCriadoEm && <span className="text-xs font-medium text-slate-400" title="Quando a tarefa entrou no RANKEN Hub">📥 {quandoEntrou(item.hubCriadoEm)}</span>}
           {item.notes && <span className="text-xs text-slate-400">📝</span>}
         </div>
       </button>
@@ -305,6 +306,17 @@ export function Modal({ title, onClose, children }) {
       </div>
     </div>
   );
+}
+
+// "entrou 14:32" (hoje), "entrou ontem 14:32" ou "entrou 27/10 14:32"
+function quandoEntrou(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return '';
+  const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const dia = d.toLocaleDateString('sv-SE');
+  if (dia === today()) return `entrou ${hora}`;
+  if (dia === addDays(today(), -1)) return `entrou ontem ${hora}`;
+  return `entrou ${dia.slice(8, 10)}/${dia.slice(5, 7)} ${hora}`;
 }
 
 export function TaskModal({ id, onClose }) {

@@ -685,8 +685,8 @@ export function StoreProvider({ user, children }) {
             if (a) {
               abertas.delete(k);
               const notas = a.descricao ? `${a.descricao}\n\n${RODAPE}` : t.notes;
-              const muda = notas !== t.notes || (!t.done && !!a.urgente !== !!t.urgent) || (a.telefone && a.telefone !== t.telefone);
-              return muda ? { ...t, notes: notas, urgent: t.done ? t.urgent : !!a.urgente, ...(a.telefone ? { telefone: a.telefone } : {}) } : t;
+              const muda = notas !== t.notes || (!t.done && !!a.urgente !== !!t.urgent) || (a.telefone && a.telefone !== t.telefone) || (a.criadoEm && a.criadoEm !== t.hubCriadoEm);
+              return muda ? { ...t, notes: notas, urgent: t.done ? t.urgent : !!a.urgente, ...(a.telefone ? { telefone: a.telefone } : {}), ...(a.criadoEm ? { hubCriadoEm: a.criadoEm } : {}) } : t;
             }
             return t.done ? t : { ...t, done: true, doneAt: dia, notes: `${t.notes ? `${t.notes}\n` : ''}Saiu de "em aberto" no Hub em ${dia.split('-').reverse().join('/')}` };
           });
@@ -701,6 +701,7 @@ export function StoreProvider({ user, children }) {
             hubPath: 'atividades',
             hubLaura: true,
             hubPrazo: a.prazo || null,
+            ...(a.criadoEm ? { hubCriadoEm: a.criadoEm } : {}), // hora em que entrou no Hub
             ...(a.telefone ? { telefone: a.telefone } : {}),
             done: false,
             createdAt: dia,
