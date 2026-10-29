@@ -288,6 +288,38 @@ const Field = ({ label, children }) => (
 export const inputBase = 'rounded-xl border border-slate-200 bg-white px-3 py-2 text-[15px] outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100';
 export const inputCls = `w-full ${inputBase}`;
 
+// Topo de cada frente (Ranken, Gralha, Pessoal): título à esquerda e as abas à direita, numa barra cinza
+// em que a aba aberta fica branca. abas = [{ id, label, badge? }]
+const COR_FRENTE = { ranken: 'text-emerald-800', gralha: 'text-sky-700', pessoal: 'text-violet-700' };
+export function AbasTopo({ area, titulo, detalhe, abas, valor, onChange }) {
+  return (
+    <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+      <div className="min-w-0">
+        <div className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${COR_FRENTE[area] || 'text-slate-500'}`}>Frente</div>
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-[28px]">{titulo}</h1>
+        {detalhe && <p className="text-sm text-slate-500">{detalhe}</p>}
+      </div>
+      <nav className="-mx-1 max-w-full overflow-x-auto px-1">
+        <div className="inline-flex gap-0.5 rounded-lg bg-slate-200/70 p-[3px]">
+          {abas.map((a) => (
+            <button
+              key={a.id}
+              type="button"
+              onClick={() => onChange(a.id)}
+              className={`shrink-0 whitespace-nowrap rounded-md px-3.5 py-1.5 text-sm transition ${
+                valor === a.id ? 'bg-white font-semibold text-ink shadow-sm' : 'font-medium text-slate-600 hover:text-ink'
+              }`}
+            >
+              {a.label}
+              {a.badge > 0 && <span className="ml-1.5 rounded-full bg-red-100 px-1.5 text-xs font-bold text-red-700">{a.badge}</span>}
+            </button>
+          ))}
+        </div>
+      </nav>
+    </header>
+  );
+}
+
 export function Segmented({ value, onChange, options }) {
   return (
     <div className="flex flex-wrap gap-1.5">

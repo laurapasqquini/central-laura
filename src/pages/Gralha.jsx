@@ -3,7 +3,7 @@ import { useStore, STAGES } from '../lib/store';
 import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes, cidadesConhecidas, cidadeDe } from '../lib/gralha';
 import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa, prazoUteis } from '../lib/gralha';
 import { fmtCurto, relativo, today, addDays } from '../lib/dates';
-import { inputCls, inputBase, Empty, Pill, Segmented } from '../components/ui';
+import { inputCls, inputBase, Empty, Pill, Segmented, AbasTopo } from '../components/ui';
 import Contrato from './Contrato';
 import ListaDoDia from '../components/ListaDoDia';
 import { pedidosParados } from '../lib/engine';
@@ -25,24 +25,14 @@ export default function Gralha() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Gralha Azul</h1>
-          <p className="text-sm text-slate-500">
-            Orçamento em segundos e cada pedido acompanhado até o contrato.
-            {cat && <span className="text-slate-400"> · {cat.produtos.length} produtos da planilha</span>}
-          </p>
-        </div>
-        <Segmented
-          value={view}
-          onChange={setView}
-          options={[
-            ['novo', '+ Novo orçamento', 'bg-sky-500 text-white ring-transparent'],
-            ['pedidos', `Pedidos${abertos ? ` (${abertos})` : ''}`, 'bg-sky-500 text-white ring-transparent'],
-            ['tarefas', 'Tarefas', 'bg-sky-500 text-white ring-transparent'],
-          ]}
-        />
-      </header>
+      <AbasTopo
+        area="gralha"
+        titulo="Gralha Azul"
+        detalhe={<>Orçamento em segundos e cada pedido acompanhado até o contrato.{cat && <span className="text-slate-400"> · {cat.produtos.length} produtos da planilha</span>}</>}
+        abas={[{ id: 'novo', label: '+ Novo orçamento' }, { id: 'pedidos', label: `Pedidos${abertos ? ` (${abertos})` : ''}` }, { id: 'tarefas', label: 'Tarefas' }]}
+        valor={view.startsWith('contrato:') ? 'pedidos' : view}
+        onChange={setView}
+      />
       {view === 'tarefas' ? (
         <ListaDoDia area="gralha" />
       ) : !cat ? (
