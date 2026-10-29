@@ -571,7 +571,8 @@ function lerPix() {
 // (para nunca fechar uma tarefa que ela esteja editando).
 let lendoLaura = false;
 async function comDescricaoLaura(n, buscar) {
-  const { descLaura = {} } = await chrome.storage.local.get('descLaura');
+  // descLaura2: as descrições guardadas antes da correção (algumas trocadas entre tarefas) são lidas de novo
+  const { descLaura2: descLaura = {} } = await chrome.storage.local.get('descLaura2');
   const chave = (a) => `${a.titulo}|${a.prazo || ''}`;
   if (buscar && !lendoLaura) {
     lendoLaura = true;
@@ -580,16 +581,24 @@ async function comDescricaoLaura(n, buscar) {
       const botao = [...document.querySelectorAll('main div[class*="border-l-[3px]"] button')].find((b) => b.textContent.trim() === a.titulo);
       if (!botao) continue;
       botao.click(); // abre a tarefa
-      await new Promise((r) => setTimeout(r, 900));
-      const caixa = document.querySelector('textarea');
-      descLaura[chave(a)] = caixa ? caixa.value.trim() : '';
+      // só lê a descrição da janela DESTA tarefa (o campo do título tem o mesmo texto); se a janela ainda é a
+      // da tarefa anterior ou demorou a abrir, não guarda nada e tenta de novo na próxima leitura
+      let caixa = null;
+      for (let t = 0; t < 15 && !caixa; t++) {
+        await new Promise((r) => setTimeout(r, 200));
+        const campo = [...document.querySelectorAll('input')].find((e) => (e.value || '').trim() === a.titulo.trim());
+        let box = campo?.parentElement;
+        for (let up = 0; box && up < 8 && !box.querySelector('textarea'); up++) box = box.parentElement;
+        caixa = box?.querySelector('textarea') || null;
+      }
+      if (caixa) descLaura[chave(a)] = caixa.value.trim();
       const cancelar = [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === 'Cancelar');
       if (cancelar) cancelar.click(); // fecha sem salvar
       else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
       await new Promise((r) => setTimeout(r, 400));
     }
     for (const k of Object.keys(descLaura)) if (!n.abertas.some((a) => chave(a) === k)) delete descLaura[k];
-    await chrome.storage.local.set({ descLaura });
+    await chrome.storage.local.set({ descLaura2: descLaura });
     lendoLaura = false;
   }
   return { ...n, abertas: n.abertas.map((a) => ({ ...a, descricao: descLaura[chave(a)] || '' })) };
