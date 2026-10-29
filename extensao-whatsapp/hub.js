@@ -427,7 +427,11 @@ function mainDaLaura() {
   if (location.pathname !== '/atividades') return null;
   const main = document.querySelector('main');
   if (!main) return null;
-  const minhas = [...main.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Minhas' && /bg-marca-preto/.test(b.className));
+  const ativo = (nome) => [...main.querySelectorAll('button')].some((b) => b.textContent.trim() === nome && /bg-marca-preto/.test(b.className));
+  // com "Deleguei" ou "Recorrentes" ligado a lista não é a da Laura: ler aí apagava a fila de concluir
+  // e fazia as tarefas dela "saírem" da Central (a aba automática passa pelo Deleguei para concluir as da Lolis)
+  if (ativo('Deleguei') || ativo('Recorrentes')) return null;
+  const minhas = ativo('Minhas');
   return /O dia de Laura/.test(main.innerText) || minhas || /tarefas suas pra resolver/.test(main.innerText) ? main : null;
 }
 
@@ -458,7 +462,8 @@ function cartoesAbertos(main) {
 
 function lerAtividadesLaura() {
   const main = mainDaLaura();
-  if (!main) return null;
+  if (!main || concluindo) return null; // enquanto conclui, a tela troca de filtro
+
   const hoje = new Date();
   const iso = (d) => d.toLocaleDateString('sv-SE');
   const abertas = [];
