@@ -182,11 +182,8 @@ export function buildDay(state, date, filter) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
   const tasks = state.tasks.filter((t) => !t.whats && t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state)); // as do WhatsApp ficam só na aba 💬 WhatsApp
   const routines = state.routines.filter((r) => r.tipo !== 'lolis-lista' && occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date), lembretesBrinde(state, date));
-  // "mandar a lista pra Lolis" já leva a mensagem do dia
-  if (filter.who !== 'lolis') {
-    const it = itemLolis(state, date);
-    if (it) routines.push(it);
-  }
+  // "Mandar a lista pra Lolis" não vira mais tarefa: ela vê o dia na página dela
+  // (quando precisar, Ranken › Lolis › "Copiar lista pro WhatsApp")
   routines.push(...contasDoDia(state, date), ...cobrancasPixDoDia(state, date));
   for (const x of routines) if (/^Planejar a próxima semana/.test(x.title)) x.acao = 'revisao';
   const marcos = state.marcos
