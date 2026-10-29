@@ -4,9 +4,7 @@ import { buildDay, buildOverdue, campanhasPendentes, pedidosParados, contasDoDia
 import { today, addDays, weekday, fmtCurto } from '../lib/dates';
 import { periodo, montarRelatorio, textoRelatorio } from '../lib/relatorio';
 import { Modal } from './ui';
-import { RelatorioChefes } from '../pages/Plano';
-import { plano } from '../lib/chefes';
-import { radar } from '../data/radar';
+import { resumoPlano } from '../pages/Plano';
 
 // Revisão de sexta: 5 minutos para fechar a semana e preparar a próxima.
 export function Revisao({ item, go, onClose }) {
@@ -30,10 +28,8 @@ export function Revisao({ item, go, onClose }) {
   const camp = campanhasPendentes(state, ref, 10).filter((c) => c.data <= sexta);
   const parados = pedidosParados(state, ref);
   const contas = Array.from({ length: 10 }, (_, i) => addDays(ref, i + 1)).flatMap((d) => contasDoDia(state, d)).filter((x) => !x.done);
-  // sugestões do Radar com prazo ideal nas próximas 2 semanas que ainda não viraram iniciativa
-  const pl = plano(state);
-  const aceitas = new Set(pl.iniciativas.map((i) => i.radarId).filter(Boolean));
-  const radarPerto = radar(ref).filter((r) => !pl.ocultos.includes(r.id) && !aceitas.has(r.id) && r.prazo && r.prazo <= addDays(ref, 14));
+  // Plano 2027: praças pedindo atenção e passos vencendo nos próximos 10 dias
+  const plano = resumoPlano(state, ref);
 
   const copiar = async () => {
     const per = periodo('semana', ref);
@@ -121,19 +117,21 @@ export function Revisao({ item, go, onClose }) {
           </ul>
         </Bloco>
 
-        <Bloco n="4" titulo="Plano e números">
+        <Bloco n="4" titulo="Plano 2027">
           <ul className="space-y-1.5 text-sm text-slate-700">
             <li className="flex items-center justify-between gap-2">
-              <span>🎯 Atualize o status das iniciativas e os números do Beach da semana</span>
+              <span>
+                Praças: {plano.semProjeto} sem projeto no Hub · {plano.atrasadas} com checklist atrasado · {plano.semQuem} sem quem toca
+              </span>
               <Btn onClick={() => ir('plano')}>Abrir</Btn>
             </li>
-            <li className="flex items-center justify-between gap-2">
-              <span>
-                {radarPerto.length
-                  ? `📡 Radar: ${radarPerto.length} ${radarPerto.length === 1 ? 'sugestão' : 'sugestões'} com prazo ideal até ${fmtCurto(addDays(ref, 14))} — ${radarPerto.map((r) => r.titulo).join(' · ')}`
-                  : '📡 Radar: nada com prazo nas próximas 2 semanas ✓'}
-              </span>
-              {radarPerto.length > 0 && <Btn onClick={() => ir('plano')}>Puxar</Btn>}
+            <li className="space-y-1">
+              <span>{plano.passos.length ? `Passos do Plano até ${fmtCurto(addDays(ref, 10))}:` : 'Nenhum passo do Plano vencendo nos próximos 10 dias ✓'}</span>
+              {plano.passos.slice(0, 6).map((x) => (
+                <div key={x.id} className={`pl-3 text-xs ${x.prazo < ref ? 'text-red-600' : 'text-slate-600'}`}>
+                  {fmtCurto(x.prazo)} · {x.texto} <span className="text-slate-400">({x.frente})</span>
+                </div>
+              ))}
             </li>
             <li className="flex items-center justify-between gap-2">
               <span>📋 Relatório detalhado (você + Lolis)</span>
@@ -143,8 +141,6 @@ export function Revisao({ item, go, onClose }) {
             </li>
           </ul>
         </Bloco>
-
-        <RelatorioChefes compacto />
 
         <button onClick={concluir} className="w-full rounded-xl bg-ink py-3 text-sm font-bold text-white">
           Concluir revisão ✓

@@ -540,6 +540,41 @@ function lerGanhadoresApi(forcar = false) {
   ganhadoresDaApi().then((g) => g && g.length && mandar('ganhadores', g, 'ultimoGanhadores', `✓ ${g.length} ganhadores recentes na Central`, true));
 }
 
+// Plano (Central): os projetos da Expansão (checklist, responsável, estreia) e os atletas pagantes por praça,
+// direto da API do Hub, a cada 30 min. Só leitura.
+let ultimoPlano = 0;
+function lerPlanoApi() {
+  if (Date.now() - ultimoPlano < 30 * 60e3) return;
+  ultimoPlano = Date.now();
+  const json = (url) => fetch(url, { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  json('/api/match-admin/expansao/projetos').then((j) => {
+    const lista = Array.isArray(j) ? j : j?.projetos;
+    if (!Array.isArray(lista)) return;
+    const projetos = lista.map((x) => ({
+      id: x.id,
+      cidade: x.cidade,
+      esporte: x.esporte,
+      status: x.status,
+      estreia: x.data_lancamento || null,
+      responsavel: x.responsavel_nome || '',
+      total: x.total || 0,
+      feitos: x.feitos || 0,
+    }));
+    mandar('expansao', { projetos }, 'ultimaExpansao', `✓ ${projetos.length} praças da Expansão na Central`, true);
+  });
+  json('/api/atletas/dashboard').then((j) => {
+    if (!Array.isArray(j?.linhas)) return;
+    // pessoas pagantes (assinatura ativa ou pago por fora) por praça e esporte
+    const por = {};
+    for (const l of j.linhas) {
+      if (!l.pagante || l.cancelado || l.cortesia || l.socio) continue;
+      (por[`${l.praca}|${l.esporte}`] ||= new Set()).add(l.user_id);
+    }
+    const pracas = Object.fromEntries(Object.entries(por).map(([k, s]) => [k, s.size]));
+    mandar('pagantes', { total: j.totais?.pagantes ?? null, pracas }, 'ultimosPagantes', '✓ Atletas pagantes na Central', true);
+  });
+}
+
 let ultimoPix = 0;
 function lerPix() {
   if (Date.now() - ultimoPix < 30 * 60e3) return;
@@ -662,6 +697,7 @@ async function tentar() {
   lerPix();
   lerProgramacoesApi();
   lerGanhadoresApi();
+  lerPlanoApi();
   if (location.pathname === '/atividades') {
     if (!lerAtividadesLaura()) return;
     enviando = true; // segura outras leituras enquanto conclui

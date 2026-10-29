@@ -9,6 +9,7 @@ import { INDICADORES_PADRAO } from './chefes';
 import { CALENDARIOS } from '../data/calendarios';
 import { jaExiste, chaveDe } from './financas';
 import { aplicarHubLaura } from './hubLaura.js';
+import { planoInicial } from './plano';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
 // Tudo é salvo como um único documento por usuária, sincronizado entre PC e iPhone.
@@ -662,6 +663,22 @@ export function StoreProvider({ user, children }) {
           const nomes = new Set(d.itens.map((c) => c.nome));
           s = { ...s, whats: { em: d.em || new Date().toISOString(), itens: d.itens }, whatsResolvidos: Object.fromEntries(Object.entries(s.whatsResolvidos || {}).filter(([n]) => nomes.has(n))) };
         }
+        // Plano: projetos da Expansão (Hub) e atletas pagantes por praça; guarda o último número de cada mês
+        for (const r of rows.filter((x) => x.conta === 'expansao' || x.conta === 'pagantes')) {
+          let d = null;
+          try {
+            d = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (!d) continue;
+          const em = new Date(r.created_at).toISOString();
+          if (r.conta === 'expansao' && Array.isArray(d.projetos)) s = { ...s, expansaoHub: { em, projetos: d.projetos } };
+          if (r.conta === 'pagantes' && d.pracas) {
+            const mes = em.slice(0, 7);
+            s = { ...s, pagantesHub: { em, total: d.total, pracas: d.pracas }, pagantesMes: { ...(s.pagantesMes || {}), [mes]: { total: d.total, pracas: d.pracas, em } } };
+          }
+        }
         for (const r of rows.filter((x) => x.conta === 'pix')) {
           let d = null;
           try {
@@ -726,7 +743,7 @@ export function StoreProvider({ user, children }) {
         }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero', 'pix', 'whatsapp'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero', 'pix', 'whatsapp', 'expansao', 'pagantes'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {
@@ -996,6 +1013,8 @@ export function StoreProvider({ user, children }) {
           if (s.lolisToken) supabase.from('lolis_pagina').delete().eq('token', s.lolisToken).then(() => {}, () => {});
           return { ...s, lolisToken: token };
         }),
+      // Plano 2027: começa das frentes sugeridas e passa a ser salvo na primeira edição
+      setPlano27: (fn) => setState((s) => ({ ...s, plano27: fn(s.plano27 || planoInicial()) })),
       setPlano: (fn) => setState((s) => ({ ...s, plano: fn({ iniciativas: [], ocultos: [], metas: {}, numeros: {}, ...(s.plano || {}) }) })),
       // contas fixas pessoais (nome, valor, dia do vencimento)
       addConta: (c) => setState((s) => ({ ...s, contas: [...(s.contas || []), { id: uid(), ativo: true, ...c }] })),
