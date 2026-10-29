@@ -114,10 +114,10 @@ chrome.alarms.onAlarm.addListener(async (a) => {
       chrome.tabs.create({ url: `${HUB}/torneios?central=6x0`, active: false });
     }
   }
-  // Atividades da Laura: de 2 em 2 horas, das 8h às 19h, em dia útil
+  // Atividades da Laura: de 1 em 1 hora, das 8h às 19h, em dia útil
   if (![0, 6].includes(agora.getDay()) && minutos >= 8 * 60 && minutos < 19 * 60) {
     const { sessao: s, autoLaura = 0 } = await chrome.storage.local.get(['sessao', 'autoLaura']);
-    if (s && Date.now() - autoLaura >= 2 * 3600e3) {
+    if (s && Date.now() - autoLaura >= 3600e3) { // de hora em hora
       await chrome.storage.local.set({ autoLaura: Date.now() });
       chrome.tabs.create({ url: `${HUB}/atividades?central=laura`, active: false });
     }

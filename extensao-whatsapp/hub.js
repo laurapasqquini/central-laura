@@ -489,15 +489,34 @@ async function concluirNoHub() {
     if (!lista.length) return 0;
     const bate = (titulo) =>
       lista.some((h) => (h.titulo && h.titulo.trim() === titulo) || (h.pix && /^Cobrar (mensalidade|renova[cç][aã]o) Pix/i.test(titulo) && nomePix(titulo).toLowerCase() === h.pix.trim().toLowerCase()));
-    let feitos = 0;
-    for (const { card, titulo } of cartoesAbertos(main)) {
-      if (!bate(titulo)) continue;
-      const btn = card.querySelector('button[aria-label="Concluir tarefa"]');
-      if (!btn || btn.disabled) continue;
-      btn.click();
-      feitos++;
-      await new Promise((r) => setTimeout(r, 900));
-      if (document.querySelector('[role="dialog"]')) break;
+    const concluir = async (raiz, filtro) => {
+      let n = 0;
+      for (const { card, titulo } of cartoesAbertos(raiz)) {
+        if (!filtro(titulo)) continue;
+        const btn = card.querySelector('button[aria-label="Concluir tarefa"]');
+        if (!btn || btn.disabled) continue;
+        btn.click();
+        n++;
+        await new Promise((r) => setTimeout(r, 900));
+        if (document.querySelector('[role="dialog"]')) break;
+      }
+      return n;
+    };
+    const minhas = lista.filter((h) => !h.lolis);
+    const daLolis = lista.filter((h) => h.lolis).map((h) => h.titulo.trim());
+    let feitos = minhas.length ? await concluir(main, bate) : 0;
+    // tarefas da Lolis que ela deu como feitas: aparecem em "Deleguei" (a tela da equipe não tem o botão de concluir);
+    // conclui lá e volta para "Minhas"
+    if (daLolis.length && AUTO_LAURA) { // só na aba automática: não troca o filtro da tela que a Laura está usando
+      const filtroBtn = (nome) => [...document.querySelectorAll('main button')].find((b) => b.textContent.trim() === nome);
+      const deleguei = filtroBtn('Deleguei');
+      if (deleguei) {
+        deleguei.click();
+        await new Promise((r) => setTimeout(r, 2500));
+        feitos += await concluir(document.querySelector('main'), (t) => daLolis.includes(t.trim()));
+        filtroBtn('Minhas')?.click();
+        await new Promise((r) => setTimeout(r, 1500));
+      }
     }
     if (feitos) aviso(`✓ ${feitos} ${feitos > 1 ? 'tarefas concluídas' : 'tarefa concluída'} no Hub (feitas na Central)`, 5000);
     return feitos;

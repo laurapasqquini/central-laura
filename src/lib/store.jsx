@@ -449,6 +449,11 @@ function aplicarFeitosLolis(s, rows) {
     lolisBanco,
     routineDone,
     tasks: tarefas.size ? s.tasks.map((t) => (tarefas.has(t.id) && !t.done ? { ...t, done: true, doneAt: today() } : t)) : s.tasks,
+    // tarefa do Hub que a Lolis deu como feita: entra na fila para a extensão concluir lá (pela visão "Deleguei")
+    hubConcluir: [
+      ...(s.hubConcluir || []),
+      ...s.tasks.filter((t) => tarefas.has(t.id) && !t.done && t.hubLolis && !(s.hubConcluir || []).some((h) => h.titulo === t.title)).map((t) => ({ titulo: t.title, em: today(), lolis: true })),
+    ],
   };
 }
 
@@ -596,6 +601,10 @@ export function StoreProvider({ user, children }) {
           if (!Array.isArray(d?.abertas)) continue;
           const chave = (t) => t.trim().toLowerCase();
           const abertas = new Map(d.abertas.map((a) => [chave(a.titulo), a]));
+          if (s.hubConcluir?.some((h) => h.lolis)) {
+            const seteDias = addDays(today(), -7);
+            s = { ...s, hubConcluir: s.hubConcluir.filter((h) => !h.lolis || (h.em >= seteDias && abertas.has(chave(h.titulo)))) };
+          }
           const dia = d.dia || today();
           let tasks = s.tasks.map((t) => {
             if (!t.hubLolis) return t;
@@ -669,7 +678,8 @@ export function StoreProvider({ user, children }) {
             s = {
               ...s,
               hubConcluir: s.hubConcluir.filter(
-                (h) => h.em >= seteDias && (h.pix ? noHub.some((t) => PIX_HUB.test(t) && t.toLowerCase().includes(`— ${h.pix.toLowerCase()} (`)) : noHub.includes(h.titulo.trim())),
+                // as da Lolis são conferidas na leitura da equipe (hub-lolis), não aqui
+                (h) => h.lolis || (h.em >= seteDias && (h.pix ? noHub.some((t) => PIX_HUB.test(t) && t.toLowerCase().includes(`— ${h.pix.toLowerCase()} (`)) : noHub.includes(h.titulo.trim()))),
               ),
             };
           }
@@ -855,7 +865,7 @@ export function StoreProvider({ user, children }) {
           const resto = (s.hubConcluir || []).filter((h) => h.titulo !== t.title);
           return {
             ...s,
-            ...(t.hubLaura ? { hubConcluir: done ? [...resto, { titulo: t.title, em: today() }] : resto } : {}),
+            ...(t.hubLaura || t.hubLolis ? { hubConcluir: done ? [...resto, { titulo: t.title, em: today(), ...(t.hubLolis ? { lolis: true } : {}) }] : resto } : {}),
             tasks: s.tasks.map((x) => (x.id === id ? { ...x, done, doneAt: done ? today() : null } : x)),
           };
         }),
