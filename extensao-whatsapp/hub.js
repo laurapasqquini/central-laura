@@ -544,7 +544,9 @@ function lerGanhadoresApi(forcar = false) {
 // direto da API do Hub, a cada 30 min. Só leitura.
 let ultimoPlano = 0;
 function lerPlanoApi() {
-  if (Date.now() - ultimoPlano < 30 * 60e3) return;
+  // nas telas da Expansão (criando ou mexendo em projeto) lê a cada minuto; no resto do Hub, a cada 30 min
+  const naExpansao = /^\/match-admin\/expansao/.test(location.pathname);
+  if (Date.now() - ultimoPlano < (naExpansao ? 60e3 : 30 * 60e3)) return;
   ultimoPlano = Date.now();
   const json = (url) => fetch(url, { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
   json('/api/match-admin/expansao/projetos').then((j) => {

@@ -415,9 +415,22 @@ function Pracas() {
   const semQuem = lista.filter((p) => !p.operando && !p.quem).length;
   const mostrar = lista.filter((p) => (filtro === 'atencao' ? !p.operando && (p.sinal !== 'ok' || !p.quem) : filtro === 'novas' ? !p.operando : filtro === 'operando' ? p.operando : true));
   const setQuem = (id, quem) => setPlano27((pl) => ({ ...pl, pracas: { ...(pl.pracas || {}), [id]: { ...(pl.pracas?.[id] || {}), quem } } }));
+  // projetos da Expansão que não estão no Plano (ex.: acabou de criar no Hub): aparecem para incluir ou ignorar
+  const ignorados = state.plano27?.ignorarHub || [];
+  const foraDoPlano = (state.expansaoHub?.projetos || []).filter((x) => !ignorados.includes(x.id) && !lista.some((p) => p.proj?.id === x.id));
+  const incluir = (x) =>
+    setPlano27((pl) => {
+      const pv = previsaoDe({ plano27: pl });
+      // "FOZ DO IGUAÇU" → "Foz do Iguaçu"
+      const cidade = x.cidade.toLowerCase().replace(/(^|\s)(\p{L})/gu, (m) => m.toUpperCase()).replace(/ (Do|Da|De|Dos|Das) /g, (m) => m.toLowerCase());
+      const esporte = ESPORTE_HUB[x.esporte] || x.esporte;
+      return { ...pl, previsao: { ...pv, pracas: [...pv.pracas, { id: `${cidade}|${esporte}`, cidade, esporte, operando: x.status === 'em_jogo', metas: {} }] } };
+    });
+  const ignorar = (x) => setPlano27((pl) => ({ ...pl, ignorarHub: [...(pl.ignorarHub || []), x.id] }));
+  const lidoEm = state.expansaoHub ? new Date(state.expansaoHub.em) : null;
 
   return (
-    <Section title={`Praças (${lista.length})`} right={<span className="text-xs text-slate-500">{state.expansaoHub ? `Hub lido ${relativo(state.expansaoHub.em.slice(0, 10), ref)}` : 'abra o Hub para ler a Expansão'}</span>}>
+    <Section title={`Praças (${lista.length})`} right={<span className="text-xs text-slate-500">{lidoEm ? `Hub lido ${relativo(lidoEm.toLocaleDateString('sv-SE'), ref)} às ${lidoEm.toTimeString().slice(0, 5)}` : 'abra o Hub para ler a Expansão'}</span>}>
       <div className="space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
         <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
           <span className={semProjeto ? 'font-semibold text-red-600' : 'text-emerald-700'}>{semProjeto} sem projeto no Hub</span>
@@ -425,6 +438,18 @@ function Pracas() {
           <span className={semQuem ? 'font-semibold text-amber-700' : 'text-emerald-700'}>{semQuem} sem quem toca</span>
           <span className="text-slate-500">estreia {ESTREIA.split('-').reverse().join('/')} · Dia −48 em {DIA_MENOS_48.split('-').reverse().join('/')}</span>
         </div>
+        {foraDoPlano.length > 0 && (
+          <div className="space-y-1.5 rounded-lg bg-sky-50 px-3 py-2.5 ring-1 ring-sky-100">
+            <div className="text-sm font-semibold text-sky-900">No Hub, mas fora do Plano ({foraDoPlano.length})</div>
+            {foraDoPlano.map((x) => (
+              <div key={x.id} className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
+                <span className="min-w-0 flex-1">{x.cidade} · {ESPORTE_HUB[x.esporte] || x.esporte} <span className="text-xs text-slate-500">({x.feitos}/{x.total} do checklist)</span></span>
+                <button onClick={() => incluir(x)} className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-sky-800 ring-1 ring-sky-200 hover:bg-sky-100">Incluir no Plano</button>
+                <button onClick={() => ignorar(x)} className="px-1 text-xs text-slate-400 hover:text-slate-600">ignorar</button>
+              </div>
+            ))}
+          </div>
+        )}
         <Segmented value={filtro} onChange={setFiltro} options={[['atencao', 'Precisam de atenção'], ['novas', 'Novas'], ['operando', 'Em operação'], ['todas', 'Todas']]} />
         {!mostrar.length && <p className="py-3 text-sm text-emerald-700">Nada pedindo atenção aqui.</p>}
         <div className="divide-y divide-slate-100">
