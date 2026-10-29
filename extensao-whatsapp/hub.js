@@ -271,6 +271,10 @@ async function comExpansao(n) {
     if (!lolis) return n;
     const lista = await (await fetch('/api/match-admin/expansao/projetos', { cache: 'no-store' })).json();
     const ja = new Set(n.abertas.map((a) => a.titulo.trim().toLowerCase()));
+    // o prazo que vale é o da tarefa em Atividades (é o que a Laura muda); o do checklist do projeto pode ficar velho
+    const deleguei = await fetch('/api/atividades?filtro=deleguei', { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const listaDel = Array.isArray(deleguei) ? deleguei : deleguei?.atividades || Object.values(deleguei || {}).find(Array.isArray) || [];
+    const prazoAtividade = new Map(listaDel.filter((x) => x.titulo && x.status !== 'concluida' && x.prazo).map((x) => [x.titulo.trim().toLowerCase(), x.prazo.slice(0, 10)]));
     const extras = [];
     for (const p of lista.projetos || lista || []) {
       const j = await (await fetch(`/api/match-admin/expansao/projetos/${p.id}`, { cache: 'no-store' })).json();
@@ -279,7 +283,7 @@ async function comExpansao(n) {
         if (i.feito || i.nao_se_aplica || !(i.responsaveis || []).includes(lolis)) continue;
         const titulo = `[Expansão ${nome}] ${i.titulo}`;
         if (ja.has(titulo.toLowerCase())) continue;
-        extras.push({ titulo, prazo: i.prazo ? i.prazo.slice(0, 10) : null, descricao: [i.ajuda, `No Hub: Expansão › ${nome} (marque o item no Checklist quando terminar)`].filter(Boolean).join('\n\n') });
+        extras.push({ titulo, prazo: prazoAtividade.get(titulo.toLowerCase()) || (i.prazo ? i.prazo.slice(0, 10) : null), descricao: [i.ajuda, `No Hub: Expansão › ${nome} (marque o item no Checklist quando terminar)`].filter(Boolean).join('\n\n') });
       }
     }
     return { ...n, abertas: [...n.abertas, ...extras] };

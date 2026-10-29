@@ -178,9 +178,12 @@ const sortItems = (a, b) =>
   (a.kind === 'routine' ? 1 : 0) - (b.kind === 'routine' ? 1 : 0) ||
   a.title.localeCompare(b.title);
 
+// tarefas da Expansão ([Expansão Beach Tennis Cidade] …) ficam só na seção Expansão, nunca como pendência do dia
+const ehExpansao = (t) => /^\[Expansão /.test(t.title || '');
+
 export function buildDay(state, date, filter) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
-  const tasks = state.tasks.filter((t) => !t.whats && t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state)); // as do WhatsApp ficam só na aba 💬 WhatsApp
+  const tasks = state.tasks.filter((t) => !t.whats && !ehExpansao(t) && t.due && dataEfetiva(state, t) === date).map((t) => fromTask(t, state.projects, state)); // as do WhatsApp ficam só na aba 💬 WhatsApp
   const routines = state.routines.filter((r) => r.tipo !== 'lolis-lista' && occursOn(state, r, date)).map((r) => fromRoutine(r, date, state.routineDone)).concat(calRoutines(state, date), lembretesBrinde(state, date));
   // "Mandar a lista pra Lolis" não vira mais tarefa: ela vê o dia na página dela
   // (quando precisar, Ranken › Lolis › "Copiar lista pro WhatsApp")
@@ -197,7 +200,7 @@ export function buildDay(state, date, filter) {
 // (Rotina diária não acumula: amanhã ela aparece de novo.)
 export function buildOverdue(state, filter, ref = today()) {
   const ok = (x) => (filter.area === 'all' || x.area === filter.area) && (filter.who === 'all' || x.who === filter.who);
-  const tasks = state.tasks.filter((t) => !t.whats && !t.done && t.due && dataEfetiva(state, t) < ref).map((t) => fromTask(t, state.projects, state));
+  const tasks = state.tasks.filter((t) => !t.whats && !ehExpansao(t) && !t.done && t.due && dataEfetiva(state, t) < ref).map((t) => fromTask(t, state.projects, state));
   const routines = [];
   for (let d = 1; d <= 14; d++) {
     const date = addDays(ref, -d);
@@ -997,7 +1000,7 @@ export function dadosPaginaLolis(state, ref = today()) {
 }
 
 // ── Expansão (tarefas do Hub "[Expansão Beach Tennis Cidade] ..."): uma de cada vez, na ordem do prazo,
-// com quanto fazer por dia e onde anotar no Hub. A do dia do prazo também cai nas tarefas do dia.
+// com quanto fazer por dia e onde anotar no Hub. É trabalho de longo prazo: não entra em atrasadas nem nas tarefas do dia.
 const EXPANSAO = /^\[Expansão (Beach Tennis|Tênis|Padel) ([^\]]+)\]\s*/;
 // locais de cada projeto no Hub (Expansão, 16/10)
 const LOCAIS_EXPANSAO = { 'nova esperanca': 3, 'alto parana': 3, paranavai: 18, apucarana: 7, paranacity: 4, colorado: 2 };
