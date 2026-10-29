@@ -576,7 +576,10 @@ export function StoreProvider({ user, children }) {
           if (!Array.isArray(lista)) continue;
           const limite = addDays(today(), -30);
           const nomeOk = (n) => /\p{L}.*\p{L}/u.test(n || ''); // descarta "nomes" que são só ícone (ex.: 🔍)
-          const g = Object.fromEntries(Object.entries(s.ganhadores || {}).filter(([, x]) => x.data >= limite && nomeOk(x.nome)));
+          // lista da API do Hub (extensão 1.35+): é completa para os dias que traz, então substitui o que
+          // a leitura antiga da tela tinha guardado desses dias (com nome e cidade trocados em alguns cartões)
+          const desdeApi = lista.some((x) => x.api) ? lista.reduce((m, x) => (x.data && x.data < m ? x.data : m), '9999') : null;
+          const g = Object.fromEntries(Object.entries(s.ganhadores || {}).filter(([, x]) => x.data >= limite && nomeOk(x.nome) && !(desdeApi && x.data >= desdeApi)));
           for (const x of lista) if (nomeOk(x.nome) && x.data) g[`${x.data}|${x.nome}|${x.patrocinador}`] = x;
           s = { ...s, ganhadores: g, ganhadoresEm: new Date(r.created_at).toLocaleDateString('sv-SE') };
         }

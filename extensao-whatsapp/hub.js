@@ -47,29 +47,6 @@ function aviso(texto, ms = 6000) {
 
 // Sorteio Diário › Ganhadores do dia: nome, data, cidade/esporte e prêmio dos últimos 12 dias
 // (para a Lolis lembrar o prazo de 7 dias e conferir se deu certo). O telefone fica no Hub.
-function lerGanhadores() {
-  const L = linhasDaTela();
-  const limite = new Date(Date.now() - 12 * 864e5).toLocaleDateString('sv-SE');
-  const out = [];
-  L.forEach((l, k) => {
-    const m = l.match(/^🗓\s*(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (!m) return;
-    const data = `${m[3]}-${m[2]}-${m[1]}`;
-    if (data < limite) return;
-    const seguintes = L.slice(k + 1, k + 4);
-    const local = seguintes[0] && !/^🎁|^⏳|^✅/.test(seguintes[0]) ? seguintes[0] : '';
-    const premio = (seguintes.find((x) => /^🎁/.test(x)) || '').replace(/^🎁\s*/, '');
-    const [patrocinador, item] = premio.split('→').map((s) => (s || '').trim());
-    // "· +1" = o ganhador levou mais um prêmio (de outro patrocinador, que só aparece abrindo no Hub)
-    const extra = Number(((item || '').match(/·\s*\+(\d+)$/) || [])[1] || 0);
-    // nome: a primeira linha acima com letras (alguns cartões têm um botão de ícone, como 🔍, antes da data)
-    const nome = [L[k - 1], L[k - 2], L[k - 3]].find((x) => x && /\p{L}.*\p{L}/u.test(x));
-    if (!nome) return;
-    out.push({ nome, data, local, patrocinador: patrocinador || '', premio: (item || '').replace(/\s*·\s*\+\d+$/, ''), extra });
-  });
-  return out.length ? out : null;
-}
-
 // Sorteio Diário › Programação: por dia, a marca do dia e os patrocinadores (prêmio, retirada, Instagram).
 // Lê a cidade/esporte que estiver selecionada na tela. Telefones não são lidos.
 function lerProgramacao() {
@@ -151,75 +128,15 @@ async function mandar(tipo, dados, chave, texto, quieto = false) {
   });
 }
 
-// Atualização automática dos ganhadores, uma vez por dia: ao usar qualquer página do Hub,
-// a extensão abre Sorteio Diário numa aba em segundo plano, lê "Ganhadores do dia" e fecha a aba.
-// (O Hub não deixa abrir páginas dele escondidas dentro de outra, por segurança.)
+// aba "?central=auto" (versões antigas abriam o Sorteio Diário escondido uma vez por dia)
 const AUTO = new URLSearchParams(location.search).get('central') === 'auto';
-const hojeISO = () => new Date().toLocaleDateString('sv-SE');
 
-async function agendarAuto() {
-  if (AUTO || AUTO_EQUIPE || AUTO_LAURA || AUTO_TEL || AUTO_6X0 || /^\/sorteio/.test(location.pathname)) return;
-  const { autoGanhadores } = await chrome.storage.local.get('autoGanhadores');
-  if (autoGanhadores === hojeISO()) return;
-  await chrome.storage.local.set({ autoGanhadores: hojeISO() });
-  chrome.runtime.sendMessage({ tipo: 'abrir-aba', url: `${location.origin}/sorteio?central=auto` });
+// os ganhadores agora vêm da API (lerGanhadoresApi) em qualquer página do Hub: não abre mais a aba do sorteio.
+// Se uma aba antiga "?central=auto" ainda abrir, lê pela API e fecha.
+if (AUTO) {
+  lerGanhadoresApi(true);
+  setTimeout(() => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }), 4000);
 }
-
-// Telefone dos ganhadores DE HOJE: abre a ficha de cada um (clicando no nome), lê o telefone e fecha.
-// Fica guardado na extensão, para não abrir de novo.
-let buscandoTel = false;
-async function telefonesDeHoje(lista) {
-  const hoje = new Date().toLocaleDateString('sv-SE');
-  const { telGanhadores = {} } = await chrome.storage.local.get('telGanhadores');
-  const faltam = lista.filter((g) => g.data === hoje && !telGanhadores[`${g.data}|${g.nome}`]);
-  if (!faltam.length || buscandoTel) return telGanhadores;
-  buscandoTel = true;
-  for (const g of faltam) {
-    const botao = [...document.querySelectorAll('main button')].find((b) => b.textContent.trim() === g.nome);
-    if (!botao) continue;
-    botao.click(); // abre a ficha do atleta (só leitura)
-    await new Promise((r) => setTimeout(r, 900));
-    const linhas = document.body.innerText.split('\n').map((s) => s.trim());
-    const tel = linhas.find((l) => /^\+?[\d\s().-]{10,18}$/.test(l) && l.replace(/\D/g, '').length >= 10 && l.replace(/\D/g, '').length <= 13);
-    telGanhadores[`${g.data}|${g.nome}`] = tel || '-'; // '-' = já tentou e não achou (não abre de novo)
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); // fecha a ficha
-    await new Promise((r) => setTimeout(r, 400));
-  }
-  // guarda só os últimos 12 dias
-  const limite = new Date(Date.now() - 12 * 864e5).toLocaleDateString('sv-SE');
-  for (const k of Object.keys(telGanhadores)) if (k.slice(0, 10) < limite) delete telGanhadores[k];
-  await chrome.storage.local.set({ telGanhadores });
-  buscandoTel = false;
-  return telGanhadores;
-}
-const comTelefones = (lista, tels) => lista.map((g) => {
-  const t = tels[`${g.data}|${g.nome}`];
-  return { ...g, telefone: t && t !== '-' ? t : '' };
-});
-
-async function rodarAuto() {
-  for (let i = 0; i < 40; i++) {
-    const aba = [...document.querySelectorAll('main button, main [role=tab], main a')].find((x) => x.textContent.trim() === 'Ganhadores do dia');
-    if (aba) {
-      aba.click(); // só troca a aba da tela, não altera nada
-      break;
-    }
-    await new Promise((r) => setTimeout(r, 500));
-  }
-  for (let i = 0; i < 40; i++) {
-    await new Promise((r) => setTimeout(r, 500));
-    const g = lerGanhadores();
-    if (g) {
-      const tels = await telefonesDeHoje(g);
-      chrome.runtime.sendMessage({ tipo: 'ganhadores', dados: comTelefones(g, tels) }, () => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }));
-      return;
-    }
-  }
-  chrome.runtime.sendMessage({ tipo: 'fechar-aba' });
-}
-
-if (AUTO) rodarAuto();
-else setTimeout(agendarAuto, 3000);
 
 // ── Atividades › Minha equipe › Lolis: o que está "Ainda em aberto" com ela vira tarefa dela na Central ──
 // (às 13h25 a extensão abre esta tela sozinha, numa aba em segundo plano; também lê quando a Laura abre)
@@ -595,6 +512,34 @@ async function lerProgramacoesApi() {
     }
 }
 
+// Ganhadores do sorteio diário de todas as cidades e esportes, direto da API do Hub (a mesma da aba
+// "Ganhadores do dia"), já com cidade, esporte, prêmios e WhatsApp. Lê de qualquer página do Hub, a cada 15 min,
+// sem abrir a tela do sorteio. (A leitura da tela trocava nome e cidade em alguns cartões e perdia o Beach.)
+let ultimosGanhadores = 0;
+async function ganhadoresDaApi() {
+  const j = await fetch('/api/torneios/sorteio-ganhadores', { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  const lista = Array.isArray(j) ? j : j?.ganhadores;
+  if (!Array.isArray(lista)) return null;
+  const limite = new Date(Date.now() - 12 * 864e5).toLocaleDateString('sv-SE');
+  return lista
+    .filter((x) => x.nome && x.data_sorteio && x.data_sorteio.slice(0, 10) >= limite)
+    .map((x) => ({
+      nome: x.nome.trim(),
+      data: x.data_sorteio.slice(0, 10),
+      local: [x.cidade, x.esporte].filter(Boolean).join(' · '),
+      patrocinador: x.patrocinador || '',
+      premio: x.premio || '',
+      extra: Math.max(0, (x.premios?.length || 1) - 1),
+      telefone: (x.whatsapp || '').replace(/\D/g, ''),
+      api: true,
+    }));
+}
+function lerGanhadoresApi(forcar = false) {
+  if (!forcar && Date.now() - ultimosGanhadores < 15 * 60e3) return;
+  ultimosGanhadores = Date.now();
+  ganhadoresDaApi().then((g) => g && g.length && mandar('ganhadores', g, 'ultimoGanhadores', `✓ ${g.length} ganhadores recentes na Central`, true));
+}
+
 let ultimoPix = 0;
 function lerPix() {
   if (Date.now() - ultimoPix < 30 * 60e3) return;
@@ -716,6 +661,7 @@ async function tentar() {
   }
   lerPix();
   lerProgramacoesApi();
+  lerGanhadoresApi();
   if (location.pathname === '/atividades') {
     if (!lerAtividadesLaura()) return;
     enviando = true; // segura outras leituras enquanto conclui
@@ -739,16 +685,8 @@ async function tentar() {
     const n = lerBeach();
     if (n) mandar('numeros', n, 'ultimoHub', '✓ Números do Beach na Central');
   } else if (/^\/sorteio/.test(location.pathname)) {
-    const g = lerGanhadores();
-    if (g) {
-      const { telGanhadores = {} } = await chrome.storage.local.get('telGanhadores');
-      mandar('ganhadores', comTelefones(g, telGanhadores), 'ultimoGanhadores', `✓ ${g.length} ganhadores recentes na Central`);
-      // telefones dos ganhadores de hoje que ainda faltam: busca e manda de novo
-      telefonesDeHoje(g).then((tels) => {
-        const nova = comTelefones(g, tels);
-        if (JSON.stringify(nova) !== JSON.stringify(comTelefones(g, telGanhadores))) setTimeout(() => mandar('ganhadores', nova, 'ultimoGanhadores', '✓ Telefones dos ganhadores de hoje na Central'), 1500);
-      });
-    }
+    // na tela do sorteio, a cada mudança (ex.: acabou de sortear) confere a API de novo, no máx. a cada 30 s
+    if (Date.now() - ultimosGanhadores > 30e3) lerGanhadoresApi(true);
     const p = lerProgramacao();
     if (p) mandar('programacao', p, `ultimoProg-${p.cidade}-${p.esporte}`, `✓ Programação ${p.cidade} · ${p.esporte} na Central`);
     else if (/MARCA DO DIA/.test(document.querySelector('main')?.innerText || '') && !avisouFalha) {
