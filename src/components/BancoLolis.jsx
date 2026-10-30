@@ -39,7 +39,7 @@ export default function BancoLolis() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-slate-500">
-        Aparece na página dela, embaixo das tarefas do dia, nesta ordem. Quando acabar o do dia, ela pega a de cima e conta na nota o que fez. <b>🔁 Contínua</b> fica sempre na lista; as outras saem quando ela marca como feita.
+        Tarefas extras que ela pode puxar pra hoje na aba <b>Acabou? Puxa daqui</b> da página dela (grupo Outras). As cidades novas entram sozinhas, vindas do Hub. <b>🔁 Contínua</b> volta todo dia; as outras saem quando ela marca como feita.
       </p>
       <section className="space-y-2">
         {abertas.map((b, i) => {
