@@ -206,7 +206,7 @@ const curtoExpansao = (titulo) => {
 const iconeEsporte = (e = '') => (/beach/i.test(e) ? '🏖️' : /padel/i.test(e) ? '🥎' : '🎾');
 // linha curta de números: "faltam 39 de 43 · 4/dia · até 13/11"
 const resumoExpansao = (a) =>
-  [a.vencida ? 'prazo passou' : null, a.faltam != null ? (a.total ? `faltam ${a.faltam} de ${a.total}` : `faltam ${a.faltam}`) : null, a.porDia ? `${a.porDia}/dia` : null, `até ${fmtCurto(a.ate).slice(5)}`].filter(Boolean).join(' · ');
+  [a.vencida ? 'prazo passou' : null, a.faltam != null ? (a.total ? `faltam ${a.faltam} de ${a.total}` : `faltam ${a.faltam}`) : null, a.porDia && a.porDia < a.faltam ? `${a.porDia}/dia` : null, // com pouco faltando, o "por dia" não ajuda `até ${fmtCurto(a.ate).slice(5)}`].filter(Boolean).join(' · ');
 // cidades novas agrupadas por cidade (Tênis e Beach juntos), na ordem do prazo mais próximo
 const porCidade = (itens) => {
   const m = new Map();
