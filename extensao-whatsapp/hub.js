@@ -559,7 +559,10 @@ function lerPlanoApi() {
       for (const x of lista) {
         const d = await json(`/api/match-admin/expansao/projetos/${x.id}`);
         if (!Array.isArray(d?.locais)) continue;
-        contagemLocais[x.id] = { locais: d.locais.length, comResponsavel: d.locais.filter((l) => (l.contato_whatsapp || '').replace(/\D/g, '').length >= 10).length };
+        // o telefone do responsável pode estar no próprio local ou na aba Contatos (dono/sócio ligado à academia)
+        const tel = (t) => (t || '').replace(/\D/g, '').length >= 10;
+        const viaContatos = new Set((d.contatos || []).filter((c) => c.academia_id && tel(c.whatsapp)).map((c) => c.academia_id));
+        contagemLocais[x.id] = { locais: d.locais.length, comResponsavel: d.locais.filter((l) => tel(l.contato_whatsapp) || viaContatos.has(l.id)).length };
       }
       await chrome.storage.local.set({ contagemLocais, contagemEm: Date.now() });
     }

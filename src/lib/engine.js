@@ -1008,7 +1008,7 @@ const ESPORTE_PROJ = { 'Beach Tennis': 'beach_tennis', Tênis: 'tenis', Padel: '
 const locaisDoProjeto = (state, esporte, cidade) =>
   (state.expansaoHub?.projetos || []).find((x) => semAcento(x.cidade) === semAcento(cidade) && x.esporte === ESPORTE_PROJ[esporte]);
 const COMO_EXPANSAO = [
-  [/telefone do respons/i, (c, n) => `Para cada local da aba Locais (Hub › Expansão › ${c}): confira no Google e no Instagram se ainda existe, quantas quadras tem e se aluga. Anote no próprio Hub, no local, o WhatsApp e o nome do dono ou gerente.${n ? ` São ${n} locais.` : ''}`],
+  [/telefone do respons/i, (c, n) => `Para cada local da aba Locais (Hub › Expansão › ${c}): confira no Google e no Instagram se ainda existe, quantas quadras tem e se aluga. Anote no Hub o WhatsApp e o nome do dono ou gerente: no próprio local ou na aba Contatos, ligado à academia (os dois contam).${n ? ` São ${n} locais.` : ''}`],
   [/professores/i, (c) => `Os professores costumam aparecer no Instagram das arenas da aba Locais. Cadastre cada um no Hub › Expansão › ${c} › aba Professores, com WhatsApp e onde dá aula.`],
   [/apoiadores/i, (c) => `Mínimo de 8: açaí, hamburgueria, restaurante, loja de esporte, fisioterapia, de preferência perto das arenas. Cadastre no Hub › Expansão › ${c} › aba Apoiadores, com Instagram e contato.`],
 ];
