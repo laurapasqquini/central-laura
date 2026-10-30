@@ -549,10 +549,22 @@ function lerPlanoApi() {
   if (Date.now() - ultimoPlano < (naExpansao ? 60e3 : 30 * 60e3)) return;
   ultimoPlano = Date.now();
   const json = (url) => fetch(url, { credentials: 'include', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-  json('/api/match-admin/expansao/projetos').then((j) => {
+  json('/api/match-admin/expansao/projetos').then(async (j) => {
     const lista = Array.isArray(j) ? j : j?.projetos;
     if (!Array.isArray(lista)) return;
+    // locais de cada projeto (aba Locais): quantos são e quantos já têm o WhatsApp do responsável.
+    // Abre o detalhe de cada projeto no máx. a cada 5 min; no meio-tempo repete a última contagem.
+    const { contagemLocais = {}, contagemEm = 0 } = await chrome.storage.local.get(['contagemLocais', 'contagemEm']);
+    if (Date.now() - contagemEm > 5 * 60e3) {
+      for (const x of lista) {
+        const d = await json(`/api/match-admin/expansao/projetos/${x.id}`);
+        if (!Array.isArray(d?.locais)) continue;
+        contagemLocais[x.id] = { locais: d.locais.length, comResponsavel: d.locais.filter((l) => (l.contato_whatsapp || '').replace(/\D/g, '').length >= 10).length };
+      }
+      await chrome.storage.local.set({ contagemLocais, contagemEm: Date.now() });
+    }
     const projetos = lista.map((x) => ({
+      ...(contagemLocais[x.id] || {}),
       id: x.id,
       cidade: x.cidade,
       esporte: x.esporte,

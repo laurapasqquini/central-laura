@@ -428,6 +428,10 @@ function Pracas() {
     });
   const ignorar = (x) => setPlano27((pl) => ({ ...pl, ignorarHub: [...(pl.ignorarHub || []), x.id] }));
   const lidoEm = state.expansaoHub ? new Date(state.expansaoHub.em) : null;
+  // telefones dos responsáveis (aba Locais do Hub) nas praças novas: o trabalho de agora
+  const novasComLocais = lista.filter((p) => !p.operando && p.proj?.locais != null);
+  const totLocais = novasComLocais.reduce((a, p) => a + p.proj.locais, 0);
+  const totTel = novasComLocais.reduce((a, p) => a + (p.proj.comResponsavel || 0), 0);
 
   return (
     <Section title={`Praças (${lista.length})`} right={<span className="text-xs text-slate-500">{lidoEm ? `Hub lido ${relativo(lidoEm.toLocaleDateString('sv-SE'), ref)} às ${lidoEm.toTimeString().slice(0, 5)}` : 'abra o Hub para ler a Expansão'}</span>}>
@@ -438,6 +442,19 @@ function Pracas() {
           <span className={semQuem ? 'font-semibold text-amber-700' : 'text-emerald-700'}>{semQuem} sem quem toca</span>
           <span className="text-slate-500">estreia {ESTREIA.split('-').reverse().join('/')} · Dia −48 em {DIA_MENOS_48.split('-').reverse().join('/')}</span>
         </div>
+        {totLocais > 0 && (
+          <div className="space-y-1">
+            <div className="flex items-baseline justify-between text-sm">
+              <span className="font-semibold text-slate-800">Telefones dos responsáveis nas praças novas</span>
+              <span className="text-slate-600">
+                <b className="text-ink">{num(totTel)}</b> de {num(totLocais)} locais
+              </span>
+            </div>
+            <div className="h-2 rounded-sm bg-slate-100">
+              <div className="h-full rounded-sm bg-emerald-700" style={{ width: `${Math.round((totTel / totLocais) * 100)}%` }} />
+            </div>
+          </div>
+        )}
         {foraDoPlano.length > 0 && (
           <div className="space-y-1.5 rounded-lg bg-sky-50 px-3 py-2.5 ring-1 ring-sky-100">
             <div className="text-sm font-semibold text-sky-900">No Hub, mas fora do Plano ({foraDoPlano.length})</div>
@@ -466,6 +483,11 @@ function Pracas() {
                     <>
                       <div className="h-1.5 rounded-sm bg-slate-100"><div className="h-full rounded-sm bg-emerald-700" style={{ width: `${Math.round((p.feito || 0) * 100)}%` }} /></div>
                       <span>{p.proj.feitos}/{p.proj.total} do checklist</span>
+                      {p.proj.locais != null && (
+                        <div className={p.proj.locais && p.proj.comResponsavel >= p.proj.locais ? 'text-emerald-700' : 'text-slate-600'}>
+                          telefones {p.proj.comResponsavel || 0}/{p.proj.locais}
+                        </div>
+                      )}
                     </>
                   ) : (
                     <span className="text-red-600">criar no Hub</span>
