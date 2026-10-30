@@ -469,12 +469,16 @@ function Pracas() {
         )}
         <Segmented value={filtro} onChange={setFiltro} options={[['atencao', 'Precisam de atenção'], ['novas', 'Novas'], ['operando', 'Em operação'], ['todas', 'Todas']]} />
         {!mostrar.length && <p className="py-3 text-sm text-emerald-700">Nada pedindo atenção aqui.</p>}
-        <div className="divide-y divide-slate-100">
-          {mostrar.map((p) => (
+        <div className="space-y-3">
+          {[...new Set(mostrar.map((p) => p.cidade))].sort((a, b) => a.localeCompare(b, 'pt-BR')).map((cidade) => (
+          <div key={cidade} className="rounded-lg ring-1 ring-slate-100">
+          <div className="border-b border-slate-100 bg-slate-50 px-3 py-1.5 text-sm font-semibold text-ink">{cidade}</div>
+          <div className="divide-y divide-slate-100 px-3">
+          {mostrar.filter((p) => p.cidade === cidade).sort((a, b) => a.esporte.localeCompare(b.esporte)).map((p) => (
             <div key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-1.5 py-2.5">
               <span className={`h-2.5 w-2.5 shrink-0 rounded-sm ${p.operando ? 'bg-emerald-700' : p.sinal === 'vermelho' ? 'bg-red-500' : p.sinal === 'amarelo' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
               <div className="min-w-[180px] flex-1">
-                <div className="text-sm font-semibold text-ink">{p.cidade} · {p.esporte}</div>
+                <div className="text-sm font-semibold text-ink">{/beach/i.test(p.esporte) ? '🏖️' : /padel/i.test(p.esporte) ? '🥎' : '🎾'} {p.esporte}</div>
                 <div className="text-xs text-slate-500">{p.motivo}</div>
               </div>
               {!p.operando && (
@@ -510,6 +514,9 @@ function Pracas() {
                 Hub ↗
               </a>
             </div>
+          ))}
+          </div>
+          </div>
           ))}
         </div>
       </div>

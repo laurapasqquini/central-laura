@@ -1036,7 +1036,8 @@ export function expansaoLolis(state, ref = today()) {
       : telefone && n ? `Meta: ${porDia} locais por dia (faltam ${n})${feitos}`
       : 'Dá pra fazer numa tarde';
     const como = COMO_EXPANSAO.find(([re]) => re.test(t.title));
-    return { key: `t:${t.id}`, titulo: t.title, ate, meta, detalhe: como ? como[1](cidade, n) : '' };
+    // números curtos para a aba "Acabou? Puxa daqui" (a frase longa fica no "como fazer")
+    return { key: `t:${t.id}`, titulo: t.title, ate, meta, detalhe: como ? como[1](cidade, n) : '', cidade, esporte, faltam: telefone ? n : null, total: telefone ? proj?.locais ?? null : null, porDia: telefone && n ? porDia : null, vencida: ate < ref };
   });
   return { itens };
 }
