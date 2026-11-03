@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { today, addDays, fmtCurto, relativo } from '../lib/dates';
-import { Section, Empty } from '../components/ui';
+import { Empty } from '../components/ui';
 
 export const MSG_INADIMPLENTES = {
   vai: 'Oi, {nome}! Tudo bem? Aqui é a Laura, do RANKEN 🎾 O pagamento da sua mensalidade não passou, e se a próxima tentativa também falhar o app bloqueia o seu acesso aos jogos. Consegue conferir o cartão no app (Perfil › Assinaturas)? Se preferir, te mando o Pix. Qualquer coisa me fala!',
@@ -25,20 +25,33 @@ export function contaInadimplentes(state, ref = today()) {
   return (state.inadimplentesHub?.itens || []).filter((x) => !c[x.id] || c[x.id] <= addDays(ref, -VOLTA_EM)).length;
 }
 
+
+// cor de cada grupo: faixa à esquerda do cartão e o título do grupo
+const COR = {
+  vai: { faixa: 'bg-amber-500', titulo: 'text-amber-700', fundo: 'bg-amber-50/60' },
+  bloqueado: { faixa: 'bg-red-500', titulo: 'text-red-700', fundo: 'bg-red-50/50' },
+  falei: { faixa: 'bg-slate-300', titulo: 'text-slate-500', fundo: 'bg-slate-50' },
+};
+
 export default function Inadimplentes() {
   const { state, setMsgInadimplentes } = useStore();
   const ref = today();
   const [editar, setEditar] = useState(false);
+  const [aberta, setAberta] = useState(null); // só uma mensagem aberta por vez
+  const [verFalei, setVerFalei] = useState(false);
   const hub = state.inadimplentesHub;
   const itens = hub?.itens || [];
   const contato = state.inadimplentesContato || {};
   const msgs = { ...MSG_INADIMPLENTES, ...(state.msgInadimplentes || {}) };
   const pede = (x) => !contato[x.id] || contato[x.id] <= addDays(ref, -VOLTA_EM);
-  // primeiro quem pede atenção; dentro disso, o maior valor
-  const ordem = (a, b) => Number(pede(b)) - Number(pede(a)) || (b.valor || 0) - (a.valor || 0);
-  const vai = itens.filter((x) => x.status !== 'unpaid').sort(ordem);
-  const bloqueados = itens.filter((x) => x.status === 'unpaid').sort(ordem);
+  const porValor = (a, b) => (b.valor || 0) - (a.valor || 0);
+  // quem já recebeu contato (há menos de 5 dias) sai do meio da lista e vai para "Já falei", no fim
+  const vai = itens.filter((x) => x.status !== 'unpaid' && pede(x)).sort(porValor);
+  const bloqueados = itens.filter((x) => x.status === 'unpaid' && pede(x)).sort(porValor);
+  const falei = itens.filter((x) => !pede(x)).sort((a, b) => (contato[b.id] || '').localeCompare(contato[a.id] || ''));
   const lidoEm = hub ? new Date(hub.em) : null;
+  const msgDe = (x) => (x.status === 'unpaid' ? msgs.bloqueado : msgs.vai);
+  const alternar = (id) => setAberta(aberta === id ? null : id);
 
   return (
     <div className="space-y-6">
@@ -51,9 +64,17 @@ export default function Inadimplentes() {
           </p>
         </div>
         <button onClick={() => setEditar(!editar)} className="rounded-md px-3 py-1.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
-          {editar ? 'Fechar mensagens' : 'Editar mensagens'}
+          {editar ? 'Fechar edição' : 'Editar mensagens'}
         </button>
       </header>
+
+      {itens.length > 0 && (
+        <div className="flex flex-wrap gap-2 text-sm">
+          <Resumo cor="bg-amber-500" n={vai.length} rotulo={vai.length === 1 ? 'vai bloquear' : 'vão bloquear'} />
+          <Resumo cor="bg-red-500" n={bloqueados.length} rotulo={bloqueados.length === 1 ? 'bloqueado' : 'bloqueados'} />
+          <Resumo cor="bg-slate-300" n={falei.length} rotulo="já falei" />
+        </div>
+      )}
 
       {editar && (
         <div className="space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
@@ -74,35 +95,63 @@ export default function Inadimplentes() {
       {hub && !itens.length && <Empty>Ninguém inadimplente agora. 🎉</Empty>}
 
       {vai.length > 0 && (
-        <Section title={`Vai bloquear (${vai.length})`}>
-          <p className="px-1 text-xs text-slate-500">O Stripe ainda vai tentar cobrar de novo: dá tempo de evitar o bloqueio.</p>
-          <Lista itens={vai} msg={msgs.vai} contato={contato} pede={pede} />
-        </Section>
+        <Grupo cor={COR.vai} titulo={`Vai bloquear (${vai.length})`} dica="O Stripe ainda vai tentar cobrar de novo: dá tempo de evitar o bloqueio.">
+          {vai.map((x) => (
+            <Pessoa key={x.id} x={x} cor={COR.vai} msg={msgDe(x)} falouEm={contato[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />
+          ))}
+        </Grupo>
       )}
       {bloqueados.length > 0 && (
-        <Section title={`Já bloqueado (${bloqueados.length})`}>
-          <p className="px-1 text-xs text-slate-500">O Stripe já esgotou as tentativas e o acesso ao app está bloqueado.</p>
-          <Lista itens={bloqueados} msg={msgs.bloqueado} contato={contato} pede={pede} />
-        </Section>
+        <Grupo cor={COR.bloqueado} titulo={`Já bloqueado (${bloqueados.length})`} dica="O Stripe já esgotou as tentativas e o acesso ao app está bloqueado.">
+          {bloqueados.map((x) => (
+            <Pessoa key={x.id} x={x} cor={COR.bloqueado} msg={msgDe(x)} falouEm={contato[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />
+          ))}
+        </Grupo>
+      )}
+      {falei.length > 0 && (
+        <section className="space-y-2">
+          <button onClick={() => setVerFalei(!verFalei)} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide ${COR.falei.titulo} hover:bg-slate-100`}>
+            <span>Já falei ({falei.length})</span>
+            <span className="text-xs normal-case tracking-normal">{verFalei ? 'esconder ▴' : 'mostrar ▾'}</span>
+          </button>
+          {verFalei && (
+            <div className="space-y-2">
+              <p className="px-1 text-xs text-slate-500">Você já falou com eles. Se em {VOLTA_EM} dias ainda estiverem aqui, voltam para cima.</p>
+              {falei.map((x) => (
+                <Pessoa key={x.id} x={x} cor={COR.falei} msg={msgDe(x)} falouEm={contato[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />
+              ))}
+            </div>
+          )}
+        </section>
       )}
     </div>
   );
 }
 
-function Lista({ itens, msg, contato, pede }) {
+function Resumo({ cor, n, rotulo }) {
   return (
-    <div className="divide-y divide-slate-100 rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-      {itens.map((x) => (
-        <Pessoa key={x.id} x={x} msg={msg} falouEm={contato[x.id]} pedeAtencao={pede(x)} />
-      ))}
-    </div>
+    <span className="inline-flex items-center gap-2 rounded-md bg-white px-2.5 py-1 shadow-sm ring-1 ring-slate-200">
+      <span className={`h-2.5 w-2.5 rounded-sm ${cor}`} />
+      <b className="text-ink">{n}</b> <span className="text-slate-600">{rotulo}</span>
+    </span>
   );
 }
 
-function Pessoa({ x, msg, falouEm, pedeAtencao }) {
+function Grupo({ cor, titulo, dica, children }) {
+  return (
+    <section className="space-y-2">
+      <div className="px-1">
+        <h2 className={`text-sm font-semibold uppercase tracking-wide ${cor.titulo}`}>{titulo}</h2>
+        <p className="text-xs text-slate-500">{dica}</p>
+      </div>
+      <div className="space-y-2">{children}</div>
+    </section>
+  );
+}
+
+function Pessoa({ x, cor, msg, falouEm, aberta, onAlternar }) {
   const { falarInadimplente } = useStore();
   const ref = today();
-  const [aberta, setAberta] = useState(false);
   const [copiado, setCopiado] = useState('');
   const texto = msg.replaceAll('{nome}', primeiroNome(x.nome)).replaceAll('{esporte}', (x.esporte || 'tênis').toLowerCase());
   const copiar = async (t, qual) => {
@@ -116,50 +165,50 @@ function Pessoa({ x, msg, falouEm, pedeAtencao }) {
   };
   const detalhe = [x.esporte, x.cidade, brl(x.valor), x.tentativas ? `${x.tentativas} tentativas` : null, x.motivo || null].filter(Boolean).join(' · ');
   const contatoHub = x.ultimoContato ? `contato no Hub em ${fmtCurto(x.ultimoContato.slice(0, 10))}` : null;
+  const parar = (e) => e.stopPropagation(); // os botões não abrem/fecham o cartão
 
   return (
-    <div className={`px-4 py-3 ${pedeAtencao ? '' : 'bg-slate-50/60'}`}>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <div className="min-w-[200px] flex-1">
-          <div className={`text-[15px] font-semibold ${pedeAtencao ? 'text-ink' : 'text-slate-500'}`}>{x.nome || 'Sem nome'}</div>
-          <div className="text-xs text-slate-500">{detalhe}</div>
-          {(falouEm || contatoHub) && (
-            <div className="text-xs text-emerald-700">{[falouEm && `você falou ${relativo(falouEm, ref)} (${fmtCurto(falouEm)})${pedeAtencao ? ': ainda na lista, vale falar de novo' : ''}`, contatoHub].filter(Boolean).join(' · ')}</div>
+    <div className={`flex overflow-hidden rounded-lg bg-white shadow-sm ring-1 ${aberta ? 'ring-slate-300' : 'ring-slate-200'}`}>
+      <span className={`w-1.5 shrink-0 ${cor.faixa}`} />
+      <div className="min-w-0 flex-1">
+        <div role="button" tabIndex={0} onClick={onAlternar} onKeyDown={(e) => e.key === 'Enter' && onAlternar()} className="flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 hover:bg-slate-50">
+          <div className="min-w-[200px] flex-1">
+            <div className="text-[15px] font-semibold text-ink">{x.nome || 'Sem nome'}</div>
+            <div className="text-xs text-slate-500">{detalhe}</div>
+            {(falouEm || contatoHub) && <div className="text-xs text-emerald-700">{[falouEm && `você falou ${relativo(falouEm, ref)} (${fmtCurto(falouEm)})`, contatoHub].filter(Boolean).join(' · ')}</div>}
+          </div>
+          <span className="rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200">{aberta ? 'Fechar ▴' : 'Mensagem ▾'}</span>
+          {falouEm === ref ? (
+            <button onClick={(e) => (parar(e), falarInadimplente(x.id, null))} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700" title="Desfazer">
+              falei hoje ✓
+            </button>
+          ) : (
+            <button onClick={(e) => (parar(e), falarInadimplente(x.id, ref), aberta && onAlternar())} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-white">
+              Falei hoje
+            </button>
           )}
         </div>
-        <button onClick={() => setAberta(!aberta)} className="rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200 hover:bg-emerald-50">
-          Mensagem
-        </button>
-        {falouEm === ref ? (
-          <button onClick={() => falarInadimplente(x.id, null)} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700" title="Desfazer">
-            falei hoje ✓
-          </button>
-        ) : (
-          <button onClick={() => falarInadimplente(x.id, ref)} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
-            Falei hoje
-          </button>
+        {aberta && (
+          <div className={`space-y-2 border-t border-slate-100 px-4 py-3 ${cor.fundo}`}>
+            <pre className="whitespace-pre-wrap rounded-md bg-white p-3 font-sans text-sm text-slate-800 ring-1 ring-slate-200">{texto}</pre>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => copiar(texto, 'msg')} className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800">
+                {copiado === 'msg' ? 'Copiado ✓' : 'Copiar mensagem'}
+              </button>
+              {x.telefone && (
+                <>
+                  <a href={`https://wa.me/${telWhats(x.telefone)}`} target="_blank" rel="noreferrer" className="rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-300 hover:bg-emerald-50">
+                    Abrir no WhatsApp
+                  </a>
+                  <button onClick={() => copiar(x.telefone, 'tel')} className="rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-300 hover:bg-slate-50">
+                    {copiado === 'tel' ? 'Copiado ✓' : 'Copiar número'}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         )}
       </div>
-      {aberta && (
-        <div className="mt-2 space-y-2 rounded-lg bg-[#e7ffdb] p-3 ring-1 ring-emerald-100">
-          <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800">{texto}</pre>
-          <div className="flex flex-wrap gap-2">
-            <button onClick={() => copiar(texto, 'msg')} className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800">
-              {copiado === 'msg' ? 'Copiado ✓' : 'Copiar mensagem'}
-            </button>
-            {x.telefone && (
-              <>
-                <a href={`https://wa.me/${telWhats(x.telefone)}`} target="_blank" rel="noreferrer" className="rounded-md px-3 py-1.5 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-300 hover:bg-white">
-                  Abrir no WhatsApp
-                </a>
-                <button onClick={() => copiar(x.telefone, 'tel')} className="rounded-md px-3 py-1.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-300 hover:bg-white">
-                  {copiado === 'tel' ? 'Copiado ✓' : 'Copiar número'}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
