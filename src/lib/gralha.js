@@ -146,7 +146,51 @@ export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, 
 }
 
 // ---- Comissão da Laura (padrão: 8% sobre o total do pedido) ----
-export const cfgComissao = (state) => ({ comissao: 8, base: 'total', ...(state.gralhaCfg || {}) });
+export const cfgComissao = (state) => ({ comissao: 8, base: 'total', meta: 1000, ...(state.gralhaCfg || {}) });
+
+// ---- Clientes: pedidos do mesmo cliente (turma, atlética) ----
+// Sugestão: mesmo nome sem o ano/turma ("Medicina UEM 2026" = "Medicina UEM 2027") ou mesmo telefone do contrato.
+// Ela confirma (clienteId = a chave) ou separa (clienteId = o próprio pedido). O que ela decidiu vale sempre.
+const chaveNome = (nome) =>
+  norm(nome)
+    .replace(/\b(19|20)\d{2}(\.\d)?\b/g, ' ')
+    .replace(/\b(t|turma)\s*\d+\b/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+const foneDe = (p) => String(p.contrato?.cliente?.telefone || '').replace(/\D/g, '').slice(-9);
+export function agruparClientes(pedidos) {
+  const lista = (pedidos || []).filter((p) => !/^Venda \(Pix comiss/.test(p.cliente || ''));
+  const grupos = {}; // id -> { id, pedidos, confirmado }
+  const porFone = {};
+  for (const p of lista) {
+    let id = p.clienteId;
+    if (!id) {
+      const f = foneDe(p);
+      id = (f.length === 9 && porFone[f]) || `n:${chaveNome(p.cliente) || p.id}`;
+    }
+    const g = (grupos[id] ||= { id, pedidos: [], confirmado: true });
+    g.pedidos.push(p);
+    if (!p.clienteId) g.confirmado = false;
+    const f = foneDe(p);
+    if (f.length === 9) porFone[f] ||= id;
+  }
+  return Object.values(grupos).map((g) => {
+    const ps = g.pedidos.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    const fechados = ps.filter((p) => p.stage !== 'perdido' && dataFechamento(p));
+    // sugestão só precisa de confirmação quando juntou mais de um pedido sem decisão dela
+    return {
+      ...g,
+      pedidos: ps,
+      sugestao: !g.confirmado && ps.length > 1,
+      nome: (fechados[0] || ps[0]).cliente,
+      telefone: ps.map((p) => p.contrato?.cliente?.telefone).find(Boolean) || '',
+      cidade: ps.map((p) => p.cidade).find(Boolean) || '',
+      fechados,
+      comprado: fechados.reduce((s, p) => s + (valoresPedido(p).total || 0), 0),
+      ultimaCompra: fechados.map(dataFechamento).sort().at(-1) || null,
+    };
+  });
+}
 
 // Valor do pedido: o do contrato (se já foi montado) ou o do orçamento
 export function valoresPedido(p) {

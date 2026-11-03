@@ -1151,7 +1151,7 @@ export function StoreProvider({ user, children }) {
           else delete r[date];
           return { ...s, [chave]: r };
         }),
-      setGralhaCfg: (patch) => setState((s) => ({ ...s, gralhaCfg: { comissao: 8, base: 'total', ...(s.gralhaCfg || {}), ...patch } })),
+      setGralhaCfg: (patch) => setState((s) => ({ ...s, gralhaCfg: { comissao: 8, base: 'total', meta: 1000, ...(s.gralhaCfg || {}), ...patch } })),
       addFolga: (date, nome) => setState((s) => ({ ...s, folgas: { ...(s.folgas || {}), [date]: nome || 'Folga' } })),
       removeFolga: (date) =>
         setState((s) => {

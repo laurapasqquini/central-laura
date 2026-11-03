@@ -7,6 +7,7 @@ import { inputCls, inputBase, Empty, Pill, Segmented, AbasTopo } from '../compon
 import Contrato, { BotaoFaixa } from './Contrato';
 import ListaDoDia from '../components/ListaDoDia';
 import { pedidosParados } from '../lib/engine';
+import { PraFazer, Clientes, uteisRestantes, grupoDoPedido } from './GralhaExtras';
 
 // O catálogo (242 produtos) só carrega quando a aba é aberta.
 function useCatalogo() {
@@ -29,41 +30,53 @@ export default function Gralha() {
         area="gralha"
         titulo="Gralha Azul"
         detalhe={<>Orçamento em segundos e cada pedido acompanhado até o contrato.{cat && <span className="opacity-70"> · {cat.produtos.length} produtos da planilha</span>}</>}
-        abas={[{ id: 'novo', label: '+ Novo orçamento' }, { id: 'pedidos', label: `Pedidos${abertos ? ` (${abertos})` : ''}` }, { id: 'tarefas', label: 'Tarefas' }]}
-        valor={view.startsWith('contrato:') ? 'pedidos' : view}
+        abas={[{ id: 'novo', label: '+ Novo orçamento' }, { id: 'pedidos', label: `Pedidos${abertos ? ` (${abertos})` : ''}` }, { id: 'clientes', label: 'Clientes' }, { id: 'tarefas', label: 'Tarefas' }]}
+        valor={view.startsWith('cliente') ? 'clientes' : view.startsWith('duplicar:') ? 'novo' : /^(contrato|editar):/.test(view) ? 'pedidos' : view}
         onChange={setView}
       />
       {view === 'tarefas' ? (
         <ListaDoDia area="gralha" />
+      ) : view === 'clientes' || view.startsWith('cliente:') ? (
+        <Clientes aberto={view.startsWith('cliente:') ? view.slice(8) : null} onAbrir={(id) => setView(id ? `cliente:${id}` : 'clientes')} onDuplicar={(id) => setView(`duplicar:${id}`)} />
       ) : !cat ? (
         <Empty>Carregando catálogo…</Empty>
       ) : view.startsWith('contrato:') && (state.pedidos || []).some((p) => p.id === view.slice(9)) ? (
         <Contrato key={view} pedido={state.pedidos.find((p) => p.id === view.slice(9))} cat={cat} onVoltar={() => setView('pedidos')} />
       ) : view.startsWith('editar:') && (state.pedidos || []).some((p) => p.id === view.slice(7)) ? (
         <Novo key={view} cat={cat} pedido={state.pedidos.find((p) => p.id === view.slice(7))} onSaved={() => setView('pedidos')} />
+      ) : view.startsWith('duplicar:') && (state.pedidos || []).some((p) => p.id === view.slice(9)) ? (
+        <Novo key={view} cat={cat} base={state.pedidos.find((p) => p.id === view.slice(9))} onSaved={() => setView('pedidos')} />
       ) : view === 'novo' ? (
         <Novo cat={cat} onSaved={() => setView('pedidos')} />
       ) : (
-        <Pedidos cat={cat} onContrato={(id) => setView(`contrato:${id}`)} onEditar={(id) => setView(`editar:${id}`)} />
+        <Pedidos
+          cat={cat}
+          onContrato={(id) => setView(`contrato:${id}`)}
+          onEditar={(id) => setView(`editar:${id}`)}
+          onDuplicar={(id) => setView(`duplicar:${id}`)}
+          onCliente={(pedidoId) => setView(`cliente:${grupoDoPedido(state.pedidos, pedidoId)}`)}
+        />
       )}
     </div>
   );
 }
 
-// Novo orçamento, ou edição de um pedido já salvo (pedido = o pedido a editar)
-function Novo({ cat, onSaved, pedido }) {
+// Novo orçamento, edição de um pedido já salvo (pedido = o pedido a editar)
+// ou cópia de um antigo (base: vêm produtos, cidade, frete e ativação; nome e data especial em branco)
+function Novo({ cat, onSaved, pedido, base }) {
   const { addPedido, updatePedido } = useStore();
   const [q, setQ] = useState('');
   const [aba, setAba] = useState('');
-  const [modo, setModo] = useState(pedido?.tipo || 'qtd'); // qtd | tabela
+  const origem = pedido || base;
+  const [modo, setModo] = useState(origem?.tipo || 'qtd'); // qtd | tabela
   const [itens, setItens] = useState(() =>
-    (pedido?.itens || []).filter((it) => cat.produtos.some((p) => p.id === it.prodId)).map((it) => ({ key: crypto.randomUUID().slice(0, 6), ...it })),
+    (origem?.itens || []).filter((it) => cat.produtos.some((p) => p.id === it.prodId)).map((it) => ({ key: crypto.randomUUID().slice(0, 6), ...it })),
   );
   const [cliente, setCliente] = useState(pedido?.cliente || '');
-  const [cidade, setCidade] = useState(pedido?.cidade || '');
-  const [frete, setFrete] = useState(pedido?.frete ? String(pedido.frete).replace('.', ',') : '');
-  const [desconto, setDesconto] = useState(pedido?.descontoTexto || ''); // "10%" ou valor em R$
-  const [ativacao, setAtivacao] = useState(pedido?.ativacao || '');
+  const [cidade, setCidade] = useState(origem?.cidade || '');
+  const [frete, setFrete] = useState(origem?.frete ? String(origem.frete).replace('.', ',') : '');
+  const [desconto, setDesconto] = useState(origem?.descontoTexto || ''); // "10%" ou valor em R$
+  const [ativacao, setAtivacao] = useState(origem?.ativacao || '');
   const [envioAte, setEnvioAte] = useState(pedido?.envioAte || ''); // data especial pedida pelo cliente
   const { state } = useStore();
   const ativacoes = useMemo(() => [...new Set((state.pedidos || []).map((p) => (p.ativacao || '').trim()).filter(Boolean))], [state.pedidos]);
@@ -116,6 +129,11 @@ function Novo({ cat, onSaved, pedido }) {
             ['tabela', 'Só tabela de preços', 'bg-ink text-white ring-ink'],
           ]}
         />
+        {base && (
+          <p className="rounded-lg bg-sky-50 px-3 py-2 text-xs text-sky-800">
+            ⧉ Cópia do orçamento de <b>{base.cliente}</b> ({fmtCurto(base.createdAt)}): produtos, cidade, frete e ativação vieram junto. Coloque o nome do cliente novo.
+          </p>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <input className={inputCls} placeholder="Cliente (ex.: Medicina UEM 2027)" value={cliente} onChange={(e) => setCliente(e.target.value)} />
           <input className={inputCls} list="cidades-gralha" placeholder="Cidade de entrega" value={cidade} onChange={(e) => setCidade(e.target.value)} />
@@ -350,7 +368,7 @@ const MESES_NOME = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 
 const nomeMes = (ym) => `${MESES_NOME[Number(ym.slice(5)) - 1]} ${ym.slice(0, 4)}`;
 const semAcento = (s = '') => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 
-function Pedidos({ onContrato, onEditar }) {
+function Pedidos({ onContrato, onEditar, onDuplicar, onCliente }) {
   const { state, setGralhaCfg } = useStore();
   const [aba, setAba] = useState('andamento');
   const [etapa, setEtapa] = useState('');
@@ -439,11 +457,15 @@ function Pedidos({ onContrato, onEditar }) {
               <div className="h-full rounded-full bg-white transition-all" style={{ width: `${Math.min(100, (comissaoMes / Number(cfg.meta)) * 100)}%` }} />
             </div>
             <div className="text-xs text-sky-100">
-              {comissaoMes >= Number(cfg.meta) ? '🎉 Meta do mês batida!' : `${Math.round((comissaoMes / Number(cfg.meta)) * 100)}% da meta · faltam ${brl(Number(cfg.meta) - comissaoMes)}`}
+              {comissaoMes >= Number(cfg.meta)
+                ? '🎉 Meta do mês batida!'
+                : `${Math.round((comissaoMes / Number(cfg.meta)) * 100)}% da meta · faltam ${brl(Number(cfg.meta) - comissaoMes)} em ${uteisRestantes(state)} ${uteisRestantes(state) === 1 ? 'dia útil' : 'dias úteis'}`}
             </div>
           </div>
         )}
       </section>
+
+      <PraFazer pedidos={pedidos} onCliente={onCliente} />
 
       <div className="flex flex-wrap items-center gap-2">
         <Segmented
@@ -467,7 +489,9 @@ function Pedidos({ onContrato, onEditar }) {
           {/* funil: quantos em cada etapa; clicar filtra */}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {STAGES.filter((st) => EM_ANDAMENTO.includes(st.id)).map((st) => {
-              const n = andamento.filter((p) => p.stage === st.id).length;
+              const naEtapa = andamento.filter((p) => p.stage === st.id);
+              const n = naEtapa.length;
+              const com = naEtapa.reduce((s, p) => s + (p.total == null && !p.contrato ? 0 : comissaoDe(p, cfg)), 0);
               const ativo = etapa === st.id;
               return (
                 <button
@@ -477,6 +501,7 @@ function Pedidos({ onContrato, onEditar }) {
                 >
                   <div className="text-xl font-bold">{n}</div>
                   <div className={`text-xs font-semibold ${ativo ? 'text-sky-100' : 'text-slate-500'}`}>{st.id === 'fechado' ? 'Fechado (falta contrato)' : st.label}</div>
+                  {com > 0 && <div className={`mt-0.5 text-xs font-bold ${ativo ? 'text-white' : 'text-emerald-600'}`}>{brl(com)} de comissão</div>}
                 </button>
               );
             })}
@@ -490,7 +515,7 @@ function Pedidos({ onContrato, onEditar }) {
                   {st.id === 'fechado' ? 'Fechado (falta contrato)' : st.label} <span className="text-slate-400">{list.length}</span>
                 </h2>
                 {list.map((p) => (
-                  <CartaoPedido key={p.id} p={p} cfg={cfg} parado={parados[p.id]} onContrato={onContrato} onEditar={onEditar} />
+                  <CartaoPedido key={p.id} p={p} cfg={cfg} parado={parados[p.id]} onContrato={onContrato} onEditar={onEditar} onDuplicar={onDuplicar} onCliente={onCliente} />
                 ))}
               </section>
             );
@@ -503,17 +528,17 @@ function Pedidos({ onContrato, onEditar }) {
         <>
           <ComoFui pedidos={pedidos} cfg={cfg} />
           <VendaAntiga />
-          <ListaPorMes pedidos={fechados.filter(bate)} cfg={cfg} tipo="fechado" onContrato={onContrato} onEditar={onEditar} />
+          <ListaPorMes pedidos={fechados.filter(bate)} cfg={cfg} tipo="fechado" onContrato={onContrato} onEditar={onEditar} onDuplicar={onDuplicar} onCliente={onCliente} />
         </>
       )}
-      {aba === 'perdidos' && <ListaPorMes pedidos={perdidos.filter(bate)} cfg={cfg} tipo="perdido" onContrato={onContrato} onEditar={onEditar} />}
+      {aba === 'perdidos' && <ListaPorMes pedidos={perdidos.filter(bate)} cfg={cfg} tipo="perdido" onContrato={onContrato} onEditar={onEditar} onDuplicar={onDuplicar} onCliente={onCliente} />}
       {aba === 'ativacoes' && (resumoAtivacoes(pedidos).length ? <Ativacoes pedidos={pedidos} /> : <Empty>Nenhuma ativação ainda. Preencha o campo de ativação no orçamento.</Empty>)}
     </div>
   );
 }
 
 // Cartão de um pedido em andamento: avançar etapa, perdido (com motivo), contrato e editar
-function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
+function CartaoPedido({ p, cfg, parado, onContrato, onEditar, onDuplicar, onCliente }) {
   const { moveStage, deletePedido, updatePedido } = useStore();
   const [aberto, setAberto] = useState(false);
   const [perdendo, setPerdendo] = useState(false);
@@ -564,6 +589,9 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
         <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
           ✏️ Editar orçamento
         </button>
+        <button onClick={() => onCliente(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
+          👤 Ficha
+        </button>
         {FOLLOW[p.stage] && (
           <button onClick={() => setFollow(!follow)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
             💬 Follow-up
@@ -587,9 +615,13 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
       {aberto && (
         <div className="mt-3 space-y-2">
           <pre className="whitespace-pre-wrap rounded-xl bg-slate-50 p-3 font-sans text-xs text-slate-700">{p.mensagem}</pre>
-          <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}?`) && deletePedido(p.id)} className="text-xs font-semibold text-red-500">
-            Excluir pedido
-          </button>
+          <div className="flex flex-wrap gap-3 text-xs font-semibold">
+            <button onClick={() => onCliente(p.id)} className="text-sky-600">👤 Ficha do cliente</button>
+            <button onClick={() => onDuplicar(p.id)} className="text-sky-600">⧉ Duplicar orçamento</button>
+            <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}?`) && deletePedido(p.id)} className="ml-auto text-red-500">
+              Excluir pedido
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -597,18 +629,19 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
 }
 
 // Fechados e perdidos: uma linha por pedido, agrupados por mês (o mês atual aberto, os outros recolhidos)
-function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
+function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar, onDuplicar, onCliente }) {
   const { moveStage, deletePedido } = useStore();
   const mesAtual = today().slice(0, 7);
-  const [abertos, setAbertos] = useState({ [mesAtual]: true });
+  const [abertos, setAbertos] = useState({});
   const [linha, setLinha] = useState(null);
   if (!pedidos.length) return <Empty>{tipo === 'fechado' ? 'Nenhum contrato fechado ainda.' : 'Nenhum pedido perdido.'}</Empty>;
   const dataDe = (p) => (tipo === 'fechado' ? dataFechamento(p) : [...(p.history || [])].reverse().find((h) => h.stage === 'perdido')?.date) || p.createdAt;
   const porMes = {};
   for (const p of pedidos) (porMes[dataDe(p).slice(0, 7)] ||= []).push(p);
-  const meses = Object.keys(porMes).sort().reverse();
+  // o mês atual fica sozinho em cima; o histórico (anos, sem o mês atual) fica recolhido embaixo
+  const meses = Object.keys(porMes).sort().reverse().filter((m) => m !== mesAtual);
   const anos = [...new Set(meses.map((m) => m.slice(0, 4)))];
-  const anoAtual = mesAtual.slice(0, 4);
+  const histAberto = !!abertos.hist;
   const resumo = (lista) => ({
     n: lista.length,
     total: lista.reduce((s, p) => s + (valoresPedido(p).total || 0), 0),
@@ -618,6 +651,61 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
   const contagem = {};
   if (tipo === 'perdido') for (const p of pedidos) contagem[p.motivoPerda || 'Sem motivo'] = (contagem[p.motivoPerda || 'Sem motivo'] || 0) + 1;
   const motivos = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+  const doMes = (porMes[mesAtual] || []).sort((a, b) => dataDe(b).localeCompare(dataDe(a)));
+  const rMes = resumo(doMes);
+  const rHist = resumo(meses.flatMap((m) => porMes[m]));
+
+  // uma linha de pedido (data, cliente, situação, valor) que abre as ações
+  const linhaPedido = (p) => (
+    <div key={p.id} className="px-5 py-2">
+      <button onClick={() => setLinha(linha === p.id ? null : p.id)} className="flex w-full items-center gap-3 text-left text-sm">
+        <span className="w-12 shrink-0 text-xs text-slate-400">{fmtCurto(dataDe(p)).replace(/^[^,]+, /, '')}</span>
+        <span className="min-w-0 flex-1 truncate font-semibold text-slate-800">
+          {/* venda registrada pelo Pix da comissão (sem cliente): nome mais limpo */}
+          {/^Venda \(Pix comiss[aã]o (\d{2}\/\d{2})\)$/.test(p.cliente) ? `💸 Pix da comissão · ${p.cliente.match(/\d{2}\/\d{2}/)[0]}` : p.cliente}
+          {p.cidade && <span className="font-normal text-slate-400"> · {p.cidade}</span>}
+          {tipo === 'perdido' && p.motivoPerda && <span className="font-normal text-slate-400"> · {p.motivoPerda}</span>}
+        </span>
+        {tipo === 'fechado' && <ChipPos p={p} />}
+        <span className="shrink-0 text-xs font-semibold text-slate-600">{p.total == null && !p.contrato ? 'tabela' : brl(valoresPedido(p).total)}</span>
+      </button>
+      {linha === p.id && tipo === 'fechado' && (p.historico ? <DataVendaAntiga p={p} /> : <PosVenda p={p} />)}
+      {linha === p.id && (
+        <div className="mt-2 flex flex-wrap gap-2 pb-1">
+          {tipo === 'fechado' && !p.historico && (
+            <button onClick={() => onContrato(p.id)} className="rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
+              📄 Ver contrato
+            </button>
+          )}
+          {!p.historico && (
+            <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
+              ✏️ Ver orçamento
+            </button>
+          )}
+          {!/^Venda \(Pix comiss/.test(p.cliente) && (
+            <button onClick={() => onCliente(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
+              👤 Ficha
+            </button>
+          )}
+          {p.itens?.length > 0 && (
+            <button onClick={() => onDuplicar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
+              ⧉ Duplicar
+            </button>
+          )}
+          <button
+            onClick={() => moveStage(p.id, [...(p.history || [])].reverse().find((h) => h.stage !== p.stage)?.stage || 'enviado')}
+            className="rounded-xl px-3 py-1.5 text-xs font-semibold text-sky-600 ring-1 ring-sky-200"
+          >
+            ↩ Reabrir
+          </button>
+          <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}?`) && deletePedido(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-semibold text-red-500">
+            Excluir
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-3">
       {motivos.length > 0 && (
@@ -629,10 +717,43 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
           ))}
         </div>
       )}
-      {anos.map((ano) => {
+
+      {/* este mês: sempre aberto */}
+      <section className="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-slate-200">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-4">
+          <span className="text-xl font-extrabold capitalize text-slate-800">{MESES_NOME[Number(mesAtual.slice(5)) - 1]}</span>
+          <span className="text-sm text-slate-500">
+            este mês · {rMes.n} {rMes.n === 1 ? 'pedido' : 'pedidos'}
+            {rMes.n > 0 && ` · ${brl(rMes.total)} ${tipo === 'fechado' ? 'vendidos' : 'perdidos'}`}
+          </span>
+          {tipo === 'fechado' && (
+            <span className="ml-auto text-xl font-extrabold text-emerald-600">
+              {brl(rMes.com)} <span className="text-xs font-semibold text-emerald-500">de comissão</span>
+            </span>
+          )}
+        </div>
+        {doMes.length ? (
+          <div className="divide-y divide-slate-100 border-t border-slate-100">{doMes.map(linhaPedido)}</div>
+        ) : (
+          <p className="border-t border-slate-100 px-5 py-3 text-sm text-slate-400">{tipo === 'fechado' ? 'Nenhum contrato fechado este mês ainda.' : 'Nenhum pedido perdido este mês.'}</p>
+        )}
+      </section>
+
+      {/* histórico: recolhido */}
+      {meses.length > 0 && (
+        <button onClick={() => setAbertos((x) => ({ ...x, hist: !histAberto }))} className="flex w-full items-center gap-3 rounded-lg bg-slate-50 px-5 py-3 text-left text-sm text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100">
+          <span className="font-bold text-slate-700">🕓 Histórico</span>
+          <span className="min-w-0 flex-1 truncate">
+            {rHist.n} {rHist.n === 1 ? 'pedido' : 'pedidos'} antes de {MESES_NOME[Number(mesAtual.slice(5)) - 1]}
+            {tipo === 'fechado' && ` · ${brl(rHist.com)} de comissão`}
+          </span>
+          <span className="text-xs text-slate-400">{histAberto ? '▲' : '▼'}</span>
+        </button>
+      )}
+      {histAberto && anos.map((ano) => {
         const msAno = meses.filter((m) => m.startsWith(ano));
         const r = resumo(msAno.flatMap((m) => porMes[m]));
-        const anoAberto = abertos[`ano:${ano}`] ?? ano === anoAtual;
+        const anoAberto = !!abertos[`ano:${ano}`];
         const valorMes = (m) => (tipo === 'fechado' ? resumo(porMes[m]).com : resumo(porMes[m]).total);
         const maxMes = Math.max(...msAno.map(valorMes), 1);
         // colunas da tabela de meses (no celular só o mês e o valor principal)
@@ -643,6 +764,7 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
               <span className="text-2xl font-extrabold text-slate-800">{ano}</span>
               <span className="text-sm text-slate-500">
                 {r.n} {r.n === 1 ? 'pedido' : 'pedidos'} · {brl(r.total)} {tipo === 'fechado' ? 'vendidos' : 'perdidos'}
+                {ano === mesAtual.slice(0, 4) && porMes[mesAtual] && <span className="text-slate-400"> (sem {MESES_NOME[Number(mesAtual.slice(5)) - 1]})</span>}
               </span>
               {tipo === 'fechado' && (
                 <span className="ml-auto text-xl font-extrabold text-emerald-600">
@@ -678,49 +800,7 @@ function ListaPorMes({ pedidos, cfg, tipo, onContrato, onEditar }) {
                         <span className={`text-right text-sm font-bold ${tipo === 'fechado' ? 'text-emerald-600' : 'text-slate-600'}`}>{brl(valorMes(m))}</span>
                         <span className="text-xs text-slate-400">{ab ? '▲' : '▼'}</span>
                       </button>
-                      {ab && (
-              <div className="divide-y divide-slate-100 border-t border-slate-100 bg-slate-50/40">
-                {lista.map((p) => (
-                  <div key={p.id} className="px-5 py-2">
-                    <button onClick={() => setLinha(linha === p.id ? null : p.id)} className="flex w-full items-center gap-3 text-left text-sm">
-                      <span className="w-12 shrink-0 text-xs text-slate-400">{fmtCurto(dataDe(p)).replace(/^\w+, /, '')}</span>
-                      <span className="min-w-0 flex-1 truncate font-semibold text-slate-800">
-                        {/* venda registrada pelo Pix da comissão (sem cliente): nome mais limpo */}
-                        {/^Venda \(Pix comiss[aã]o (\d{2}\/\d{2})\)$/.test(p.cliente) ? `💸 Pix da comissão · ${p.cliente.match(/\d{2}\/\d{2}/)[0]}` : p.cliente}
-                        {p.cidade && <span className="font-normal text-slate-400"> · {p.cidade}</span>}
-                        {tipo === 'perdido' && p.motivoPerda && <span className="font-normal text-slate-400"> · {p.motivoPerda}</span>}
-                      </span>
-                      {tipo === 'fechado' && <ChipPos p={p} />}
-                      <span className="shrink-0 text-xs font-semibold text-slate-600">{p.total == null && !p.contrato ? 'tabela' : brl(valoresPedido(p).total)}</span>
-                    </button>
-                    {linha === p.id && tipo === 'fechado' && (p.historico ? <DataVendaAntiga p={p} /> : <PosVenda p={p} />)}
-                    {linha === p.id && (
-                      <div className="mt-2 flex flex-wrap gap-2 pb-1">
-                        {tipo === 'fechado' && !p.historico && (
-                          <button onClick={() => onContrato(p.id)} className="rounded-xl bg-ink px-3 py-1.5 text-xs font-bold text-white">
-                            📄 Ver contrato
-                          </button>
-                        )}
-                        {!p.historico && (
-                          <button onClick={() => onEditar(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-600 ring-1 ring-sky-200">
-                            ✏️ Ver orçamento
-                          </button>
-                        )}
-                        <button
-                          onClick={() => moveStage(p.id, [...(p.history || [])].reverse().find((h) => h.stage !== p.stage)?.stage || 'enviado')}
-                          className="rounded-xl px-3 py-1.5 text-xs font-semibold text-sky-600 ring-1 ring-sky-200"
-                        >
-                          ↩ Reabrir
-                        </button>
-                        <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}?`) && deletePedido(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-semibold text-red-500">
-                          Excluir
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-                      )}
+                      {ab && <div className="divide-y divide-slate-100 border-t border-slate-100 bg-slate-50/40">{lista.map(linhaPedido)}</div>}
                     </div>
                   );
                 })}
@@ -773,7 +853,7 @@ function ChipPos({ p }) {
     : pos.entregue
       ? ['📦 falta a 2ª parcela', 'bg-amber-50 text-amber-800']
       : pos.pago1
-        ? [`🏭 entrega até ${fmtCurto(previsaoDe(p)).replace(/^\w+, /, '')}`, 'bg-sky-50 text-sky-700']
+        ? [`🏭 entrega até ${fmtCurto(previsaoDe(p)).replace(/^[^,]+, /, '')}`, 'bg-sky-50 text-sky-700']
         : ['💸 falta a 1ª parcela', 'bg-red-50 text-red-700'];
   return <span className={`hidden shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold sm:inline ${cor}`}>{txt}</span>;
 }
@@ -787,7 +867,7 @@ function PosVenda({ p }) {
     >
       <span className={`grid h-4 w-4 place-items-center rounded-full text-[10px] text-white ${pos[chave] ? 'bg-emerald-500' : 'border-2 border-slate-300'}`}>{pos[chave] ? '✓' : ''}</span>
       {rotulo}
-      {pos[chave] && <span className="font-normal text-emerald-600">{fmtCurto(pos[chave]).replace(/^\w+, /, '')}</span>}
+      {pos[chave] && <span className="font-normal text-emerald-600">{fmtCurto(pos[chave]).replace(/^[^,]+, /, '')}</span>}
     </button>
   );
   return (
