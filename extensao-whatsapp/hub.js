@@ -616,6 +616,7 @@ function lerInadimplentes() {
           motivo: x.motivo_recusa || '',
           ultimoContato: x.ultimo_contato || null,
           desde: x.atualizado_em || null,
+          stripeCliente: x.stripe_customer_id || null, // botão "Stripe ↗", igual ao do Hub
         }));
       mandar('inadimplentes', { itens }, 'ultimosInadimplentes', `✓ ${itens.length} inadimplentes na Central`, true);
     })

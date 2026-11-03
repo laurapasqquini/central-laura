@@ -177,6 +177,11 @@ function Pessoa({ x, cor, msg, falouEm, aberta, onAlternar }) {
             <div className="text-xs text-slate-500">{detalhe}</div>
             {(falouEm || contatoHub) && <div className="text-xs text-emerald-700">{[falouEm && `você falou ${relativo(falouEm, ref)} (${fmtCurto(falouEm)})`, contatoHub].filter(Boolean).join(' · ')}</div>}
           </div>
+          {x.stripeCliente && (
+            <a href={`https://dashboard.stripe.com/customers/${x.stripeCliente}`} target="_blank" rel="noreferrer" onClick={parar} title="Abrir o cliente no Stripe" className="rounded-md px-2 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50">
+              Stripe ↗
+            </a>
+          )}
           <span className="rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200">{aberta ? 'Fechar ▴' : 'Mensagem ▾'}</span>
           {falouEm === ref ? (
             <button onClick={(e) => (parar(e), falarInadimplente(x.id, null))} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700" title="Desfazer">
