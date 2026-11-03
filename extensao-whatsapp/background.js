@@ -28,7 +28,7 @@ async function enviar(item, contaFixa) {
   const conta = contaFixa || contaSalva; // 'numeros' = números do Hub, não vira tarefa
   // computador da Lolis: sem login, manda só ganhadores e programação pelo link da página dela
   if (!sessao && lolisToken) {
-    if (['expansao', 'pagantes'].includes(conta)) return; // dados do Plano: só do computador da Laura
+    if (['expansao', 'pagantes', 'inadimplentes'].includes(conta)) return; // dados do Plano: só do computador da Laura
     if (!['ganhadores', 'programacao'].includes(conta)) throw new Error('No computador da Lolis a extensão só manda ganhadores e programação do Hub.');
     const r = await fetch(`${URL}/rest/v1/rpc/lolis_enviar`, {
       method: 'POST',
@@ -73,6 +73,7 @@ chrome.runtime.onMessage.addListener((msg, sender, responder) => {
     : msg.tipo === 'pix' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Pagamento Pix' }, 'pix')
     : msg.tipo === 'expansao' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Expansão' }, 'expansao')
     : msg.tipo === 'pagantes' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Atletas' }, 'pagantes')
+    : msg.tipo === 'inadimplentes' ? enviar({ texto: JSON.stringify(msg.dados), contato: 'RANKEN Hub · Cobranças' }, 'inadimplentes')
     : msg.tipo === 'hub-concluir-lista' ? listaConcluir()
     : Promise.resolve();
   run.then((r) => responder({ ok: true, ...r }), (e) => responder({ ok: false, erro: e.message }));

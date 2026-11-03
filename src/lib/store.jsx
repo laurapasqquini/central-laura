@@ -700,6 +700,16 @@ export function StoreProvider({ user, children }) {
             s = { ...s, pagantesHub: { em, total: d.total, pracas: d.pracas }, pagantesMes: { ...(s.pagantesMes || {}), [mes]: { total: d.total, pracas: d.pracas, em } } };
           }
         }
+        // inadimplentes do Hub (Assinaturas › Cobranças): a lista toda, substitui a anterior
+        for (const r of rows.filter((x) => x.conta === 'inadimplentes')) {
+          let d = null;
+          try {
+            d = JSON.parse(r.texto);
+          } catch {
+            /* ignora */
+          }
+          if (Array.isArray(d?.itens)) s = { ...s, inadimplentesHub: { em: new Date(r.created_at).toISOString(), itens: d.itens } };
+        }
         for (const r of rows.filter((x) => x.conta === 'pix')) {
           let d = null;
           try {
@@ -764,7 +774,7 @@ export function StoreProvider({ user, children }) {
         }
         const ja = new Set(s.tasks.map((t) => t.entradaId).filter(Boolean));
         const novas = rows
-          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero', 'pix', 'whatsapp', 'expansao', 'pagantes'].includes(r.conta) && !ja.has(r.id))
+          .filter((r) => !['numeros', 'ganhadores', 'programacao', 'hub-lolis', 'hub-laura', 'telefones', 'seiszero', 'pix', 'whatsapp', 'expansao', 'pagantes', 'inadimplentes'].includes(r.conta) && !ja.has(r.id))
           .map((r) => {
             const curto = r.texto.replace(/\s+/g, ' ').trim();
             return {
@@ -895,6 +905,15 @@ export function StoreProvider({ user, children }) {
           }
           return { ...s, routineDone };
         }),
+      // inadimplentes: "falei hoje" (data do contato, por id da cobrança) e as mensagens padrão editáveis
+      falarInadimplente: (id, dia) =>
+        setState((s) => {
+          const c = { ...(s.inadimplentesContato || {}) };
+          if (dia) c[id] = dia;
+          else delete c[id];
+          return { ...s, inadimplentesContato: c };
+        }),
+      setMsgInadimplentes: (patch) => setState((s) => ({ ...s, msgInadimplentes: { ...(s.msgInadimplentes || {}), ...patch } })),
       // cobrança Pix (vem do Hub todo dia): passa para a Lolis ou volta para a Laura
       pixPraLolis: (id, lolis) =>
         setState((s) => {

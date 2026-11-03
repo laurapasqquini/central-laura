@@ -592,6 +592,36 @@ function lerPlanoApi() {
   });
 }
 
+// Inadimplentes (Assinaturas › Cobranças): pagamento falhou no Stripe; "past_due" ainda vai ser cobrado de novo,
+// "unpaid" já esgotou as tentativas (acesso bloqueado). Vai para a aba Ranken › Inadimplentes, a cada 30 min.
+let ultimosInadimplentes = 0;
+function lerInadimplentes() {
+  if (Date.now() - ultimosInadimplentes < 30 * 60e3) return;
+  ultimosInadimplentes = Date.now();
+  fetch('/api/cobrancas', { credentials: 'include', cache: 'no-store' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) => {
+      if (!Array.isArray(j?.items)) return;
+      const itens = j.items
+        .filter((x) => !x.oculto)
+        .map((x) => ({
+          id: String(x.id),
+          nome: (x.nome_ranking || x.cliente_nome || '').trim(),
+          telefone: (x.telefone || '').replace(/\D/g, ''),
+          esporte: x.esporte_atleta || x.esporte || '',
+          cidade: x.cidade_atleta || x.cidade || '',
+          valor: x.valor_mensal ?? null,
+          status: x.status,
+          tentativas: x.tentativas_cobranca ?? null,
+          motivo: x.motivo_recusa || '',
+          ultimoContato: x.ultimo_contato || null,
+          desde: x.atualizado_em || null,
+        }));
+      mandar('inadimplentes', { itens }, 'ultimosInadimplentes', `✓ ${itens.length} inadimplentes na Central`, true);
+    })
+    .catch(() => {});
+}
+
 let ultimoPix = 0;
 function lerPix() {
   if (Date.now() - ultimoPix < 30 * 60e3) return;
@@ -715,6 +745,7 @@ async function tentar() {
   lerProgramacoesApi();
   lerGanhadoresApi();
   lerPlanoApi();
+  lerInadimplentes();
   if (location.pathname === '/atividades') {
     if (!lerAtividadesLaura()) return;
     enviando = true; // segura outras leituras enquanto conclui
