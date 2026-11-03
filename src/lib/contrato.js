@@ -1,7 +1,9 @@
 // Monta o contrato da Gralha Azul (.docx) no próprio navegador, a partir de public/contrato-modelo.docx.
 // O modelo tem marcadores {{...}}; os itens, a tabela de tamanhos e as fotos são repetidos aqui.
 import JSZip from 'jszip';
-import { descontoValor } from './gralha';
+import { descontoValor, descontoFaixaItem, rotuloFaixa, dataBR } from './gralha';
+import { FERIADOS } from '../data/feriados';
+import { addDays, weekday } from './dates';
 
 export const brl = (n) => n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/ /g, ' ');
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -32,20 +34,48 @@ export const PAGAMENTOS = {
   },
 };
 
+// Data em que terminam N dias úteis depois de `iso` (pula sábado, domingo e feriados nacionais e de Maringá)
+export function somaDiasUteis(iso, n) {
+  let d = iso;
+  for (let c = 0; c < n; ) {
+    d = addDays(d, 1);
+    if (![0, 6].includes(weekday(d)) && !FERIADOS[d]) c++;
+  }
+  return d;
+}
+export const prazoAte = (c) => (c.data && Number(c.prazoDias) ? somaDiasUteis(c.data, Number(c.prazoDias)) : null);
+
+// 3.1 do contrato: "30 (trinta) dias úteis (até 16/12/2026)" + a data especial de envio, se houver
+export function textoPrazo(c) {
+  if (c.prazoTexto) return c.prazoTexto;
+  const ate = prazoAte(c);
+  const base = `As partes concordam que o prazo de produção e envio será de até ${c.prazoDias} (${extenso(Number(c.prazoDias))}) dias úteis${ate ? ` (até ${dataBR(ate)})` : ''}, a contar da confirmação deste contrato e do pagamento da entrada.`;
+  return c.envioAte ? `${base} Para este pedido, fica combinado o envio até ${dataBR(c.envioAte)}, data solicitada pelo CONTRATANTE.` : base;
+}
+
 export const totaisContrato = (c) => {
   const itens = c.itens.map((it) => {
     const qtd = it.tamanhos.reduce((s, t) => s + (Number(t.qtd) || 0), 0);
-    return { ...it, qtdTotal: qtd, subtotal: qtd * (Number(it.preco) || 0) };
+    const preco = Number(it.preco) || 0;
+    return { ...it, qtdTotal: qtd, subtotal: qtd * preco, descFaixa: it.faixaMaior ? descontoFaixaItem(preco, qtd, it.precoFaixaMaior) : 0 };
   });
   const produtos = itens.reduce((s, i) => s + i.subtotal, 0);
+  const descontoFaixa = Math.round(itens.reduce((s, i) => s + i.descFaixa, 0) * 100) / 100; // preço de 51+
+  const faixaTexto = rotuloFaixa(itens.filter((i) => i.descFaixa > 0).map((i) => i.faixaMin));
   const frete = Number(c.frete) || 0;
-  const desconto = descontoValor(c.desconto, produtos); // desconto de ativação (vem do orçamento)
-  return { itens, produtos, desconto, frete, total: produtos - desconto + frete, unidades: itens.reduce((s, i) => s + i.qtdTotal, 0) };
+  const desconto = descontoValor(c.desconto, produtos - descontoFaixa); // desconto de ativação (vem do orçamento)
+  return { itens, produtos, descontoFaixa, faixaTexto, desconto, frete, total: produtos - descontoFaixa - desconto + frete, unidades: itens.reduce((s, i) => s + i.qtdTotal, 0) };
 };
 
-// "Desconto · Ativação: −R$ 140,40 · Frete grátis" (mesma linha do frete no contrato)
+// "Desconto · preço de 51+: −R$ 300,00 · Desconto · Ativação: −R$ 140,40 · Frete grátis" (mesma linha do frete no contrato)
 export const linhaFrete = (c, t) =>
-  [t.desconto > 0 ? `Desconto${c.ativacao ? ` · ${c.ativacao}` : ''}: −${brl(t.desconto)}` : '', t.frete ? `Frete: ${brl(t.frete)}` : 'Frete grátis'].filter(Boolean).join(' · ');
+  [
+    t.descontoFaixa > 0 ? `Desconto · ${t.faixaTexto}: −${brl(t.descontoFaixa)}` : '',
+    t.desconto > 0 ? `Desconto${c.ativacao ? ` · ${c.ativacao}` : ''}: −${brl(t.desconto)}` : '',
+    t.frete ? `Frete: ${brl(t.frete)}` : 'Frete grátis',
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
 // 4.3 Dados bancários (título + 3 linhas) com marca-texto amarelo
 function marcaDadosBancarios(xml) {
@@ -191,9 +221,7 @@ export async function gerarContrato(c) {
     TELEFONE: c.cliente.telefone,
     PEDIDO: c.pedido.toUpperCase(),
     TOTAL_GERAL: t.unidades,
-    PRAZO_TEXTO:
-      c.prazoTexto ||
-      `As partes concordam que o prazo de produção e envio será de até ${c.prazoDias} (${extenso(Number(c.prazoDias))}) dias úteis, a contar da confirmação deste contrato e do pagamento da entrada.`,
+    PRAZO_TEXTO: textoPrazo(c),
     PAGAMENTO_TEXTO: c.pagamentoTexto || pag.texto,
     FRETE_LINHA: linhaFrete(c, t),
     TOTAL_PEDIDO: brl(t.total),

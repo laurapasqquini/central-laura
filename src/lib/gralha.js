@@ -14,6 +14,19 @@ export function priceFor(prod, qtd) {
   return { atual, proxima, abaixoMinimo: !atual };
 }
 
+// Faixa mais barata do produto (ex.: 51+). Desconto "preço de 51+": o cliente leva com o preço dela mesmo sem a quantidade.
+export const faixaMaior = (prod) => [...(prod?.faixas || [])].sort((a, b) => b.min - a.min)[0] || null;
+// quanto o item economiza com o preço da faixa maior
+export const descontoFaixaItem = (unit, qtd, precoFaixa) => (precoFaixa != null && Number(precoFaixa) < unit ? (unit - Number(precoFaixa)) * qtd : 0);
+// "preço de 51+" quando todos os itens com o desconto têm a mesma faixa
+export const rotuloFaixa = (mins) => {
+  const u = [...new Set(mins.filter(Boolean))];
+  return u.length === 1 ? `preço de ${u[0]}+` : 'preço da faixa maior';
+};
+export const dataBR = (iso) => (iso ? iso.split('-').reverse().join('/') : '');
+// data especial de envio pedida pelo cliente (vai junto do prazo padrão)
+const linhaEnvio = (envioAte) => `*Envio combinado:* até ${dataBR(envioAte)} (data pedida por vocês)`;
+
 // Produtos cujo NOME bate com a busca vêm antes dos que só batem pela aba ou tecido.
 export function search(produtos, q, aba) {
   const terms = norm(q).split(/\s+/).filter(Boolean);
@@ -50,7 +63,7 @@ export function faixasLabel(prod) {
 // todo prazo de produção é em dias úteis, mesmo quando a planilha não diz
 export const prazoUteis = (t) => (t && !/úteis/i.test(t) ? `${String(t).trim()} úteis` : t);
 
-export function mensagemTabela({ cliente, cidade, itens, produtos, descontoTexto, ativacao }) {
+export function mensagemTabela({ cliente, cidade, itens, produtos, descontoTexto, ativacao, envioAte }) {
   const out = ['*ORÇAMENTO GRALHA AZUL UNIFORMES*', ''];
   if (cliente) out.push(`Cliente: ${cliente}`, '');
   itens.forEach((it, i) => {
@@ -61,6 +74,7 @@ export function mensagemTabela({ cliente, cidade, itens, produtos, descontoTexto
     if (p.prazo) out.push(`Prazo: ${prazoUteis(p.prazo)}`);
     out.push('');
   });
+  if (envioAte) out.push(linhaEnvio(envioAte));
   out.push(`*Frete:* ${isMaringa(cidade) ? 'grátis para Maringá-PR' : 'a calcular conforme o endereço de entrega'}`);
   if (String(descontoTexto || '').trim()) {
     const d = String(descontoTexto).trim();
@@ -91,19 +105,24 @@ export function totals(itens, produtos, frete, descontoTexto) {
     const p = produtos.find((x) => x.id === it.prodId);
     const { atual } = priceFor(p, it.qtd);
     const unit = it.precoManual ?? atual?.preco ?? 0;
-    return { ...it, p, unit, subtotal: unit * it.qtd };
+    const topo = it.faixaMaior && it.precoManual == null ? faixaMaior(p) : null;
+    const descFaixa = descontoFaixaItem(unit, it.qtd, topo?.preco);
+    return { ...it, p, unit, subtotal: unit * it.qtd, topo, descFaixa };
   });
   const produtosTotal = linhas.reduce((s, l) => s + l.subtotal, 0);
-  const desconto = descontoValor(descontoTexto, produtosTotal);
-  const comDesconto = produtosTotal - desconto;
+  const descontoFaixa = Math.round(linhas.reduce((s, l) => s + l.descFaixa, 0) * 100) / 100;
+  const faixaTexto = rotuloFaixa(linhas.filter((l) => l.descFaixa > 0).map((l) => l.topo.min));
+  // o desconto de ativação vale sobre o que sobra depois do preço de 51+
+  const desconto = descontoValor(descontoTexto, produtosTotal - descontoFaixa);
+  const comDesconto = produtosTotal - descontoFaixa - desconto;
   const total = comDesconto + (frete || 0);
-  return { linhas, produtosTotal, desconto, total, aVista: comDesconto * 0.95 + (frete || 0) };
+  return { linhas, produtosTotal, descontoFaixa, faixaTexto, desconto, total, aVista: comDesconto * 0.95 + (frete || 0) };
 }
 
 const rotuloDesconto = (ativacao) => `*Desconto${ativacao ? ` · ${ativacao}` : ''}:*`;
 
-export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, descontoTexto, ativacao }) {
-  const { linhas, produtosTotal, desconto, total } = totals(itens, produtos, frete, descontoTexto);
+export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, descontoTexto, ativacao, envioAte }) {
+  const { linhas, produtosTotal, descontoFaixa, faixaTexto, desconto, total } = totals(itens, produtos, frete, descontoTexto);
   // com mais de um item, vale o prazo mais longo
   const diasMax = (t) => Math.max(...(t.match(/\d+/g) || [0]).map(Number));
   const prazos = linhas.map((l) => prazoUteis(l.p.prazo)).filter(Boolean).sort((a, b) => diasMax(b) - diasMax(a)).slice(0, 1);
@@ -115,9 +134,12 @@ export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, 
     out.push(`${l.qtd} un × ${brl(l.unit)} = *${brl(l.subtotal)}*`, '');
   });
   if (prazos.length) out.push(`*Prazo de produção:* ${prazos.join(' / ')}`);
+  if (envioAte) out.push(linhaEnvio(envioAte));
   out.push(`*Frete:* ${isMaringa(cidade) ? 'grátis para Maringá-PR' : frete ? `${brl(frete)}${cidade ? ` (${cidade})` : ''}` : freteTexto || 'a calcular conforme o endereço de entrega'}`);
   out.push('');
-  if (desconto > 0) out.push(`Produtos: ${brl(produtosTotal)}`, `${rotuloDesconto(ativacao)} −${brl(desconto)}${ehPorcentagem(descontoTexto) ? ` (${String(descontoTexto).trim()})` : ''}`);
+  if (desconto > 0 || descontoFaixa > 0) out.push(`Produtos: ${brl(produtosTotal)}`);
+  if (descontoFaixa > 0) out.push(`*Desconto · ${faixaTexto}:* −${brl(descontoFaixa)}`);
+  if (desconto > 0) out.push(`${rotuloDesconto(ativacao)} −${brl(desconto)}${ehPorcentagem(descontoTexto) ? ` (${String(descontoTexto).trim()})` : ''}`);
   // os 5% à vista não vão no orçamento: só se o cliente pedir desconto (o valor fica na tela)
   out.push(`*Total: ${brl(total)}*`, '', '*Pagamento:* 50% no fechamento do pedido e 50% no envio', '', assinatura());
   return out.join('\n');
@@ -129,15 +151,18 @@ export const cfgComissao = (state) => ({ comissao: 8, base: 'total', ...(state.g
 // Valor do pedido: o do contrato (se já foi montado) ou o do orçamento
 export function valoresPedido(p) {
   if (p.contrato) {
-    const produtos = p.contrato.itens.reduce((s, i) => s + i.tamanhos.reduce((a, t) => a + (Number(t.qtd) || 0), 0) * (Number(i.preco) || 0), 0);
+    const qtdDe = (i) => i.tamanhos.reduce((a, t) => a + (Number(t.qtd) || 0), 0);
+    const bruto = p.contrato.itens.reduce((s, i) => s + qtdDe(i) * (Number(i.preco) || 0), 0);
+    const descontoFaixa = p.contrato.itens.reduce((s, i) => s + (i.faixaMaior ? descontoFaixaItem(Number(i.preco) || 0, qtdDe(i), i.precoFaixaMaior) : 0), 0);
+    const produtos = bruto - descontoFaixa;
     const frete = Number(p.contrato.frete) || 0;
     // desconto de ativação: o do contrato (que começa igual ao do orçamento)
     const desconto = descontoValor(p.contrato.desconto ?? p.descontoTexto, produtos);
-    if (produtos > 0) return { produtos: produtos - desconto, frete, total: produtos - desconto + frete, desconto };
+    if (bruto > 0) return { produtos: produtos - desconto, frete, total: produtos - desconto + frete, desconto, descontoFaixa };
   }
   const frete = Number(p.frete) || 0;
   const total = Number(p.total) || 0;
-  return { produtos: Math.max(0, total - frete), frete, total, desconto: Number(p.desconto) || 0 };
+  return { produtos: Math.max(0, total - frete), frete, total, desconto: Number(p.desconto) || 0, descontoFaixa: Number(p.descontoFaixa) || 0 };
 }
 
 // Cidades já usadas nos pedidos, com os fretes cobrados (o mais recente primeiro).

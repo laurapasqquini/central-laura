@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
 import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes, cidadesConhecidas, cidadeDe } from '../lib/gralha';
-import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa, prazoUteis } from '../lib/gralha';
+import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa, prazoUteis, faixaMaior, dataBR } from '../lib/gralha';
 import { fmtCurto, relativo, today, addDays } from '../lib/dates';
 import { inputCls, inputBase, Empty, Pill, Segmented, AbasTopo } from '../components/ui';
-import Contrato from './Contrato';
+import Contrato, { BotaoFaixa } from './Contrato';
 import ListaDoDia from '../components/ListaDoDia';
 import { pedidosParados } from '../lib/engine';
 
@@ -64,6 +64,7 @@ function Novo({ cat, onSaved, pedido }) {
   const [frete, setFrete] = useState(pedido?.frete ? String(pedido.frete).replace('.', ',') : '');
   const [desconto, setDesconto] = useState(pedido?.descontoTexto || ''); // "10%" ou valor em R$
   const [ativacao, setAtivacao] = useState(pedido?.ativacao || '');
+  const [envioAte, setEnvioAte] = useState(pedido?.envioAte || ''); // data especial pedida pelo cliente
   const { state } = useStore();
   const ativacoes = useMemo(() => [...new Set((state.pedidos || []).map((p) => (p.ativacao || '').trim()).filter(Boolean))], [state.pedidos]);
   const cidades = useMemo(() => cidadesConhecidas((state.pedidos || []).filter((p) => p.id !== pedido?.id)), [state.pedidos, pedido]);
@@ -77,9 +78,9 @@ function Novo({ cat, onSaved, pedido }) {
   const added = new Set(itens.map((i) => i.prodId));
 
   const freteNum = isMaringa(cidade) ? 0 : parseFloat(String(frete).replace(',', '.')) || 0;
-  const { linhas, produtosTotal, desconto: descontoR, total, aVista } = totals(itens, cat.produtos, freteNum, desconto);
+  const { linhas, produtosTotal, descontoFaixa, faixaTexto, desconto: descontoR, total, aVista } = totals(itens, cat.produtos, freteNum, desconto);
   const tabela = modo === 'tabela';
-  const msg = !itens.length ? '' : tabela ? mensagemTabela({ cliente, cidade, itens, produtos: cat.produtos, descontoTexto: desconto, ativacao: ativacao.trim() }) : mensagem({ cliente, cidade, itens, produtos: cat.produtos, frete: freteNum, descontoTexto: desconto, ativacao: ativacao.trim() });
+  const msg = !itens.length ? '' : tabela ? mensagemTabela({ cliente, cidade, itens, produtos: cat.produtos, descontoTexto: desconto, ativacao: ativacao.trim(), envioAte }) : mensagem({ cliente, cidade, itens, produtos: cat.produtos, frete: freteNum, descontoTexto: desconto, ativacao: ativacao.trim(), envioAte });
 
   const add = (p) => {
     setItens((xs) => [...xs, { key: crypto.randomUUID().slice(0, 6), prodId: p.id, qtd: Math.max(p.minimo || 1, 1) }]);
@@ -97,7 +98,7 @@ function Novo({ cat, onSaved, pedido }) {
   };
 
   const salvar = () => {
-    const dados = { cliente: cliente.trim() || 'Cliente sem nome', cidade, tipo: modo, itens: itens.map(({ prodId, qtd, precoManual }) => ({ prodId, qtd, ...(precoManual != null ? { precoManual } : {}) })), frete: freteNum, total: tabela ? null : total, mensagem: msg, ativacao: ativacao.trim(), descontoTexto: desconto.trim(), desconto: tabela ? 0 : descontoR };
+    const dados = { cliente: cliente.trim() || 'Cliente sem nome', cidade, tipo: modo, itens: itens.map(({ prodId, qtd, precoManual, faixaMaior }) => ({ prodId, qtd, ...(precoManual != null ? { precoManual } : {}), ...(faixaMaior && !tabela ? { faixaMaior } : {}) })), frete: freteNum, total: tabela ? null : total, mensagem: msg, ativacao: ativacao.trim(), descontoTexto: desconto.trim(), desconto: tabela ? 0 : descontoR, descontoFaixa: tabela ? 0 : descontoFaixa, envioAte };
     // editando: atualiza o mesmo pedido (mantém a etapa e o histórico)
     if (pedido) updatePedido(pedido.id, { ...dados, editadoEm: today() });
     else addPedido(dados);
@@ -192,6 +193,9 @@ function Novo({ cat, onSaved, pedido }) {
                 <span className="ml-auto font-bold text-ink">{brl(l.subtotal)}</span>
               </div>
               {abaixoMinimo && <p className="rounded-lg bg-red-50 px-2 py-1 text-xs font-semibold text-red-600">Abaixo do pedido mínimo ({l.p.minimo} peças).</p>}
+              {l.precoManual == null && (
+                <BotaoFaixa ligado={!!l.faixaMaior} topo={faixaMaior(l.p)} unit={l.unit} qtd={l.qtd} onToggle={() => setItens((xs) => xs.map((x) => (x.key === l.key ? { ...x, faixaMaior: !x.faixaMaior } : x)))} />
+              )}
               {proxima && !abaixoMinimo && (
                 <p className="rounded-lg bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
                   💡 Com <b>{proxima.min - l.qtd}</b> peças a mais ({proxima.min}), cai para <b>{brl(proxima.preco)}</b> cada.
@@ -214,6 +218,23 @@ function Novo({ cat, onSaved, pedido }) {
               {ativacoes.map((a) => <option key={a} value={a} />)}
             </datalist>
             {desconto.trim() && !ativacao.trim() && <p className="text-xs font-semibold text-amber-600">Coloque a ativação ou o motivo, para dar para acompanhar depois quanto vendeu.</p>}
+          </div>
+        )}
+
+        {itens.length > 0 && (
+          <div className="space-y-1 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-semibold text-slate-700">
+                Precisa ser enviado até <span className="font-normal text-slate-400">(só se pediram uma data)</span>
+              </span>
+              <input type="date" className={`${inputBase} w-40`} value={envioAte} onChange={(e) => setEnvioAte(e.target.value)} />
+            </div>
+            {envioAte && (
+              <p className="text-xs text-slate-500">
+                Vai na mensagem e no contrato junto do prazo padrão. 5 dias úteis antes de {dataBR(envioAte)} a central te lembra de conferir com a fábrica.{' '}
+                <button onClick={() => setEnvioAte('')} className="underline">tirar</button>
+              </p>
+            )}
           </div>
         )}
 
@@ -244,6 +265,7 @@ function Novo({ cat, onSaved, pedido }) {
               </div>
             )}
             <Row label="Produtos" value={brl(produtosTotal)} />
+            {descontoFaixa > 0 && <Row label={`Desconto · ${faixaTexto}`} value={`−${brl(descontoFaixa)}`} />}
             {descontoR > 0 && <Row label={`Desconto${ativacao.trim() ? ` · ${ativacao.trim()}` : ''}`} value={`−${brl(descontoR)}`} />}
             <Row label="Total" value={brl(total)} strong />
             <Row label="Se pedirem desconto: à vista (5% off nos produtos)" value={brl(aVista)} />
@@ -516,6 +538,8 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar }) {
             {p.total == null && !p.contrato ? 'tabela de preços' : brl(valoresPedido(p).total)}
             {p.stage === 'fechado' && <b className="text-emerald-600"> · comissão {brl(comissaoDe(p, cfg))}</b>} · {p.itens.length} {p.itens.length > 1 ? 'itens' : 'item'}
             {p.cidade && ` · ${p.cidade}`}
+            {p.envioAte && <b className="text-amber-700"> · 📅 envio até {dataBR(p.envioAte)}</b>}
+            {valoresPedido(p).descontoFaixa > 0 && <b className="text-violet-600"> · 💸 preço de faixa maior (−{brl(valoresPedido(p).descontoFaixa)})</b>}
             {p.ativacao && (
               <b className="text-violet-600">
                 {' '}

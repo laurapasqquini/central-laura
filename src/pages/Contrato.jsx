@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
-import { priceFor } from '../lib/gralha';
-import { gerarContrato, totaisContrato, brl, PAGAMENTOS } from '../lib/contrato';
+import { priceFor, faixaMaior, descontoFaixaItem, dataBR } from '../lib/gralha';
+import { gerarContrato, totaisContrato, prazoAte, brl, PAGAMENTOS } from '../lib/contrato';
 import { gerarContratoPdf } from '../lib/contratoPdf';
 import { arquivoParaImagem, imagensDoEvento, salvarImagens, carregarImagens } from '../lib/imagens';
 import { today } from '../lib/dates';
@@ -59,6 +59,12 @@ export function lerResposta(txt) {
 const TAMANHO_UNICO = /bon[eé]|caneca|tirante|tatuagem|trof[eé]u|[oó]culos|bandana|bandeira|fl[aâ]mula|porta documento|ecobag|sacochila|toalha|gorro|avental/i;
 const ehUnico = (it) => it.tamanhos.length === 1 && it.tamanhos[0].tam === 'ÚNICO';
 
+// desconto "preço de 51+" ligado no item (o preço da faixa fica guardado no contrato)
+const camposFaixa = (prod) => {
+  const f = faixaMaior(prod);
+  return { faixaMaior: true, precoFaixaMaior: f.preco, faixaMin: f.min };
+};
+
 const maiorNumero =(s) => Math.max(...(String(s || '').match(/\d+/g) || ['30']).map(Number));
 
 function contratoInicial(p, cat) {
@@ -75,6 +81,7 @@ function contratoInicial(p, cat) {
       personalizacao: prod.personalizacao || '',
       descPers: 'Conforme layout aprovado.',
       preco: it.precoManual ?? priceFor(prod, it.qtd || prod.minimo || 1).atual?.preco ?? 0,
+      ...(it.faixaMaior && it.precoManual == null && prod.faixas ? camposFaixa(prod) : {}),
       tamanhos: TAMANHO_UNICO.test(prod.nome || '') ? [{ tam: 'ÚNICO', qtd: String(it.qtd || '') }] : TAMANHOS.map((tam) => ({ tam, qtd: '' })),
     };
   });
@@ -93,7 +100,7 @@ function contratoInicial(p, cat) {
 export default function Contrato({ pedido, cat, onVoltar }) {
   const { updatePedido, moveStage } = useStore();
   // desconto de ativação: vem do orçamento (também nos rascunhos de contrato feitos antes de existir)
-  const [c, setC] = useState(() => ({ desconto: pedido.descontoTexto || '', ativacao: pedido.ativacao || '', ...(pedido.contrato || contratoInicial(pedido, cat)) }));
+  const [c, setC] = useState(() => ({ desconto: pedido.descontoTexto || '', ativacao: pedido.ativacao || '', envioAte: pedido.envioAte || '', ...(pedido.contrato || contratoInicial(pedido, cat)) }));
   const [fotos, setFotos] = useState({}); // { itemKey: [{dataUrl,w,h,nome}] }
   const [colado, setColado] = useState('');
   const [msg, setMsg] = useState('');
@@ -104,7 +111,7 @@ export default function Contrato({ pedido, cat, onVoltar }) {
   }, [pedido.id]);
   // salva o rascunho do contrato no pedido (sem as fotos, que ficam neste aparelho)
   useEffect(() => {
-    const t = setTimeout(() => updatePedido(pedido.id, { contrato: c }), 600);
+    const t = setTimeout(() => updatePedido(pedido.id, { contrato: c, envioAte: c.envioAte || '' }), 600);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c]);
@@ -233,10 +240,18 @@ export default function Contrato({ pedido, cat, onVoltar }) {
           <Campo rotulo="Frete (R$, 0 = grátis)" valor={c.frete} onChange={(v) => set({ frete: v.replace(',', '.') })} />
           <Campo rotulo="Desconto (R$ ou %)" valor={c.desconto} onChange={(v) => set({ desconto: v })} />
           <Campo rotulo="Ativação / motivo do desconto" valor={c.ativacao} onChange={(v) => set({ ativacao: v })} />
-          <Campo rotulo="Prazo (dias úteis)" valor={c.prazoDias} onChange={(v) => set({ prazoDias: v.replace(/\D/g, '') })} />
           <label className="block space-y-1">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Data do contrato</span>
             <input type="date" className={inputCls} value={c.data} onChange={(e) => set({ data: e.target.value })} />
+          </label>
+          <div className="space-y-1">
+            <Campo rotulo="Prazo (dias úteis)" valor={c.prazoDias} onChange={(v) => set({ prazoDias: v.replace(/\D/g, '') })} />
+            {prazoAte(c) && <p className="text-xs text-slate-500">= até <b className="text-ink">{dataBR(prazoAte(c))}</b> (sem fim de semana e feriado)</p>}
+          </div>
+          <label className="block space-y-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Envio até (data especial)</span>
+            <input type="date" className={inputCls} value={c.envioAte || ''} onChange={(e) => set({ envioAte: e.target.value })} />
+            <span className="block text-xs text-slate-400">Só quando o cliente pediu uma data. Vai junto do prazo padrão.</span>
           </label>
         </div>
         <Segmented value={c.pagamento} onChange={(v) => set({ pagamento: v })} options={Object.entries(PAGAMENTOS).map(([k, p]) => [k, p.nome, 'bg-sky-500 text-white ring-transparent'])} />
@@ -249,6 +264,12 @@ export default function Contrato({ pedido, cat, onVoltar }) {
               <span>{brl(i.subtotal)}</span>
             </div>
           ))}
+          {t.descontoFaixa > 0 && (
+            <div className="flex justify-between text-violet-700">
+              <span>Desconto · {t.faixaTexto}</span>
+              <span>−{brl(t.descontoFaixa)}</span>
+            </div>
+          )}
           {t.desconto > 0 && (
             <div className="flex justify-between text-violet-700">
               <span>Desconto{c.ativacao ? ` · ${c.ativacao}` : ''}</span>
@@ -307,6 +328,23 @@ function Campo({ rotulo, valor, onChange, area }) {
       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{rotulo}</span>
       {area ? <textarea rows={2} className={inputCls} value={valor ?? ''} onChange={(e) => onChange(e.target.value)} /> : <input className={inputCls} value={valor ?? ''} onChange={(e) => onChange(e.target.value)} />}
     </label>
+  );
+}
+
+// "💸 Dar preço de 51+": mostra o desconto que o cliente ganha (o mesmo botão do orçamento)
+export function BotaoFaixa({ ligado, topo, unit, qtd, onToggle }) {
+  if (!topo || (!ligado && !(topo.preco < unit))) return null;
+  const valor = descontoFaixaItem(unit, qtd, topo.preco);
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`w-full rounded-lg px-2.5 py-1.5 text-left text-xs ring-1 ring-inset ${ligado ? 'bg-violet-50 font-semibold text-violet-700 ring-violet-200' : 'bg-white text-slate-500 ring-slate-200 hover:bg-slate-50'}`}
+    >
+      {ligado ? '✓' : '💸'} {ligado ? 'Com' : 'Dar'} preço de {topo.min}+ ({brl(topo.preco)} cada)
+      {ligado && valor > 0 && <> · desconto de {brl(valor)}</>}
+      {ligado && <span className="font-normal text-violet-500"> · tocar para tirar</span>}
+    </button>
   );
 }
 
@@ -449,6 +487,13 @@ function Item({ n, it, fotos, set, remover, addFotos, tiraFoto, prod }) {
           = <b className="text-ink">{brl(soma * (Number(it.preco) || 0))}</b>
         </div>
       </div>
+      <BotaoFaixa
+        ligado={!!it.faixaMaior}
+        topo={prod?.faixas ? faixaMaior(prod) : it.faixaMaior ? { min: it.faixaMin, preco: Number(it.precoFaixaMaior) } : null}
+        unit={Number(it.preco) || 0}
+        qtd={soma}
+        onToggle={() => set(it.faixaMaior ? { faixaMaior: false } : camposFaixa(prod))}
+      />
     </div>
   );
 }

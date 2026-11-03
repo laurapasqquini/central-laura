@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 import { today, addDays, nextWorkday } from './dates';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 import { leituraDeBusca } from './whats';
-import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES, chaveApoiador, PIX_HUB } from './engine';
+import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES, chaveApoiador, PIX_HUB, isWorkday } from './engine';
 import { apagarAnexos, linksAnexos } from './anexos';
 import { INDICADORES_PADRAO } from './chefes';
 import { CALENDARIOS } from '../data/calendarios';
@@ -389,6 +389,27 @@ function tarefasDoContrato(s, ped, data) {
   if (de && !s.tasks.some((t) => t.pedidoRecorrente === ped.id)) out.push(de);
   return out;
 }
+// Data especial de envio: tarefa de conferir com a fábrica 5 dias úteis antes (ou hoje, se já passou).
+// Mudou a data: a tarefa aberta é trocada; tirou a data ou o pedido foi perdido: ela some.
+const ANTECEDENCIA_ENVIO = 5;
+function tarefasEnvio(s, ped) {
+  const aberta = s.tasks.find((t) => t.pedidoEnvio === ped.id && !t.done);
+  const outras = aberta ? s.tasks.filter((t) => t !== aberta) : s.tasks;
+  if (!ped.envioAte || ped.stage === 'perdido') return outras;
+  let due = ped.envioAte;
+  for (let c = 0; c < ANTECEDENCIA_ENVIO; ) {
+    due = addDays(due, -1);
+    if (isWorkday(s, due)) c++;
+  }
+  if (due < today()) due = today();
+  const [, m, d] = ped.envioAte.split('-');
+  const title = `Conferir com a fábrica: ${ped.cliente} precisa sair até ${d}/${m}`;
+  if (aberta && aberta.title === title) return s.tasks; // mesma data (o vencimento pode ter sido adiado por ela)
+  if (!aberta && s.tasks.some((t) => t.pedidoEnvio === ped.id && t.done && t.title === title)) return s.tasks; // já conferiu
+  const notes = `Data especial combinada com o cliente: o pedido ${ped.cliente} precisa ser ENVIADO até ${d}/${m}/${ped.envioAte.slice(0, 4)} (fora do prazo padrão). Confirme com a fábrica se a produção está no ritmo; se não for dar, avise o cliente já.`;
+  return [{ id: aberta?.id || uid(), title, area: 'gralha', who: 'laura', urgent: false, due, done: false, createdAt: today(), postponed: 0, notes, pedidoEnvio: ped.id }, ...outras];
+}
+
 function recorrente(ped, data) {
   const [y, m] = data.split('-');
   return { id: uid(), title: `Oferecer de novo: ${ped.cliente} (fechou em ${m}/${y}, turma do ano seguinte?)`, area: 'gralha', who: 'laura', urgent: false, due: addDays(data, 330), done: false, createdAt: data, postponed: 0, notes: 'Quem fechou no ano passado costuma ter a turma seguinte com a mesma necessidade. Procure o contato e mande um oi com o catálogo novo.', pedidoRecorrente: ped.id };
@@ -922,18 +943,16 @@ export function StoreProvider({ user, children }) {
       addPedido: (p) =>
         setState((s) => {
           const id = uid();
-          return {
-            ...s,
-            pedidos: [{ id, stage: 'enviado', createdAt: today(), history: [{ stage: 'enviado', date: today() }], ...p }, ...(s.pedidos || [])],
-            tasks: [stageTask(id, p.cliente, 'enviado'), ...s.tasks],
-          };
+          const ped = { id, stage: 'enviado', createdAt: today(), history: [{ stage: 'enviado', date: today() }], ...p };
+          const s2 = { ...s, pedidos: [ped, ...(s.pedidos || [])], tasks: [stageTask(id, p.cliente, 'enviado'), ...s.tasks] };
+          return { ...s2, tasks: tarefasEnvio(s2, ped) };
         }),
       moveStage: (id, stage) =>
         setState((s) => {
           const ped = (s.pedidos || []).find((p) => p.id === id);
           const next = stageTask(id, ped.cliente, stage);
           const extras = stage === 'contrato' ? tarefasDoContrato(s, ped, today()) : [];
-          return {
+          const s2 = {
             ...s,
             pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, stage, history: [...(p.history || []), { stage, date: today() }] } : p)),
             tasks: [
@@ -942,6 +961,8 @@ export function StoreProvider({ user, children }) {
               ...s.tasks.map((t) => (t.pedidoId === id && !t.done ? { ...t, done: true, doneAt: today() } : t)),
             ],
           };
+          // perdido: o aviso da data especial some
+          return stage === 'perdido' ? { ...s2, tasks: tarefasEnvio(s2, s2.pedidos.find((p) => p.id === id)) } : s2;
         }),
       // depois do contrato: 1ª parcela, produção/entrega e 2ª parcela (cada passo fecha ou cria a tarefa certa)
       setPosVenda: (id, patch) =>
@@ -970,9 +991,15 @@ export function StoreProvider({ user, children }) {
           const de = recorrente(ped, data);
           return { ...s, pedidos: [ped, ...(s.pedidos || [])], tasks: de && de.due > today() ? [de, ...s.tasks] : s.tasks };
         }),
-      updatePedido: (id, patch) => setState((s) => ({ ...s, pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...patch } : p)) })),
+      updatePedido: (id, patch) =>
+        setState((s) => {
+          const s2 = { ...s, pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...patch } : p)) };
+          if (!('envioAte' in patch) && !('cliente' in patch)) return s2;
+          const tasks = tarefasEnvio(s2, s2.pedidos.find((p) => p.id === id));
+          return tasks === s.tasks ? s2 : { ...s2, tasks };
+        }),
       deletePedido: (id) =>
-        setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => ![t.pedidoId, t.pedidoPos, t.pedidoRecorrente].includes(id) || t.done) })),
+        setState((s) => ({ ...s, pedidos: s.pedidos.filter((p) => p.id !== id), tasks: s.tasks.filter((t) => ![t.pedidoId, t.pedidoPos, t.pedidoRecorrente, t.pedidoEnvio].includes(id) || t.done) })),
 
       // lista "Acabou? Puxa daqui" da Lolis
       // contato do apoiador que vai para os atletas (sobrepõe o que veio da Programação do Hub); vazio = usa o do Hub

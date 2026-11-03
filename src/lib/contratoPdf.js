@@ -1,7 +1,7 @@
 // PDF do contrato da Gralha Azul, gerado no navegador (mesmo conteúdo do Word).
 // Cabeçalho e rodapé vêm das imagens do próprio modelo (public/contrato-modelo.docx).
 import JSZip from 'jszip';
-import { totaisContrato, linhaFrete, brl, extenso, dataPorExtenso, PAGAMENTOS } from './contrato';
+import { totaisContrato, linhaFrete, brl, textoPrazo, dataPorExtenso, PAGAMENTOS } from './contrato';
 
 const AZUL = '#0b63b5';
 
@@ -160,8 +160,7 @@ export async function gerarContratoPdf(c) {
       titulo('3. PRAZOS'),
       par(
         b('3.1 '),
-        c.prazoTexto ||
-          `As partes concordam que o prazo de produção e envio será de até ${c.prazoDias} (${extenso(Number(c.prazoDias))}) dias úteis, a contar da confirmação deste contrato e do pagamento da entrada.`
+        textoPrazo(c)
       ),
       par(b('3.2 '), 'O prazo de entrega da mercadoria, depois do envio não será de responsabilidade da empresa.'),
       par(b('3.3 '), 'Fica a critério do cliente, com o auxílio da empresa, a escolha da transportadora que faça o translado dos produtos.'),
