@@ -4,7 +4,7 @@
 import { today, diffDays } from './dates';
 
 // a última mensagem fecha o assunto (não precisa responder): curta, sem pergunta e com palavra de fechamento
-const PALAVRA_FECHA = /(obrigad|\bobg\b|brigad|valeu|\bvlw\b|\bblz\b|beleza|\bbele\b|\bok\b|\bokk|okay|\bcerto\b|\bshow\b|\btop\b|perfeito|combinado|massa|de nada|por nada|\btmj\b|👍|🙏|❤|😘|😍|🥰|kkk|fechou|maravilha|[oó]timo|tranquilo|\bobri\b|uhu|amei|\bfeito\b|\bpronto\b|fica em paz|magina|entendi|de boa|retirei|aguardo|estou indo|t[oô] indo|^sim\b|^isso\b|t[aá] bom|pode ser)/i;
+const PALAVRA_FECHA = /(obrigad|\bob(r|ri)?g\w*|brigad|vale[uw]|\bvlw+\b|\bgrat[oa]\b|agrade[cç]|\bthanks?\b|\btks\b|👏|🤝|✅|💚|😊|☺|\bblz\b|beleza|\bbele\b|\bok\b|\bokk|okay|\bcerto\b|\bshow\b|\btop\b|perfeito|combinado|massa|de nada|por nada|\btmj\b|👍|🙏|❤|😘|😍|🥰|kkk|fechou|maravilha|[oó]timo|tranquilo|\bobri\b|uhu|amei|\bfeito\b|\bpronto\b|fica em paz|magina|entendi|de boa|retirei|aguardo|estou indo|t[oô] indo|^sim\b|^isso\b|t[aá] bom|pode ser)/i;
 const fecha = (t) => t.length <= 80 && !t.includes('?') && PALAVRA_FECHA.test(t);
 // promessa: "vou ver", "já te falo", "deixa comigo"…
 const PROMESSA = /(vou (ver|verificar|resolver|conferir|olhar|checar|falar|mandar|te mandar|passar|confirmar|arrumar|ajustar|lan[cç]ar|corrigir|pedir|perguntar|levar|dar um jeito|dar uma olhada)|j[aá] te (falo|aviso|mando|retorno|chamo|envio)|deixa comigo|te retorno|te aviso|\baviso\b|me avisa|daqui a pouco|mais tarde|amanh[aã] te|j[aá] vejo|vou ver pra)/i;
