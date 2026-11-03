@@ -291,7 +291,49 @@ export const inputCls = `w-full ${inputBase}`;
 // Topo de cada frente (Ranken, Gralha, Pessoal): título à esquerda e as abas à direita, numa barra cinza
 // em que a aba aberta fica branca. abas = [{ id, label, badge? }]
 const COR_FRENTE = { ranken: 'text-emerald-800', gralha: 'text-sky-700', pessoal: 'text-violet-700' };
+export const MARCA = (arq) => `${import.meta.env.BASE_URL}marcas/${arq}.png`;
+
+// RANKEN e Gralha: faixa com a logo e as cores de cada empresa
+const FAIXA = {
+  ranken: {
+    fundo: 'bg-ranken text-white', faixa: 'bg-laranja', logo: 'ranken-branco', alt: 'RANKEN', logoCls: 'h-6 sm:h-7', texto: 'text-ranken-verde',
+    trilho: 'bg-white/10', ativa: 'bg-white text-ranken', outra: 'text-white/75 hover:bg-white/10 hover:text-white',
+  },
+  gralha: {
+    fundo: 'bg-[#e6e6e8] text-slate-800', faixa: 'bg-gralha', logo: 'gralha', alt: 'Gralha Azul', logoCls: 'h-32 -my-2 mx-auto sm:h-36', texto: 'text-slate-600', centro: true,
+    trilho: 'bg-black/5', ativa: 'bg-gralha text-white', outra: 'text-slate-600 hover:bg-black/5 hover:text-slate-900',
+  },
+};
+
 export function AbasTopo({ area, titulo, detalhe, abas, valor, onChange }) {
+  const f = FAIXA[area];
+  if (f)
+    return (
+      <header className={`relative overflow-hidden rounded-2xl ${f.fundo} px-5 pt-5 pb-4 shadow-sm sm:px-6`}>
+        <div className={`absolute inset-x-0 top-0 h-1 ${f.faixa}`} />
+        <div className={`flex flex-wrap items-center gap-x-6 gap-y-4 ${f.centro ? 'flex-col text-center' : 'justify-between'}`}>
+          <div className="min-w-0">
+            <img src={MARCA(f.logo)} alt={f.alt} className={`w-auto ${f.logoCls}`} />
+            {detalhe && <p className={`mt-2 text-sm ${f.texto}`}>{detalhe}</p>}
+          </div>
+          <nav className="-mx-1 max-w-full overflow-x-auto px-1">
+            <div className={`inline-flex gap-0.5 rounded-lg p-[3px] ${f.trilho}`}>
+              {abas.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => onChange(a.id)}
+                  className={`shrink-0 whitespace-nowrap rounded-md px-3.5 py-1.5 text-sm transition ${valor === a.id ? `font-semibold shadow-sm ${f.ativa}` : `font-medium ${f.outra}`}`}
+                >
+                  {a.label}
+                  {a.badge > 0 && <span className="ml-1.5 rounded-full bg-laranja px-1.5 text-xs font-bold text-white">{a.badge}</span>}
+                </button>
+              ))}
+            </div>
+          </nav>
+        </div>
+      </header>
+    );
   return (
     <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div className="min-w-0">

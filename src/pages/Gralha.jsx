@@ -28,7 +28,7 @@ export default function Gralha() {
       <AbasTopo
         area="gralha"
         titulo="Gralha Azul"
-        detalhe={<>Orçamento em segundos e cada pedido acompanhado até o contrato.{cat && <span className="text-slate-400"> · {cat.produtos.length} produtos da planilha</span>}</>}
+        detalhe={<>Orçamento em segundos e cada pedido acompanhado até o contrato.{cat && <span className="opacity-70"> · {cat.produtos.length} produtos da planilha</span>}</>}
         abas={[{ id: 'novo', label: '+ Novo orçamento' }, { id: 'pedidos', label: `Pedidos${abertos ? ` (${abertos})` : ''}` }, { id: 'tarefas', label: 'Tarefas' }]}
         valor={view.startsWith('contrato:') ? 'pedidos' : view}
         onChange={setView}

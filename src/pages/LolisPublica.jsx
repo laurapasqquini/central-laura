@@ -7,6 +7,7 @@ import { pontoHoje, baterPonto, resumoDia, hora, duracao, JORNADA_MAX } from '..
 import { quemFala } from '../lib/engine';
 import { EtapasRodadas } from './Etapas';
 import { EntregasLolis } from '../components/Entregas';
+import { MARCA } from '../components/ui';
 
 // Página da Lolis: abre pelo link secreto, sem login. Só mostra o dia dela, com um Copiar em cada mensagem.
 // O que ela marca (feito / não consegui + nota) vai para a central da Laura.
@@ -65,10 +66,12 @@ export default function LolisPublica({ token, embutida }) {
   return (
     <div className={embutida ? '' : 'min-h-screen bg-paper'}>
       <div className={embutida ? 'space-y-5 p-2 sm:p-3' : 'mx-auto max-w-3xl space-y-5 px-4 py-6 sm:py-10'}>
-        <header className="space-y-1">
-          <p className="text-sm font-medium text-slate-500">RANKEN · Página da Lolis{embutida && ' · exatamente o que ela vê agora'}</p>
-          {!embutida && <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Oi, Lolis! 👋</h1>}
-          <p className="text-xs text-slate-400">Atualizado {relativo(dados.geradoEm.slice(0, 10), hoje)} às {new Date(dados.geradoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · a página se atualiza sozinha</p>
+        <header className="relative space-y-1 overflow-hidden rounded-2xl bg-ranken px-5 pt-5 pb-4 text-white shadow-sm">
+          <div className="absolute inset-x-0 top-0 h-1 bg-laranja" />
+          <img src={MARCA('ranken-branco')} alt="RANKEN" className="mb-3 h-5 w-auto sm:h-6" />
+          <p className="text-sm font-medium text-ranken-verde">Página da Lolis{embutida && ' · exatamente o que ela vê agora'}</p>
+          {!embutida && <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Oi, Lolis! 👋</h1>}
+          <p className="text-xs text-white/60">Atualizado {relativo(dados.geradoEm.slice(0, 10), hoje)} às {new Date(dados.geradoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} · a página se atualiza sozinha</p>
         </header>
 
         <Protecao>

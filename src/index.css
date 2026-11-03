@@ -4,6 +4,11 @@
   --font-sans: "IBM Plex Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --color-ink: #1e1b4b;
   --color-paper: #f7f6fb;
+  /* marcas: azul-escuro e verde-claro do RANKEN, laranja pros detalhes, azul da Gralha */
+  --color-ranken: #162834;
+  --color-ranken-verde: #dbe7d0;
+  --color-laranja: #f26a21;
+  --color-gralha: #0067b4;
 }
 
 html, body { background: var(--color-paper); color: #1f1d36; }

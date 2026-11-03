@@ -10,12 +10,21 @@ import Ranken, { SUBABAS_RANKEN } from './pages/Ranken';
 import Pessoal from './pages/Pessoal';
 import LolisPublica from './pages/LolisPublica';
 import { Revisao } from './components/Revisao';
-import { House, Trophy, ShoppingBag, Heart, Repeat, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
+import { MARCA } from './components/ui';
+import { House, Heart, Repeat, PanelLeftClose, PanelLeftOpen, LogOut } from 'lucide-react';
+
+// ícone com a marca da empresa (claro = menu escuro do computador; escuro = barra branca do celular)
+const marca = (claro, escuro, chip) =>
+  function Marca({ size = 18, escuro: e }) {
+    const img = <img src={MARCA(e ? escuro : claro)} alt="" style={{ height: chip && !e ? size - 6 : size }} className="w-auto shrink-0" />;
+    // passarinho azul some no menu escuro: vai num quadradinho claro
+    return chip && !e ? <span className="grid shrink-0 place-items-center rounded-md bg-[#e6e6e8]" style={{ width: size + 2, height: size + 2 }}>{img}</span> : img;
+  };
 
 const TABS = [
   { id: 'home', label: 'Início', Icon: House, C: Inicio },
-  { id: 'ranken', label: 'Ranken', Icon: Trophy, C: Ranken },
-  { id: 'gralha', label: 'Gralha', Icon: ShoppingBag, C: Gralha },
+  { id: 'ranken', label: 'Ranken', Icon: marca('r-branco', 'r-azul'), C: Ranken },
+  { id: 'gralha', label: 'Gralha', Icon: marca('gralha-passaro', 'gralha-passaro', true), C: Gralha },
   { id: 'pessoal', label: 'Pessoal', Icon: Heart, C: Pessoal },
   { id: 'routines', label: 'Rotinas', Icon: Repeat, C: Routines },
 ];
@@ -115,8 +124,8 @@ function Shell() {
           </button>
           {!fechado && (
             <>
-              <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-emerald-400" />RANKEN</div>
-              <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-sky-400" />Gralha Azul</div>
+              <div className="flex items-center gap-2"><img src={MARCA('r-branco')} alt="" className="h-3.5 w-auto" />RANKEN</div>
+              <div className="flex items-center gap-2"><span className="grid h-4 w-4 place-items-center rounded bg-[#e6e6e8]"><img src={MARCA('gralha-passaro')} alt="" className="h-2.5 w-auto" /></span>Gralha Azul</div>
               <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-violet-400" />Pessoal</div>
             </>
           )}
@@ -132,7 +141,7 @@ function Shell() {
       <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-slate-200 bg-white/95 pt-1.5 backdrop-blur sm:hidden">
         {TABS.map(({ id, label, Icon }) => (
           <button key={id} onClick={() => setTab(id)} className={`relative flex min-w-0 flex-col items-center gap-1 py-1 text-[10px] font-medium ${tab === id ? 'text-ink' : 'text-slate-400'}`}>
-            <Icon size={20} strokeWidth={tab === id ? 2.2 : 1.8} />
+            <Icon size={20} strokeWidth={tab === id ? 2.2 : 1.8} escuro />
             {label}
             {badge(id) && <span className="absolute top-0 right-1/4 rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">{badge(id)}</span>}
           </button>
