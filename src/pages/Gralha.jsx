@@ -196,7 +196,7 @@ function Novo({ cat, onSaved, pedido }) {
               {l.precoManual == null && (
                 <BotaoFaixa ligado={!!l.faixaMaior} topo={faixaMaior(l.p)} unit={l.unit} qtd={l.qtd} onToggle={() => setItens((xs) => xs.map((x) => (x.key === l.key ? { ...x, faixaMaior: !x.faixaMaior } : x)))} />
               )}
-              {proxima && !abaixoMinimo && (
+              {proxima && !abaixoMinimo && !l.descFaixa && (
                 <p className="rounded-lg bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
                   💡 Com <b>{proxima.min - l.qtd}</b> peças a mais ({proxima.min}), cai para <b>{brl(proxima.preco)}</b> cada.
                 </p>
