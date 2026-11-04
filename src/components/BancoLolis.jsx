@@ -1,7 +1,57 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { fmtCurto } from '../lib/dates';
+import { fmtCurto, today } from '../lib/dates';
+import { expansaoLolis } from '../lib/engine';
 import { Empty, inputCls } from './ui';
+
+// Cidades novas (tarefas da Expansão no nome dela, vindas do Hub): só para a Laura ver o que está no cardápio dela.
+// Quem muda prazo ou dono é o Hub (Expansão › projeto da cidade).
+const EXP = /^\[Expansão (Beach Tennis|Tênis|Padel) ([^\]]+)\]\s*/;
+const CURTA = [
+  [/telefone do respons/i, 'Telefones dos responsáveis'],
+  [/professores/i, 'Professores'],
+  [/apoiadores/i, 'Apoiadores e local dos kits'],
+];
+function CidadesNovas() {
+  const { state } = useStore();
+  const ref = today();
+  const itens = expansaoLolis(state, ref)?.itens || [];
+  const cidades = new Map();
+  for (const a of itens) {
+    const [, esporte = '', cidade = 'Outras'] = a.titulo.match(EXP) || [];
+    if (!cidades.has(cidade)) cidades.set(cidade, []);
+    cidades.get(cidade).push({ ...a, esporte });
+  }
+  const grupos = [...cidades].sort((x, y) => x[1][0].ate.localeCompare(y[1][0].ate));
+  return (
+    <section className="space-y-2">
+      <h3 className="px-1 text-sm font-semibold uppercase tracking-wide text-slate-700">
+        Cidades novas · vindas do Hub <span className="font-normal normal-case tracking-normal text-slate-400">({itens.length})</span>
+      </h3>
+      {!itens.length ? (
+        <Empty>Nenhuma tarefa da Expansão com ela agora (ou a central ainda não leu a equipe da Lolis no Hub).</Empty>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {grupos.map(([cidade, its]) => (
+            <div key={cidade} className="rounded-lg bg-white px-3 py-2 shadow-sm ring-1 ring-slate-200">
+              <div className="text-sm font-semibold text-ink">{cidade}</div>
+              {its.map((a) => (
+                <div key={a.key} className="flex items-baseline justify-between gap-2 border-t border-slate-100 py-1 text-sm first-of-type:border-0">
+                  <span className="min-w-0 text-slate-700">
+                    {/beach/i.test(a.esporte) ? '🏖️ Beach' : '🎾 Tênis'} · {CURTA.find(([re]) => re.test(a.titulo))?.[1] || a.titulo.replace(EXP, '')}
+                  </span>
+                  <span className={`shrink-0 text-xs ${a.ate < ref ? 'font-semibold text-red-600' : 'text-slate-500'}`}>
+                    {a.faltam != null && a.total ? `${a.total - a.faltam}/${a.total} · ` : ''}até {fmtCurto(a.ate).slice(5)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 // Lista "Acabou? Puxa daqui": o que a Lolis pega quando termina o do dia, em ordem de prioridade.
 // Contínua (🔁) fica sempre; as de uma vez saem quando ela marca como feita (e vão para Concluídas).
@@ -41,6 +91,8 @@ export default function BancoLolis() {
       <p className="text-sm text-slate-500">
         Tarefas extras que ela pode puxar pra hoje na aba <b>Acabou? Puxa daqui</b> da página dela (grupo Outras). As cidades novas entram sozinhas, vindas do Hub. <b>🔁 Contínua</b> volta todo dia; as outras saem quando ela marca como feita.
       </p>
+      <CidadesNovas />
+      <h3 className="px-1 text-sm font-semibold uppercase tracking-wide text-slate-700">Outras (você cadastra)</h3>
       <section className="space-y-2">
         {abertas.map((b, i) => {
           const regs = registros(b.id);
