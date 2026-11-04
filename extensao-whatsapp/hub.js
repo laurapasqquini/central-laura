@@ -201,11 +201,21 @@ async function comExpansao(n) {
         const titulo = `[Expansão ${nome}] ${i.titulo}`;
         if (ja.has(titulo.toLowerCase())) continue;
         extras.push({ titulo, prazo: prazoAtividade.get(titulo.toLowerCase()) || (i.prazo ? i.prazo.slice(0, 10) : null), descricao: [i.ajuda, `No Hub: Expansão › ${nome} (marque o item no Checklist quando terminar)`].filter(Boolean).join('\n\n') });
+        ja.add(titulo.toLowerCase());
       }
+    }
+    // tarefas que a Laura passou para a Lolis em Atividades (a tela da equipe só mostra as de hoje e as atrasadas)
+    for (const x of listaDel) {
+      if (x.responsavel_id !== lolis || x.status === 'concluida' || x.arquivada_em || x.parent_id || !x.titulo) continue;
+      const titulo = x.titulo.trim();
+      if (ja.has(titulo.toLowerCase())) continue;
+      extras.push({ titulo, prazo: x.prazo ? x.prazo.slice(0, 10) : null, descricao: (x.descricao || '').trim() });
+      ja.add(titulo.toLowerCase());
     }
     return { ...n, abertas: [...n.abertas, ...extras] };
   } catch {
-    return n;
+    // leitura pela metade: a Central não dá baixa no que não veio (senão marca como "saiu do Hub" sem ter saído)
+    return { ...n, incompleta: true };
   }
 }
 

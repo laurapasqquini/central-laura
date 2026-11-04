@@ -633,21 +633,25 @@ export function StoreProvider({ user, children }) {
           if (!Array.isArray(d?.abertas)) continue;
           const chave = (t) => t.trim().toLowerCase();
           const abertas = new Map(d.abertas.map((a) => [chave(a.titulo), a]));
-          if (s.hubConcluir?.some((h) => h.lolis)) {
+          // leitura pela metade (a extensão avisa): não tira da fila nem dá baixa no que não veio
+          if (s.hubConcluir?.some((h) => h.lolis) && !d.incompleta) {
             const seteDias = addDays(today(), -7);
             s = { ...s, hubConcluir: s.hubConcluir.filter((h) => !h.lolis || (h.em >= seteDias && abertas.has(chave(h.titulo)))) };
           }
           const dia = d.dia || today();
+          const SAIU_LOLIS = /\n?Saiu de "em aberto" no Hub em \d{2}\/\d{2}\/\d{4}/;
           let tasks = s.tasks.map((t) => {
             if (!t.hubLolis) return t;
             const a = abertas.get(chave(t.title));
             if (a) {
               abertas.delete(chave(t.title));
+              // dada como "saiu" por uma leitura com falha e ainda em aberto no Hub: volta para a Lolis
+              if (t.done && SAIU_LOLIS.test(t.notes || '')) t = { ...t, done: false, doneAt: null, notes: t.notes.replace(SAIU_LOLIS, '').trim() };
               const notas = a.descricao ? `${a.descricao}\n\nVeio do Hub (Atividades › Minha equipe › Lolis)` : t.notes;
               const muda = (a.prazo && a.prazo !== t.due && !t.done) || notas !== t.notes || (a.telefone && a.telefone !== t.telefone);
               return muda ? { ...t, due: a.prazo && !t.done ? a.prazo : t.due, notes: notas, ...(a.telefone ? { telefone: a.telefone } : {}) } : t;
             }
-            return t.done ? t : { ...t, done: true, doneAt: dia, notes: `${t.notes ? `${t.notes}\n` : ''}Saiu de "em aberto" no Hub em ${dia.split('-').reverse().join('/')}` };
+            return t.done || d.incompleta ? t : { ...t, done: true, doneAt: dia, notes: `${t.notes ? `${t.notes}\n` : ''}Saiu de "em aberto" no Hub em ${dia.split('-').reverse().join('/')}` };
           });
           const novas = [...abertas.values()].map((a) => ({
             id: uid(),

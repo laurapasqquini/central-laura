@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { buildDay, buildOverdue, noDate, AREAS, folgaDe, isWorkday, ehPix, PIX_URGENTE_DIAS } from '../lib/engine';
 import { today, addDays, fmtCurto, relativo } from '../lib/dates';
-import { ItemRow, Empty, QuickAdd, TaskModal, Segmented } from './ui';
+import { ItemRow, Empty, QuickAdd, TaskModal, Segmented, Check } from './ui';
 
 // de qual frente é cada aviso (pelo ícone); sem frente = aviso geral
 const FRENTE_AVISO = { '💸': 'pessoal', '💜': 'pessoal', '🐦': 'gralha', '📣': 'ranken', '🙋': 'ranken', '🎉': 'ranken', '📅': 'ranken', '🚧': 'ranken' };
@@ -23,7 +23,7 @@ function Grupo({ icone, titulo, conta, cor = 'text-slate-700', children }) {
 }
 
 export default function ListaDoDia({ area }) {
-  const { state } = useStore();
+  const { state, toggleTask, updateTask } = useStore();
   const [filter, setFilter] = useState({ area, who: 'laura' }); // começa no que é seu; Todos e Lolis ficam a um clique
   const [editing, setEditing] = useState(null);
   const [verFeitos, setVerFeitos] = useState(false);
@@ -162,16 +162,30 @@ export default function ListaDoDia({ area }) {
                   {ms.map((m) => (
                     <div key={m.key} className="text-sm font-medium text-indigo-700">{m.title}</div>
                   ))}
-                  {ts.map((x) => (
-                    <button key={x.key} onClick={() => x.kind === 'task' && setEditing(x.id)} className="flex w-full items-start gap-2 text-left text-sm text-slate-700 hover:text-ink">
-                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${AREAS[x.area].dot}`} />
-                      <span className="min-w-0">
-                        {x.title}
-                        {x.who === 'lolis' && <span className="text-amber-600"> · 🙋 Lolis</span>}
-                        {x.urgent && <span className="text-red-500"> · urgente</span>}
-                      </span>
-                    </button>
-                  ))}
+                  {ts.map((x) =>
+                    x.kind === 'task' ? (
+                      // tarefa com data mais pra frente: dá pra marcar feita já ou trazer pra hoje (o prazo do Hub não muda)
+                      <div key={x.key} className="flex w-full items-start gap-2 text-sm text-slate-700">
+                        <Check done={false} onClick={() => toggleTask(x.id)} area={x.area} />
+                        <button onClick={() => setEditing(x.id)} className="min-w-0 flex-1 text-left hover:text-ink">
+                          {x.title}
+                          {x.who === 'lolis' && <span className="text-amber-600"> · Lolis</span>}
+                          {x.urgent && <span className="text-red-500"> · urgente</span>}
+                        </button>
+                        <button onClick={() => updateTask(x.id, { due: ref })} title="Trazer para a lista de hoje" className="shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-ink">
+                          fazer hoje
+                        </button>
+                      </div>
+                    ) : (
+                      <div key={x.key} className="flex w-full items-start gap-2 text-sm text-slate-700">
+                        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${AREAS[x.area].dot}`} />
+                        <span className="min-w-0">
+                          {x.title}
+                          {x.who === 'lolis' && <span className="text-amber-600"> · Lolis</span>}
+                        </span>
+                      </div>
+                    ),
+                  )}
                   {!folga && !ms.length && !ts.length && <div className="text-xs text-slate-300">sem tarefas avulsas</div>}
                 </div>
               );
