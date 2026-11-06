@@ -3,7 +3,7 @@ import { useStore } from '../lib/store';
 import { dadosPaginaLolis, expansaoLolis, isWorkday } from '../lib/engine';
 import { today, addDays, fmtCurto } from '../lib/dates';
 import { pontoDesde, porDia, resumoDia, hora, duracao } from '../lib/ponto';
-import { metasLolis, metaTelefones, resumoDoDia, cobrancas, elogios, semana, telefonesNoDia, diasUteisEntre, segundaDe, METAS_PADRAO } from '../lib/acompanhamento.js';
+import { metasLolis, metaTelefones, resumoDoDia, cobrancas, elogios, semana, telefonesNoDia, diasUteisEntre, segundaDe, METAS_PADRAO, MODELOS_PADRAO } from '../lib/acompanhamento.js';
 import { Empty, inputCls } from './ui';
 
 // Ranken › Lolis › Acompanhamento: o painel que se monta sozinho (sem IA) para a Laura acompanhar a Lolis:
@@ -89,7 +89,7 @@ export default function AcompanhamentoLolis() {
       d > ref ? { date: d, futuro: true } : isWorkday(state, d) ? (d === ref ? hoje : d === ant ? anterior : montarDia(state, d, ref, ponto, agora, meta, metas)) : { date: d, folga: true },
     );
     const resumos = dias.filter((r) => r && !r.futuro && !r.folga);
-    return { expansao, meta, hoje, anterior, cobrar: cobrancas(ctx, metas), elogiar: elogios(ctx), dias, sem: semana(resumos, metas) };
+    return { expansao, meta, hoje, anterior, cobrar: cobrancas(ctx, metas, state.lolisModelos), elogiar: elogios(ctx, state.lolisModelos), dias, sem: semana(resumos, metas) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, ref, res, agora.getHours(), agora.getMinutes()]);
 
@@ -107,13 +107,13 @@ export default function AcompanhamentoLolis() {
       <Metas meta={dados.meta} expansao={dados.expansao} />
       <Hoje r={dados.hoje} anterior={dados.anterior} pontoErro={res?.erro} carregando={!res} />
 
-      <Bloco titulo="O que cobrar" tom="text-red-700" count={dados.cobrar.length} dica="Mensagens prontas, em tom acolhedor. Copie e mande só se fizer sentido: nada sai sozinho.">
+      <Bloco titulo="O que cobrar" tom="text-red-700" count={dados.cobrar.length} dica="Mensagens prontas: dá para ajustar o texto antes de copiar, e mudar o modelo de cada tipo em Modelos das mensagens. Nada sai sozinho.">
         {dados.cobrar.length ? (
           dados.cobrar.map((c) => {
             const r = reg[c.id];
             const n = r ? diasUteisEntre(r.desde, ref, util) : 0;
             return (
-              <Cartao key={c.id} titulo={c.titulo} porque={c.porque} mensagem={c.mensagem} cor="red">
+              <Cartao key={c.id} titulo={c.titulo} porque={c.porque} mensagem={c.mensagem} tipo={c.tipo} cor="red">
                 {r?.tarefa ? (
                   <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-700">virou tarefa sua em {fmtCurto(r.tarefa)}</span>
                 ) : n > 0 ? (
@@ -130,8 +130,10 @@ export default function AcompanhamentoLolis() {
       </Bloco>
 
       <Bloco titulo="O que elogiar" tom="text-emerald-700" count={dados.elogiar.length} dica="Reconhecer o que deu certo também é acompanhar.">
-        {dados.elogiar.length ? dados.elogiar.map((c) => <Cartao key={c.id} titulo={c.titulo} mensagem={c.mensagem} cor="emerald" />) : <Empty>Ainda nada para elogiar hoje.</Empty>}
+        {dados.elogiar.length ? dados.elogiar.map((c) => <Cartao key={c.id} titulo={c.titulo} mensagem={c.mensagem} tipo={c.tipo} cor="emerald" />) : <Empty>Ainda nada para elogiar hoje.</Empty>}
       </Bloco>
+
+      <Modelos />
 
       <Semana dias={dados.dias} sem={dados.sem} metas={metas} sexta={new Date(`${ref}T12:00`).getDay() === 5} />
     </div>
@@ -318,8 +320,12 @@ const Num = ({ rotulo, valor, sub, ok, alerta }) => (
   </div>
 );
 
+// mensagem pronta: dá para ajustar o texto só desta vez antes de copiar (para mudar sempre, edite o modelo)
 function Cartao({ titulo, porque, mensagem, cor, children }) {
   const anel = cor === 'red' ? 'ring-red-100' : 'ring-emerald-100';
+  const [texto, setTexto] = useState(mensagem);
+  useEffect(() => setTexto(mensagem), [mensagem]);
+  const mudou = texto !== mensagem;
   return (
     <div className={`space-y-2 rounded-lg p-3 ring-1 ${anel}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -330,10 +336,79 @@ function Cartao({ titulo, porque, mensagem, cor, children }) {
         {children}
       </div>
       <div className="flex items-start gap-2">
-        <p className="min-w-0 flex-1 rounded-lg bg-[#e7ffdb] px-3 py-2 text-sm text-slate-700">{mensagem}</p>
-        <Copiar texto={mensagem} />
+        <textarea
+          rows={Math.max(2, Math.ceil(texto.length / 70))}
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          aria-label="Mensagem (dá para ajustar antes de copiar)"
+          className="min-w-0 flex-1 resize-y rounded-lg border-0 bg-[#e7ffdb] px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-emerald-300"
+        />
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <Copiar texto={texto} />
+          {mudou && (
+            <button onClick={() => setTexto(mensagem)} className="text-[11px] font-semibold text-slate-400 hover:text-slate-600">
+              desfazer
+            </button>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
+
+// ── Modelos das mensagens: um texto por tipo, com variáveis entre chaves ──
+function Modelos() {
+  const { state, setLolisModelo } = useStore();
+  const [aberto, setAberto] = useState(false);
+  const editados = state.lolisModelos || {};
+  const n = Object.keys(editados).length;
+  const grupo = (g, nome, tom) => (
+    <div className="space-y-3">
+      <div className={`text-xs font-bold uppercase tracking-wide ${tom}`}>{nome}</div>
+      {Object.entries(MODELOS_PADRAO)
+        .filter(([, m]) => m.grupo === g)
+        .map(([tipo, m]) => (
+          <label key={tipo} className="block space-y-1">
+            <span className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-600">
+              {m.rotulo}
+              {editados[tipo] && (
+                <button type="button" onClick={() => confirm('Voltar ao texto padrão?') && setLolisModelo(tipo, '')} className="font-semibold text-slate-400 hover:text-red-500">
+                  voltar ao padrão
+                </button>
+              )}
+            </span>
+            <textarea rows={2} className={inputCls} value={editados[tipo] ?? m.texto} onChange={(e) => setLolisModelo(tipo, e.target.value)} />
+            <span className="block text-[11px] text-slate-400">
+              {Object.entries(m.vars).map(([k, d], i) => (
+                <span key={k}>
+                  {i > 0 && ' · '}
+                  <code className="text-slate-500">{`{${k}}`}</code> {d}
+                </span>
+              ))}
+            </span>
+          </label>
+        ))}
+    </div>
+  );
+  return (
+    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <button onClick={() => setAberto(!aberto)} className="flex w-full flex-wrap items-baseline justify-between gap-2 text-left">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-slate-700">Modelos das mensagens</h2>
+        <span className="text-xs text-slate-500">
+          {n ? `${n} editado${n > 1 ? 's' : ''} · ` : ''}
+          <b className="text-slate-600">{aberto ? 'fechar' : 'editar'}</b>
+        </span>
+      </button>
+      {aberto && (
+        <div className="space-y-5">
+          <p className="text-xs text-slate-500">
+            Um texto para cada tipo de cobrança e de elogio. As palavras entre chaves, como <code>{'{tarefa}'}</code>, são trocadas pelo que aconteceu. Salva sozinho; se apagar tudo, volta ao padrão. Para mudar só uma vez, ajuste direto na mensagem antes de copiar.
+          </p>
+          {grupo('cobrar', 'Cobrar', 'text-red-700')}
+          {grupo('elogiar', 'Elogiar', 'text-emerald-700')}
+        </div>
+      )}
+    </section>
   );
 }
 

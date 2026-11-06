@@ -75,30 +75,53 @@ export function resumoDoDia(dia, metas, meta) {
   };
 }
 
+// ── Modelos das mensagens: um por tipo, editáveis pela Laura (state.lolisModelos), com variáveis entre chaves ──
+export const MODELOS_PADRAO = {
+  atraso: { grupo: 'cobrar', rotulo: 'Tarefa atrasada', vars: { tarefa: 'nome da tarefa', desde: 'data do prazo (dd/mm)', dias: 'dias úteis de atraso' }, texto: 'Lolis, "{tarefa}" está pendente desde {desde}. O que está travando? Me avisa se precisar de algo.' },
+  expansao: { grupo: 'cobrar', rotulo: 'Expansão com prazo vencido', vars: { cidade: 'cidade', faltam: 'locais que faltam', prazo: 'prazo (dd/mm)' }, texto: 'Lolis, o prazo de {cidade} venceu em {prazo} e ainda faltam {faltam} locais. Qual a previsão para terminar?' },
+  nao: { grupo: 'cobrar', rotulo: '"Não consegui" sem nota', vars: { tarefa: 'nome da tarefa', quando: 'hoje / em dd/mm' }, texto: 'Lolis, você marcou que não conseguiu "{tarefa}". O que aconteceu?' },
+  telefones: { grupo: 'cobrar', rotulo: 'Telefones abaixo da meta', vars: { feitos: 'telefones anotados', meta: 'meta do dia', quando: 'hoje / em dd/mm' }, texto: 'Lolis, {quando} foram {feitos} telefones e a meta é {meta}. O que dificultou?' },
+  sorteio: { grupo: 'cobrar', rotulo: 'Sorteio sem parabéns', vars: { quando: 'hoje / em dd/mm', feitos: 'sorteios feitos', total: 'sorteios do dia' }, texto: 'Lolis, o sorteio {quando} ficou sem o parabéns no grupo. Consegue postar?' },
+  cedo: { grupo: 'cobrar', rotulo: 'Saiu cedo sem puxar extra', vars: { quando: 'hoje / em dd/mm', hora: 'hora da saída', horas: 'horas trabalhadas' }, texto: 'Lolis, {quando} você saiu às {hora} e não puxou nada do "Acabou? Puxa daqui". Quando terminar antes, puxa de lá, por favor.' },
+  'elogio-telefones': { grupo: 'elogiar', rotulo: 'Bateu a meta de telefones', vars: { feitos: 'telefones anotados', meta: 'meta do dia', quando: 'hoje / em dd/mm' }, texto: 'Lolis, {feitos} telefones {quando}, meta batida. Muito bom.' },
+  'elogio-tudo': { grupo: 'elogiar', rotulo: 'Fechou todas as tarefas', vars: { total: 'tarefas do dia', quando: 'hoje / em dd/mm' }, texto: 'Lolis, todas as tarefas {quando} feitas. Obrigada.' },
+  'elogio-extra': { grupo: 'elogiar', rotulo: 'Puxou extra do "Acabou? Puxa daqui"', vars: { extra: 'o que ela puxou', total: 'quantos extras' }, texto: 'Lolis, vi que você puxou {extra} do "Acabou? Puxa daqui". Boa iniciativa, obrigada.' },
+  'elogio-sorteio': { grupo: 'elogiar', rotulo: 'Sorteio completo', vars: { quando: 'hoje / em dd/mm' }, texto: 'Lolis, sorteio {quando} completo, com parabéns. Obrigada.' },
+  'elogio-ponto': { grupo: 'elogiar', rotulo: 'Pontualidade e jornada', vars: { quando: 'hoje / em dd/mm', hora: 'hora da chegada' }, texto: 'Lolis, obrigada pela pontualidade {quando}.' },
+};
+// troca {variavel} pelo valor; variável desconhecida fica como está (a Laura vê que digitou errado)
+export const preencher = (texto = '', vars = {}) => texto.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null && vars[k] !== '' ? String(vars[k]) : m));
+const modelo = (modelos, tipo) => (modelos?.[tipo]?.trim() ? modelos[tipo] : MODELOS_PADRAO[tipo].texto);
+const comMensagem = (modelos) => (x) => ({ ...x, mensagem: preencher(modelo(modelos, x.tipo), x.vars) });
+
 // ── O que cobrar ──
 // ctx = { ref, hoje (resumoDoDia), anterior (resumoDoDia do dia útil anterior, ou null),
 //         atrasadas: [{ key, titulo, era, dias }], expansao (expansaoLolis), agora: Date }
-export function cobrancas(ctx, metas) {
+// modelos = state.lolisModelos (textos editados pela Laura; o que estiver vazio usa o padrão)
+export function cobrancas(ctx, metas, modelos = {}) {
   const { hoje, anterior, atrasadas = [], expansao, agora = new Date() } = ctx;
   const out = [];
   const fimDoDia = (r) => r && (r.encerrou || r.date < ctx.ref || agora.getHours() >= 18);
+  const quando = (r) => (r.date === ctx.ref ? 'hoje' : `em ${ddmm(r.date)}`);
 
   for (const t of atrasadas)
     if (t.dias >= (Number(metas.diasAtraso) || 2))
       out.push({
         id: `atraso:${t.key}`,
+        tipo: 'atraso',
+        vars: { tarefa: curto(t.titulo), desde: ddmm(t.era), dias: t.dias },
         titulo: `"${curto(t.titulo)}" atrasada há ${t.dias} dias úteis`,
         tarefa: `"${curto(t.titulo)}" atrasada desde ${ddmm(t.era)}`,
         porque: `Era para ${ddmm(t.era)} e ainda não foi feita.`,
-        mensagem: `Lolis, vi que "${curto(t.titulo)}" ficou parada desde ${ddmm(t.era)}. O que aconteceu? Posso te ajudar a destravar? 💚`,
       });
 
   for (const x of (expansao?.itens || []).filter((x) => x.vencida))
     out.push({
       id: `expansao:${x.key}`,
+      tipo: 'expansao',
+      vars: { cidade: x.cidade, faltam: x.faltam ?? 'alguns', prazo: ddmm(x.ate) },
       titulo: `Expansão ${x.cidade}: o prazo passou (${ddmm(x.ate)})`,
       porque: `${curto(x.titulo)}${x.faltam ? `: faltam ${x.faltam} locais` : ''}.`,
-      mensagem: `Lolis, vi que ${x.cidade} travou um pouco${x.faltam ? ` (faltam ${x.faltam} locais)` : ''}. O que aconteceu? Posso te ajudar?`,
     });
 
   // "não consegui" sem explicar o porquê (hoje e o dia útil anterior)
@@ -106,9 +129,10 @@ export function cobrancas(ctx, metas) {
     for (const x of r.naoConsegui.filter((x) => !x.nota.trim()))
       out.push({
         id: `nao:${r.date}:${x.key}`,
+        tipo: 'nao',
+        vars: { tarefa: curto(x.titulo), quando: quando(r) },
         titulo: `Não conseguiu "${curto(x.titulo)}" (${r.date === ctx.ref ? 'hoje' : ddmm(r.date)}) e não disse o porquê`,
         porque: 'Marcou "não consegui" sem nota.',
-        mensagem: `Lolis, vi que você marcou que não conseguiu "${curto(x.titulo)}". Me conta o que travou? Assim eu te ajudo ou vejo outro caminho 💚`,
       });
 
   // ritmo dos telefones: o último dia encerrado abaixo da meta
@@ -116,10 +140,11 @@ export function cobrancas(ctx, metas) {
   if (diaTel && diaTel.telefones < diaTel.metaTelefones)
     out.push({
       id: 'ritmo-telefones',
+      tipo: 'telefones',
+      vars: { feitos: diaTel.telefones, meta: diaTel.metaTelefones, quando: quando(diaTel) },
       tarefa: `ritmo dos telefones abaixo da meta de ${diaTel.metaTelefones} por dia`,
       titulo: `Telefones abaixo da meta (${diaTel.telefones} de ${diaTel.metaTelefones}${diaTel.date === ctx.ref ? ' hoje' : ` em ${ddmm(diaTel.date)}`})`,
       porque: `A meta é ${diaTel.metaTelefones} telefones de responsáveis por dia.`,
-      mensagem: `Lolis, ${diaTel.date === ctx.ref ? 'hoje' : 'no último dia'} foram ${diaTel.telefones} telefones de ${diaTel.metaTelefones} da meta. Teve algo que dificultou? Se quiser, a gente vê juntas um jeito de agilizar.`,
     });
 
   // sorteio sem parabéns
@@ -127,9 +152,10 @@ export function cobrancas(ctx, metas) {
     if (r.sorteios > r.sorteiosOk && fimDoDia(r))
       out.push({
         id: `sorteio:${r.date}`,
+        tipo: 'sorteio',
+        vars: { quando: r.date === ctx.ref ? 'de hoje' : `de ${ddmm(r.date)}`, feitos: r.sorteiosOk, total: r.sorteios },
         titulo: `Sorteio ${r.date === ctx.ref ? 'de hoje' : `de ${ddmm(r.date)}`} sem o parabéns (${r.sorteiosOk} de ${r.sorteios})`,
         porque: 'O sorteio diário não foi marcado como feito na página dela.',
-        mensagem: `Lolis, o sorteio ${r.date === ctx.ref ? 'de hoje' : `de ${ddmm(r.date)}`} ficou sem o parabéns no grupo. Consegue postar? Os atletas adoram ver 🎉`,
       });
 
   // saiu cedo sem puxar nada do "Acabou? Puxa daqui"
@@ -137,36 +163,38 @@ export function cobrancas(ctx, metas) {
     if (r.encerrou && r.minutos != null && r.minutos < r.metaMin - (Number(metas.toleranciaMin) || 0) && !r.extras.length)
       out.push({
         id: `cedo:${r.date}`,
-        titulo: `Saiu cedo ${r.date === ctx.ref ? 'hoje' : `em ${ddmm(r.date)}`} (${hm(r.minutos)} de ${hm(r.metaMin)}) sem puxar nada extra`,
+        tipo: 'cedo',
+        vars: { quando: quando(r), hora: horaDe(r.saida) || 'cedo', horas: hm(r.minutos) },
+        titulo: `Saiu cedo ${quando(r)} (${hm(r.minutos)} de ${hm(r.metaMin)}) sem puxar nada extra`,
         porque: `Saiu às ${horaDe(r.saida) || '?'} e não puxou nada do "Acabou? Puxa daqui".`,
-        mensagem: `Lolis, vi que ${r.date === ctx.ref ? 'hoje' : `em ${ddmm(r.date)}`} você saiu às ${horaDe(r.saida) || 'cedo'} e não puxou nada do "Acabou? Puxa daqui". Tudo certo por aí? Quando sobrar tempo, pode puxar de lá, tá? 💚`,
       });
 
-  return out;
+  return out.map(comMensagem(modelos));
 }
 
 // ── O que elogiar ── (só o dia de hoje, e o anterior se hoje ainda não começou)
-export function elogios(ctx) {
+export function elogios(ctx, modelos = {}) {
   const { hoje, anterior } = ctx;
   const r = hoje && (hoje.feitas || hoje.entrada) ? hoje : anterior;
   if (!r) return [];
   const quando = r.date === ctx.ref ? 'hoje' : `em ${ddmm(r.date)}`;
   const out = [];
   if (r.metaTelefones > 0 && r.telefones != null && r.telefones >= r.metaTelefones)
-    out.push({ id: `tel:${r.date}`, titulo: `Bateu a meta de telefones ${quando} (${r.telefones} de ${r.metaTelefones})`, mensagem: `Lolis, ${r.telefones} telefones ${quando}, bateu a meta! Mandou muito bem 👏` });
+    out.push({ id: `tel:${r.date}`, tipo: 'elogio-telefones', vars: { feitos: r.telefones, meta: r.metaTelefones, quando }, titulo: `Bateu a meta de telefones ${quando} (${r.telefones} de ${r.metaTelefones})` });
   if (r.total > 0 && r.feitas === r.total)
-    out.push({ id: `tudo:${r.date}`, titulo: `Fechou todas as ${r.total} tarefas ${quando}`, mensagem: `Lolis, você fechou todas as tarefas ${quando}. Obrigada pelo capricho 💚` });
+    out.push({ id: `tudo:${r.date}`, tipo: 'elogio-tudo', vars: { total: r.total, quando }, titulo: `Fechou todas as ${r.total} tarefas ${quando}` });
   if (r.extras.length)
     out.push({
       id: `extra:${r.date}`,
+      tipo: 'elogio-extra',
+      vars: { extra: r.extras.length > 1 ? `${r.extras.length} coisas` : `"${curto(r.extras[0].titulo)}"`, total: r.extras.length },
       titulo: `Puxou ${r.extras.length} extra${r.extras.length > 1 ? 's' : ''} do "Acabou? Puxa daqui"`,
-      mensagem: `Lolis, vi que você terminou e já puxou ${r.extras.length > 1 ? `${r.extras.length} coisas` : `"${curto(r.extras[0].titulo)}"`} do "Acabou? Puxa daqui". Adoro essa iniciativa, obrigada!`,
     });
   if (r.sorteios > 0 && r.sorteiosOk === r.sorteios)
-    out.push({ id: `sorteio-ok:${r.date}`, titulo: `Sorteio ${quando} completo, com parabéns`, mensagem: `Lolis, o sorteio ${quando} ficou redondinho, com parabéns e tudo. Obrigada! 🎉` });
+    out.push({ id: `sorteio-ok:${r.date}`, tipo: 'elogio-sorteio', vars: { quando }, titulo: `Sorteio ${quando} completo, com parabéns` });
   if (r.entrada && !r.atrasoChegada && r.encerrou && r.minutos >= r.metaMin - 15)
-    out.push({ id: `ponto:${r.date}`, titulo: `Chegou no horário e cumpriu a jornada ${quando}`, mensagem: `Lolis, obrigada pela pontualidade ${quando} 💚 Faz muita diferença.` });
-  return out;
+    out.push({ id: `ponto:${r.date}`, tipo: 'elogio-ponto', vars: { quando, hora: horaDe(r.entrada) }, titulo: `Chegou no horário e cumpriu a jornada ${quando}` });
+  return out.map(comMensagem(modelos));
 }
 
 // ── Semana: placar e pauta da conversa de sexta ──

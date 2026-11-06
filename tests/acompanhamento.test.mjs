@@ -1,7 +1,7 @@
 // Testes do Acompanhamento da Lolis (rodar com: npm test). Dados de exemplo, sem nomes reais.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { resumoDoDia, cobrancas, elogios, semana, escalar, telefonesNoDia, guardarTelefones, metaTelefones, diasUteisEntre, METAS_PADRAO } from '../src/lib/acompanhamento.js';
+import { resumoDoDia, cobrancas, elogios, semana, escalar, telefonesNoDia, guardarTelefones, metaTelefones, diasUteisEntre, METAS_PADRAO, MODELOS_PADRAO, preencher } from '../src/lib/acompanhamento.js';
 
 const REF = '2026-11-06'; // sexta
 const M = { ...METAS_PADRAO };
@@ -66,7 +66,7 @@ test('expansão vencida vira cobrança com a cidade na mensagem', () => {
   const hoje = resumoDoDia(dia(), M, 0);
   const c = cobrancas(ctx(hoje, { expansao: { itens: [{ key: 't:e', titulo: '[Expansão Tênis Cidade X] Telefone do responsável', cidade: 'Cidade X', ate: '2026-11-02', vencida: true, faltam: 7 }] } }), M);
   assert.equal(c.length, 1);
-  assert.match(c[0].mensagem, /Cidade X travou um pouco/);
+  assert.match(c[0].mensagem, /prazo de Cidade X venceu em 02\/11 e ainda faltam 7 locais/);
 });
 
 test('escalar: entra na lista, depois de 2 dias úteis vira tarefa uma vez só, e sai quando resolve', () => {
@@ -94,4 +94,20 @@ test('semana: soma o placar e monta a pauta com o que travou', () => {
   assert.equal(s.metaHoras, 480);
   assert.ok(s.pauta.some((p) => /Tarefa B/.test(p) && /quinta/.test(p)));
   assert.ok(s.pauta.some((p) => /9 de 10/.test(p)));
+});
+
+test('modelos: o texto editado pela Laura troca as variáveis; vazio volta ao padrão', () => {
+  assert.equal(preencher('Oi {cidade}, faltam {faltam}. {nada}', { cidade: 'X', faltam: 3 }), 'Oi X, faltam 3. {nada}');
+  const hoje = resumoDoDia(dia(), M, 0);
+  const exp = { itens: [{ key: 't:e', titulo: '[Expansão Tênis Cidade X] Telefone', cidade: 'Cidade X', ate: '2026-11-02', vencida: true, faltam: 7 }] };
+  const [c] = cobrancas(ctx(hoje, { expansao: exp }), M, { expansao: 'Lolis, como está {cidade}? Faltam {faltam}.' });
+  assert.equal(c.mensagem, 'Lolis, como está Cidade X? Faltam 7.');
+  assert.equal(cobrancas(ctx(hoje, { expansao: exp }), M, { expansao: '  ' })[0].mensagem, preencher(MODELOS_PADRAO.expansao.texto, c.vars));
+  const el = elogios(ctx(resumoDoDia(dia({ feitos: ['t:a', 't:b'] }), M, 0)), { 'elogio-tudo': 'Fechou as {total}!' });
+  assert.equal(el.find((e) => e.tipo === 'elogio-tudo').mensagem, 'Fechou as 2!');
+});
+
+test('todo tipo usado nas regras tem modelo padrão, e as variáveis do padrão existem', () => {
+  for (const [tipo, m] of Object.entries(MODELOS_PADRAO))
+    for (const v of m.texto.match(/\{(\w+)\}/g) || []) assert.ok(v.slice(1, -1) in m.vars, `${tipo}: ${v}`);
 });

@@ -1057,6 +1057,14 @@ export function StoreProvider({ user, children }) {
           for (const k of Object.keys(m)) if (m[k] === '' || m[k] == null) delete m[k];
           return { ...s, lolisMetas: m };
         }),
+      // modelo da mensagem de cada tipo de cobrança/elogio (vazio = volta ao texto padrão)
+      setLolisModelo: (tipo, texto) =>
+        setState((s) => {
+          const m = { ...(s.lolisModelos || {}) };
+          if (texto && texto.trim()) m[tipo] = texto;
+          else delete m[tipo];
+          return { ...s, lolisModelos: m };
+        }),
       // cobrança que fica na lista N dias úteis vira tarefa da Laura "Cobrar Lolis: …" (com o contexto nas notas)
       escalarCobrancasLolis: (ativas) =>
         setState((s) => {
