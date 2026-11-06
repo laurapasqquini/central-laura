@@ -10,6 +10,7 @@ import { CALENDARIOS } from '../data/calendarios';
 import { jaExiste, chaveDe } from './financas';
 import { aplicarHubLaura } from './hubLaura.js';
 import { planoInicial } from './plano';
+import { guardarTelefones, escalar, diasUteisEntre, metasLolis } from './acompanhamento.js';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
 // Tudo é salvo como um único documento por usuária, sincronizado entre PC e iPhone.
@@ -698,7 +699,12 @@ export function StoreProvider({ user, children }) {
           }
           if (!d) continue;
           const em = new Date(r.created_at).toISOString();
-          if (r.conta === 'expansao' && Array.isArray(d.projetos)) s = { ...s, expansaoHub: { em, projetos: d.projetos } };
+          if (r.conta === 'expansao' && Array.isArray(d.projetos)) {
+            // e a leitura do dia, para o Acompanhamento contar quantos telefones a Lolis anotou em cada dia
+            const dia = new Date(r.created_at).toLocaleDateString('sv-SE');
+            const ultimo = Object.keys(s.telefonesHist || {}).sort().at(-1) || '';
+            s = { ...s, expansaoHub: { em, projetos: d.projetos }, telefonesHist: dia >= ultimo ? guardarTelefones(s.telefonesHist, dia, d.projetos) : s.telefonesHist };
+          }
           if (r.conta === 'pagantes' && d.pracas) {
             const mes = em.slice(0, 7);
             s = { ...s, pagantesHub: { em, total: d.total, pracas: d.pracas }, pagantesMes: { ...(s.pagantesMes || {}), [mes]: { total: d.total, pracas: d.pracas, em } } };
@@ -1044,6 +1050,22 @@ export function StoreProvider({ user, children }) {
         }),
       setLolisAvisos: (avisos) => setState((s) => ({ ...s, lolisAvisos: avisos })),
       setLolisBanco: (fn) => setState((s) => ({ ...s, lolisBanco: fn(s.lolisBanco || []) })),
+      // Acompanhamento da Lolis: metas editáveis (vazio = volta ao padrão)
+      setLolisMetas: (patch) =>
+        setState((s) => {
+          const m = { ...(s.lolisMetas || {}), ...patch };
+          for (const k of Object.keys(m)) if (m[k] === '' || m[k] == null) delete m[k];
+          return { ...s, lolisMetas: m };
+        }),
+      // cobrança que fica na lista N dias úteis vira tarefa da Laura "Cobrar Lolis: …" (com o contexto nas notas)
+      escalarCobrancasLolis: (ativas) =>
+        setState((s) => {
+          const ref = today();
+          const { reg, criar } = escalar(s.lolisCobrancas, ativas, ref, (desde) => diasUteisEntre(desde, ref, (d) => isWorkday(s, d)), metasLolis(s));
+          if (reg === s.lolisCobrancas && !criar.length) return s;
+          const novas = criar.map((t) => ({ id: uid(), done: false, createdAt: ref, postponed: 0, who: 'laura', area: 'ranken', urgent: false, due: ref, ...t }));
+          return { ...s, lolisCobrancas: reg, tasks: [...novas, ...s.tasks] };
+        }),
       setMelhoresWho: (who) => setState((s) => ({ ...s, melhoresWho: who })),
       // Plano: iniciativas, radar descartado, metas do mês e números da semana
       // links dos modelos do Canva da Lolis (6x0, vouchers)

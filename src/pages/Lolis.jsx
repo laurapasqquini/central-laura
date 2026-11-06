@@ -8,6 +8,7 @@ import LolisPublica from './LolisPublica';
 import PontoLolis from '../components/PontoLolis';
 import BancoLolis from '../components/BancoLolis';
 import { EntregasResumo } from '../components/Entregas';
+import AcompanhamentoLolis from '../components/AcompanhamentoLolis';
 
 export default function Lolis() {
   const { state } = useStore();
@@ -49,13 +50,16 @@ export default function Lolis() {
         onChange={setVista}
         options={[
           ['pagina', '👀 O que ela vê', 'bg-amber-500 text-white ring-transparent'],
+          ['acomp', '📋 Acompanhamento', 'bg-amber-500 text-white ring-transparent'],
           ['ponto', '⏰ Ponto', 'bg-amber-500 text-white ring-transparent'],
           ['banco', '🙌 Acabou? Puxa daqui', 'bg-amber-500 text-white ring-transparent'],
           ['gestao', '⚙️ Delegado, link e frases', 'bg-amber-500 text-white ring-transparent'],
         ]}
       />
 
-      {vista === 'ponto' ? (
+      {vista === 'acomp' ? (
+        <AcompanhamentoLolis />
+      ) : vista === 'ponto' ? (
         <PontoLolis />
       ) : vista === 'banco' ? (
         <BancoLolis />
