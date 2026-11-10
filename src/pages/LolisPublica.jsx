@@ -30,7 +30,7 @@ class Protecao extends Component {
     if (this.state.erro)
       return (
         <div className="rounded-xl border border-dashed border-red-200 bg-white px-4 py-4 text-center text-sm text-red-600">
-          Não consegui mostrar esta parte. Peça para a Laura abrir a central (ela atualiza a página) e dê F5 aqui.
+          Não consegui mostrar esta parte. Peça para a Lau abrir a central (ela atualiza a página) e dê F5 aqui.
         </div>
       );
     return this.props.children;
@@ -57,7 +57,7 @@ export default function LolisPublica({ token, embutida }) {
   }, [token]);
 
   if (dados === undefined) return embutida ? <Caixa>Carregando a página da Lolis…</Caixa> : <Tela>Carregando…</Tela>;
-  if (!dados) return embutida ? <Caixa>Não consegui abrir a página dela. Tente "trocar link" em Delegado, link e frases.</Caixa> : <Tela>Link inválido ou desatualizado. Peça o link novo para a Laura.</Tela>;
+  if (!dados) return embutida ? <Caixa>Não consegui abrir a página dela. Tente "trocar link" em Delegado, link e frases.</Caixa> : <Tela>Link inválido ou desatualizado. Peça o link novo para a Lau.</Tela>;
 
   const hoje = today();
   const dias = (dados.dias || []).filter((d) => d.date >= hoje);
@@ -99,7 +99,7 @@ export default function LolisPublica({ token, embutida }) {
           </div>
         )}
 
-        {!dia ? <Caixa>Nada publicado para hoje ainda. A Laura atualiza quando abre a central.</Caixa> : <Protecao key={dia.date}><Dia dia={dia} andamento={dados.andamento || []} banco={dia.date === hoje ? dados.banco || [] : []} adiantar={dia.date === hoje ? dados.adiantar || [] : []} expansao={dia.date === hoje ? dados.expansao || null : null} token={token} /></Protecao>}
+        {!dia ? <Caixa>Nada publicado para hoje ainda. A Lau atualiza quando abre a central.</Caixa> : <Protecao key={dia.date}><Dia dia={dia} andamento={dados.andamento || []} banco={dia.date === hoje ? dados.banco || [] : []} adiantar={dia.date === hoje ? dados.adiantar || [] : []} expansao={dia.date === hoje ? dados.expansao || null : null} token={token} /></Protecao>}
       </div>
     </div>
   );
@@ -552,7 +552,7 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
             </Secao>
           )}
 
-          <Caixa>No fim do dia, manda pra Laura no WhatsApp o que você fez 💚</Caixa>
+          <Caixa>No fim do dia, manda pra Lau no WhatsApp o que você fez 💚</Caixa>
         </>
       ) : (
         <>
@@ -804,7 +804,7 @@ function Tarefa({ t, feito, marca, onMarcar }) {
         {/* veio do WhatsApp da Laura: lembrar de responder o atleta por lá */}
         {t.retorno && !feito && (
           <span className="mt-2 block rounded-lg bg-amber-100 px-3 py-2 text-sm font-bold text-amber-900 ring-1 ring-amber-300">
-            📲 Fez a tarefa? Não esquece de dar o retorno pro atleta no WhatsApp da Laura!
+            📲 Fez a tarefa? Não esquece de dar o retorno pro atleta no WhatsApp da Lau!
           </span>
         )}
         {/* imagens que a Laura anexou: clica e abre grande */}

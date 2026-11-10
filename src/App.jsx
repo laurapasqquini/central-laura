@@ -86,7 +86,7 @@ function Shell() {
           {!fechado && (
             <div className="min-w-0 flex-1">
               <div className="font-bold leading-tight">Central</div>
-              <div className="text-xs text-indigo-300">da Laura</div>
+              <div className="text-xs text-indigo-300">da Lau</div>
             </div>
           )}
           <button onClick={alternarMenu} title={fechado ? 'Abrir menu' : 'Recolher menu'} className="rounded-lg p-1.5 text-indigo-300 hover:bg-white/10 hover:text-white">

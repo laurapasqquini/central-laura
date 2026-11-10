@@ -345,7 +345,7 @@ export function buildAgenda(state, ref = today()) {
       if (atrasadas.length) partes.push(`${atrasadas.length} ${atrasadas.length === 1 ? 'atrasada' : 'atrasadas'}`);
       const destaque = [...atrasadas, ...urgentes, ...minhas.filter((x) => x.kind === 'task')];
       slots.manha = {
-        title: ['☀️ Bom dia, Laura', ...partes].join(' · '),
+        title: ['☀️ Bom dia, Lau', ...partes].join(' · '),
         body: [
           ...marcos.map((m) => `📌 ${corta(m.title, 70)}`),
           (() => {

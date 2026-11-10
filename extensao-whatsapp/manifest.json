@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Central da Laura",
-  "version": "1.42",
-  "description": "Botão ➕ Central no WhatsApp Web e números do Beach Tênis do RANKEN Hub direto na Central da Laura.",
+  "name": "Central da Lau",
+  "version": "1.43",
+  "description": "Botão ➕ Central no WhatsApp Web e números do Beach Tênis do RANKEN Hub direto na Central da Lau.",
   "permissions": [
     "storage",
     "contextMenus",
@@ -16,7 +16,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Central da Laura"
+    "default_title": "Central da Lau"
   },
   "content_scripts": [
     {

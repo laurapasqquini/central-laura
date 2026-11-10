@@ -8,7 +8,7 @@ self.addEventListener('push', (event) => {
     d = { body: event.data && event.data.text() };
   }
   event.waitUntil(
-    self.registration.showNotification(d.title || 'Central da Laura', {
+    self.registration.showNotification(d.title || 'Central da Lau', {
       body: d.body || '',
       icon: 'icon.svg',
       badge: 'icon.svg',

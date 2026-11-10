@@ -74,7 +74,7 @@ export default function Inicio({ go }) {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-slate-500 first-letter:uppercase">{fmtLongo(ref)}</p>
-          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{saud}, Laura</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">{saud}, Lau</h1>
         </div>
         {meusHoje.length > 0 && (
           <div className="w-40 space-y-1 text-right">

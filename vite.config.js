@@ -16,7 +16,7 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'Central da Laura',
+        name: 'Central da Lau',
         short_name: 'Central',
         description: 'Organização pessoal e profissional: RANKEN, Gralha Azul e vida pessoal',
         theme_color: '#1e1b4b',

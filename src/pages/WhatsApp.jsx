@@ -150,7 +150,7 @@ function Item({ c }) {
                 who,
                 due: today(),
                 urgent: c.tipo === 'prometi',
-                notes: `Veio da aba 💬 WhatsApp (${c.tipo === 'prometi' ? 'a Laura prometeu' : c.tipo === 'responder' ? 'esperando resposta' : 'esperando o outro'})`,
+                notes: `Veio da aba 💬 WhatsApp (${c.tipo === 'prometi' ? 'a Lau prometeu' : c.tipo === 'responder' ? 'esperando resposta' : 'esperando o outro'})`,
                 ...(who === 'lolis' ? { entradaId: `whats:${c.nome}` } : { whats: true }), // a minha fica só aqui na aba
               });
               resolverWhats(c.nome, c.prev);

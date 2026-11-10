@@ -26,7 +26,7 @@ function botao(msg) {
   const b = document.createElement('button');
   b.className = 'central-btn';
   b.textContent = '➕ Central';
-  b.title = 'Virar tarefa na Central da Laura';
+  b.title = 'Virar tarefa na Central da Lau';
   b.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
