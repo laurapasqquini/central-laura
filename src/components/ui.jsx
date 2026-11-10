@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
 import { AREAS } from '../lib/engine';
 import { parseQuick } from '../lib/parse';
@@ -196,6 +196,14 @@ export function QuickAdd({ defaultArea }) {
   const [focado, setFocado] = useState(false); // os atalhos só aparecem com o campo em uso
   const gasto = text.trim() ? gastoRapido(text) : null;
   const preview = text.trim() && !gasto ? parseQuick(text, { area: defaultArea }) : null;
+  // a caixa quebra a linha e cresce para baixo conforme o texto (em vez de rolar para o lado)
+  const caixa = useRef(null);
+  useEffect(() => {
+    const el = caixa.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [text]);
 
   const submit = (e) => {
     e.preventDefault();
@@ -226,11 +234,17 @@ export function QuickAdd({ defaultArea }) {
 
   return (
     <form onSubmit={submit} className="rounded-lg bg-white p-2 shadow-sm ring-1 ring-slate-200">
-      <div className="flex items-center gap-2">
-        <span className="pl-2 text-slate-400">＋</span>
-        <input
+      <div className="flex items-end gap-2">
+        <span className="self-start pl-2 pt-2 text-slate-400">＋</span>
+        <textarea
+          ref={caixa}
+          rows={1}
           value={text}
-          onChange={(e) => setText(e.target.value)}
+          // Enter cria (como antes); a quebra de linha é só visual, a tarefa continua sendo uma frase
+          onChange={(e) => setText(e.target.value.replace(/\n/g, ' '))}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.nativeEvent.isComposing) submit(e);
+          }}
           onFocus={() => setFocado(true)}
           onBlur={() => setFocado(false)}
           onPaste={(e) => {
@@ -241,7 +255,7 @@ export function QuickAdd({ defaultArea }) {
             }
           }}
           placeholder="Anotar… ex.: pedir pra @lolis contar estoque sexta !urgente (Ctrl+V cola imagem)"
-          className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-slate-400"
+          className="min-w-0 flex-1 resize-none overflow-hidden bg-transparent py-2 text-[15px] leading-snug outline-none placeholder:text-slate-400"
         />
         <button className="rounded-xl bg-ink px-4 py-2 text-sm font-bold text-white disabled:opacity-30" disabled={(!preview?.title && !gasto) || enviando}>
           {enviando ? 'Enviando…' : gasto ? 'Lançar' : 'Criar'}
