@@ -1022,6 +1022,7 @@ export function StoreProvider({ user, children }) {
         }),
       updatePedido: (id, patch) =>
         setState((s) => {
+          if (!s.pedidos.some((p) => p.id === id)) return s; // já excluído (ex.: rascunho do contrato salvando depois de excluir)
           const s2 = { ...s, pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, ...patch } : p)) };
           if (!('envioAte' in patch) && !('cliente' in patch)) return s2;
           const tasks = tarefasEnvio(s2, s2.pedidos.find((p) => p.id === id));

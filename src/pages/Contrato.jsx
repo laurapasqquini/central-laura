@@ -98,7 +98,7 @@ function contratoInicial(p, cat) {
 }
 
 export default function Contrato({ pedido, cat, onVoltar }) {
-  const { updatePedido, moveStage } = useStore();
+  const { updatePedido, moveStage, deletePedido } = useStore();
   // desconto de ativação: vem do orçamento (também nos rascunhos de contrato feitos antes de existir)
   const [c, setC] = useState(() => ({ desconto: pedido.descontoTexto || '', ativacao: pedido.ativacao || '', envioAte: pedido.envioAte || '', ...(pedido.contrato || contratoInicial(pedido, cat)) }));
   const [fotos, setFotos] = useState({}); // { itemKey: [{dataUrl,w,h,nome}] }
@@ -303,6 +303,16 @@ export default function Contrato({ pedido, cat, onVoltar }) {
               Marcar como contrato enviado
             </button>
           )}
+          <button
+            onClick={() => {
+              if (!confirm(`Excluir o pedido de ${pedido.cliente}? Some o pedido, o contrato e as tarefas dele.`)) return;
+              onVoltar();
+              deletePedido(pedido.id);
+            }}
+            className="ml-auto rounded-xl px-4 py-3 text-sm font-semibold text-red-500 ring-1 ring-red-200"
+          >
+            Excluir
+          </button>
         </div>
         {msg && <p className="text-sm font-medium text-slate-600">{msg}</p>}
       </div>

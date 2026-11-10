@@ -600,6 +600,9 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar, onDuplicar, onClie
         <button onClick={() => setPerdendo(!perdendo)} className="rounded-xl px-3 py-1.5 text-xs font-semibold text-slate-400 ring-1 ring-slate-200">
           Perdido
         </button>
+        <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}? Some o pedido, o contrato e as tarefas dele.`) && deletePedido(p.id)} className="rounded-xl px-3 py-1.5 text-xs font-semibold text-red-500 ring-1 ring-red-200">
+          Excluir
+        </button>
       </div>
       {follow && FOLLOW[p.stage] && <TextoCopiar texto={FOLLOW[p.stage](p)} />}
       {perdendo && (
@@ -618,9 +621,6 @@ function CartaoPedido({ p, cfg, parado, onContrato, onEditar, onDuplicar, onClie
           <div className="flex flex-wrap gap-3 text-xs font-semibold">
             <button onClick={() => onCliente(p.id)} className="text-sky-600">👤 Ficha do cliente</button>
             <button onClick={() => onDuplicar(p.id)} className="text-sky-600">⧉ Duplicar orçamento</button>
-            <button onClick={() => confirm(`Excluir o pedido de ${p.cliente}?`) && deletePedido(p.id)} className="ml-auto text-red-500">
-              Excluir pedido
-            </button>
           </div>
         </div>
       )}
