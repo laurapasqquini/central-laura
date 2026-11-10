@@ -194,8 +194,11 @@ export function QuickAdd({ defaultArea }) {
   const [enviando, setEnviando] = useState(false);
   const [lancado, setLancado] = useState('');
   const [focado, setFocado] = useState(false); // os atalhos só aparecem com o campo em uso
-  const gasto = text.trim() ? gastoRapido(text) : null;
-  const preview = text.trim() && !gasto ? parseQuick(text, { area: defaultArea }) : null;
+  // 1ª linha = a tarefa (com #área, data, @lolis…); as linhas de baixo (Shift+Enter) vão para as notas
+  const [linha1, ...demais] = text.split('\n');
+  const notas = demais.join('\n').trim();
+  const gasto = linha1.trim() && !notas ? gastoRapido(linha1) : null;
+  const preview = linha1.trim() && !gasto ? { ...parseQuick(linha1, { area: defaultArea }), ...(notas ? { notes: notas } : {}) } : null;
   // a caixa quebra a linha e cresce para baixo conforme o texto (em vez de rolar para o lado)
   const caixa = useRef(null);
   useEffect(() => {
@@ -240,10 +243,10 @@ export function QuickAdd({ defaultArea }) {
           ref={caixa}
           rows={1}
           value={text}
-          // Enter cria (como antes); a quebra de linha é só visual, a tarefa continua sendo uma frase
-          onChange={(e) => setText(e.target.value.replace(/\n/g, ' '))}
+          // Enter cria; Shift+Enter desce a linha (o que vem embaixo vira nota da tarefa)
+          onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.nativeEvent.isComposing) submit(e);
+            if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) submit(e);
           }}
           onFocus={() => setFocado(true)}
           onBlur={() => setFocado(false)}
@@ -286,7 +289,7 @@ export function QuickAdd({ defaultArea }) {
       )}
       {!text && focado && (
         <div className="hidden px-2 pb-1 text-[11px] text-slate-400 sm:block">
-          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>#whats</b> = aba WhatsApp · <b>@lolis</b> delega · <b>!urgente</b> · sem data escrita = hoje · amanhã, sexta, 15/10, em 3 dias · <b>sem data</b> = sem dia · <b>gastei 45 ifood</b> / <b>recebi 300 pix</b> = Financeiro
+          <b>#ranken #gralha #pessoal</b> escolhe a área · <b>#hub</b> = fazer no Hub · <b>#whats</b> = aba WhatsApp · <b>@lolis</b> delega · <b>!urgente</b> · sem data escrita = hoje · amanhã, sexta, 15/10, em 3 dias · <b>sem data</b> = sem dia · <b>gastei 45 ifood</b> / <b>recebi 300 pix</b> = Financeiro · <b>Shift+Enter</b> desce a linha: o que vem embaixo vira nota
         </div>
       )}
     </form>
