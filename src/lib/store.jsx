@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from './supabase';
-import { today, addDays, nextWorkday } from './dates';
+import { today, addDays, nextWorkday, toStr } from './dates';
+import { atualizarHistorico, marcarContato } from './inadimplentes.js';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 import { leituraDeBusca } from './whats';
 import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES, chaveApoiador, PIX_HUB, isWorkday } from './engine';
@@ -718,7 +719,11 @@ export function StoreProvider({ user, children }) {
           } catch {
             /* ignora */
           }
-          if (Array.isArray(d?.itens)) s = { ...s, inadimplentesHub: { em: new Date(r.created_at).toISOString(), itens: d.itens } };
+          if (!Array.isArray(d?.itens)) continue;
+          s = { ...s, inadimplentesHub: { em: new Date(r.created_at).toISOString(), itens: d.itens } };
+          // histórico por pessoa (episódios e contatos): só avança com listas novas
+          const dia = toStr(new Date(r.created_at));
+          if (dia >= (s.inadHistDia || '')) s = { ...s, inadHist: atualizarHistorico(s.inadHist, d.itens, dia, s.inadHist ? {} : s.inadimplentesContato || {}), inadHistDia: dia };
         }
         for (const r of rows.filter((x) => x.conta === 'pix')) {
           let d = null;
@@ -916,12 +921,11 @@ export function StoreProvider({ user, children }) {
           return { ...s, routineDone };
         }),
       // inadimplentes: "falei hoje" (data do contato, por id da cobrança) e as mensagens padrão editáveis
-      falarInadimplente: (id, dia) =>
+      // x = a pessoa da lista; dia = data do contato (null desfaz o de hoje)
+      falarInadimplente: (x, dia) =>
         setState((s) => {
-          const c = { ...(s.inadimplentesContato || {}) };
-          if (dia) c[id] = dia;
-          else delete c[id];
-          return { ...s, inadimplentesContato: c };
+          const base = s.inadHist || atualizarHistorico({}, s.inadimplentesHub?.itens || [], today(), s.inadimplentesContato || {});
+          return { ...s, inadHist: marcarContato(base, x, dia, today()) };
         }),
       setMsgInadimplentes: (patch) => setState((s) => ({ ...s, msgInadimplentes: { ...(s.msgInadimplentes || {}), ...patch } })),
       // cobrança Pix (vem do Hub todo dia): passa para a Lolis ou volta para a Laura

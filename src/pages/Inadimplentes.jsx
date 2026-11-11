@@ -3,14 +3,30 @@
 // Cada pessoa tem a mensagem pronta; quem paga ou cancela sai da lista do Hub e some daqui sozinha.
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { today, addDays, fmtCurto, relativo } from '../lib/dates';
+import { today, fmtCurto, relativo } from '../lib/dates';
+import { atualizarHistorico, situacao, VOLTA_EM } from '../lib/inadimplentes.js';
 import { Empty } from '../components/ui';
 
+// a mensagem certa sai sozinha do histórico da pessoa: 1º contato (pelo status), follow-up ou "inadimplente de novo"
 export const MSG_INADIMPLENTES = {
-  vai: 'Oi, {nome}! Tudo bem? Aqui é a Laura, do RANKEN 🎾 O pagamento da sua mensalidade não passou, e se a próxima tentativa também falhar o app bloqueia o seu acesso aos jogos. Consegue conferir o cartão no app (Perfil › Assinaturas)? Se preferir, te mando o Pix. Qualquer coisa me fala!',
-  bloqueado: 'Oi, {nome}! Tudo bem? Aqui é a Laura, do RANKEN 🎾 Vi que o pagamento da sua mensalidade de {esporte} não passou nas últimas tentativas e por isso o seu acesso ao app ficou bloqueado. Aconteceu alguma coisa? Se quiser voltar a jogar, é só atualizar o cartão no app ou eu te mando o Pix. Se a ideia for pausar ou sair, me avisa que eu te ajudo.',
+  vai: 'Oii, {nome}, tudo bem? Aqui é a Lau, do RANKEN 🎾 O pagamento da sua mensalidade não passou, e se a próxima tentativa também falhar o app bloqueia o seu acesso aos jogos. Consegue conferir o cartão no app (Perfil › Assinaturas)? Se preferir, te mando o Pix. Qualquer coisa me fala!',
+  bloqueado: 'Oii, {nome}, tudo bem? Aqui é a Lau, do RANKEN 🎾 Vi que o pagamento da sua mensalidade de {esporte} não passou nas últimas tentativas e por isso o seu acesso ao app ficou bloqueado. Aconteceu alguma coisa? Se quiser voltar a jogar, é só atualizar o cartão no app ou eu te mando o Pix. Se a ideia for pausar ou sair, me avisa que eu te ajudo.',
+  followup: 'Oii, {nome}, tudo bem? Aqui é a Lau, do RANKEN 🎾 Passando de novo por aqui porque o pagamento da sua mensalidade ainda não passou. Conseguiu dar uma olhadinha no cartão (Perfil › Assinaturas)? Se for mais fácil, te mando o Pix agora mesmo. Qualquer coisa, me chama!',
+  followupBloqueado: 'Oii, {nome}, tudo bem? Aqui é a Lau, do RANKEN 🎾 Voltando aqui sobre a sua mensalidade de {esporte}: o acesso ao app continua bloqueado porque o pagamento não passou. Quer que eu te mande o Pix pra você voltar a jogar? Se a ideia for pausar ou sair, tudo bem também, é só me falar que eu resolvo por aqui.',
+  reincidente: 'Oii, {nome}, tudo bem? Aqui é a Lau, do RANKEN 🎾 O pagamento da sua mensalidade de {esporte} não passou de novo. Às vezes é o cartão que venceu ou trocou. Consegue conferir no app (Perfil › Assinaturas)? Se preferir, te mando o Pix. Qualquer coisa me fala!',
 };
-const VOLTA_EM = 5; // dias depois do "falei" para a pessoa voltar a pedir atenção
+const ROTULO_MSG = [
+  ['vai', '1º contato · vai bloquear'],
+  ['bloqueado', '1º contato · já bloqueado'],
+  ['followup', 'Follow-up (2º contato em diante) · vai bloquear'],
+  ['followupBloqueado', 'Follow-up (2º contato em diante) · já bloqueado'],
+  ['reincidente', 'Inadimplente de novo (já pagou uma vez e voltou)'],
+];
+// qual modelo usar para a pessoa
+const chaveMsg = (sit, x) => (sit.tipo === 'followup' ? (x.status === 'unpaid' ? 'followupBloqueado' : 'followup') : sit.tipo);
+const mesAno = (d) => (d ? `${d.slice(5, 7)}/${d.slice(0, 4)}` : '');
+// o histórico salvo; antes da primeira lista nova, monta na hora a partir do "falei hoje" antigo
+const histDe = (state) => state.inadHist || atualizarHistorico({}, state.inadimplentesHub?.itens || [], today(), state.inadimplentesContato || {});
 
 const primeiroNome = (n = '') => {
   const w = n.trim().split(/\s+/)[0] || '';
@@ -21,8 +37,8 @@ const telWhats = (t = '') => (t.length >= 12 ? t : `55${t}`);
 
 // quantos pedem atenção (para o número na aba): sem contato ou com contato há mais de 5 dias
 export function contaInadimplentes(state, ref = today()) {
-  const c = state.inadimplentesContato || {};
-  return (state.inadimplentesHub?.itens || []).filter((x) => !c[x.id] || c[x.id] <= addDays(ref, -VOLTA_EM)).length;
+  const hist = histDe(state);
+  return (state.inadimplentesHub?.itens || []).filter((x) => situacao(hist, x, ref).pedeAtencao).length;
 }
 
 
@@ -41,16 +57,19 @@ export default function Inadimplentes() {
   const [verFalei, setVerFalei] = useState(false);
   const hub = state.inadimplentesHub;
   const itens = hub?.itens || [];
-  const contato = state.inadimplentesContato || {};
-  const msgs = { ...MSG_INADIMPLENTES, ...(state.msgInadimplentes || {}) };
-  const pede = (x) => !contato[x.id] || contato[x.id] <= addDays(ref, -VOLTA_EM);
+  const hist = histDe(state);
+  const sit = Object.fromEntries(itens.map((x) => [x.id, situacao(hist, x, ref)]));
+  const proprias = Object.fromEntries(Object.entries(state.msgInadimplentes || {}).filter(([, v]) => v));
+  const msgs = { ...MSG_INADIMPLENTES, ...proprias };
+  const pede = (x) => sit[x.id].pedeAtencao;
   const porValor = (a, b) => (b.valor || 0) - (a.valor || 0);
   // quem já recebeu contato (há menos de 5 dias) sai do meio da lista e vai para "Já falei", no fim
   const vai = itens.filter((x) => x.status !== 'unpaid' && pede(x)).sort(porValor);
   const bloqueados = itens.filter((x) => x.status === 'unpaid' && pede(x)).sort(porValor);
-  const falei = itens.filter((x) => !pede(x)).sort((a, b) => (contato[b.id] || '').localeCompare(contato[a.id] || ''));
+  const falei = itens.filter((x) => !pede(x)).sort((a, b) => (sit[b.id].ultimo || '').localeCompare(sit[a.id].ultimo || ''));
   const lidoEm = hub ? new Date(hub.em) : null;
-  const msgDe = (x) => (x.status === 'unpaid' ? msgs.bloqueado : msgs.vai);
+  const msgDe = (x) => msgs[chaveMsg(sit[x.id], x)];
+  const card = (x, cor) => <Pessoa key={x.id} x={x} cor={cor} msg={msgDe(x)} sit={sit[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />;
   const alternar = (id) => setAberta(aberta === id ? null : id);
 
   return (
@@ -78,15 +97,21 @@ export default function Inadimplentes() {
 
       {editar && (
         <div className="space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-          <p className="text-xs text-slate-500">Use {'{nome}'} e {'{esporte}'}: entram sozinhos em cada mensagem.</p>
-          {[
-            ['vai', 'Vai bloquear'],
-            ['bloqueado', 'Já bloqueado'],
-          ].map(([k, rot]) => (
-            <label key={k} className="block space-y-1">
-              <span className="text-sm font-semibold text-slate-800">{rot}</span>
-              <textarea rows={4} defaultValue={msgs[k]} onBlur={(e) => setMsgInadimplentes({ [k]: e.target.value })} className="w-full rounded-lg border border-slate-200 p-2 text-sm outline-none focus:border-slate-400" />
-            </label>
+          <p className="text-xs text-slate-500">
+            A central escolhe sozinha qual usar para cada pessoa: o 1º contato, o follow-up (quando você já falou com ela desta vez) ou &quot;inadimplente de novo&quot; (quando ela já pagou uma vez e voltou para a lista). Use {'{nome}'} e {'{esporte}'}: entram sozinhos.
+          </p>
+          {ROTULO_MSG.map(([k, rot]) => (
+            <div key={k} className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-slate-800">{rot}</span>
+                {proprias[k] && proprias[k] !== MSG_INADIMPLENTES[k] && (
+                  <button onClick={() => setMsgInadimplentes({ [k]: '' })} className="text-xs font-semibold text-slate-500 hover:text-slate-800">
+                    voltar ao padrão
+                  </button>
+                )}
+              </div>
+              <textarea key={msgs[k]} rows={4} defaultValue={msgs[k]} onBlur={(e) => e.target.value.trim() !== msgs[k] && setMsgInadimplentes({ [k]: e.target.value.trim() })} className="w-full rounded-lg border border-slate-200 p-2 text-sm outline-none focus:border-slate-400" />
+            </div>
           ))}
         </div>
       )}
@@ -96,16 +121,12 @@ export default function Inadimplentes() {
 
       {vai.length > 0 && (
         <Grupo cor={COR.vai} titulo={`Vai bloquear (${vai.length})`} dica="O Stripe ainda vai tentar cobrar de novo: dá tempo de evitar o bloqueio.">
-          {vai.map((x) => (
-            <Pessoa key={x.id} x={x} cor={COR.vai} msg={msgDe(x)} falouEm={contato[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />
-          ))}
+          {vai.map((x) => card(x, COR.vai))}
         </Grupo>
       )}
       {bloqueados.length > 0 && (
         <Grupo cor={COR.bloqueado} titulo={`Já bloqueado (${bloqueados.length})`} dica="O Stripe já esgotou as tentativas e o acesso ao app está bloqueado.">
-          {bloqueados.map((x) => (
-            <Pessoa key={x.id} x={x} cor={COR.bloqueado} msg={msgDe(x)} falouEm={contato[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />
-          ))}
+          {bloqueados.map((x) => card(x, COR.bloqueado))}
         </Grupo>
       )}
       {falei.length > 0 && (
@@ -117,9 +138,7 @@ export default function Inadimplentes() {
           {verFalei && (
             <div className="space-y-2">
               <p className="px-1 text-xs text-slate-500">Você já falou com eles. Se em {VOLTA_EM} dias ainda estiverem aqui, voltam para cima.</p>
-              {falei.map((x) => (
-                <Pessoa key={x.id} x={x} cor={COR.falei} msg={msgDe(x)} falouEm={contato[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />
-              ))}
+              {falei.map((x) => card(x, COR.falei))}
             </div>
           )}
         </section>
@@ -149,7 +168,7 @@ function Grupo({ cor, titulo, dica, children }) {
   );
 }
 
-function Pessoa({ x, cor, msg, falouEm, aberta, onAlternar }) {
+function Pessoa({ x, cor, msg, sit, aberta, onAlternar }) {
   const { falarInadimplente } = useStore();
   const ref = today();
   const [copiado, setCopiado] = useState('');
@@ -166,6 +185,10 @@ function Pessoa({ x, cor, msg, falouEm, aberta, onAlternar }) {
   const detalhe = [x.esporte, x.cidade, brl(x.valor), x.tentativas ? `${x.tentativas} tentativas` : null, x.motivo || null].filter(Boolean).join(' · ');
   const contatoHub = x.ultimoContato ? `contato no Hub em ${fmtCurto(x.ultimoContato.slice(0, 10))}` : null;
   const parar = (e) => e.stopPropagation(); // os botões não abrem/fecham o cartão
+  const falouEm = sit.ultimo;
+  // em que contato estamos neste episódio (o de hoje conta como o atual)
+  const n = falouEm === ref ? sit.contatos : sit.contatos + 1;
+  const etapa = n <= 1 ? '1º contato' : `${n}º contato · último em ${fmtCurto(falouEm)}`;
 
   return (
     <div className={`flex overflow-hidden rounded-lg bg-white shadow-sm ring-1 ${aberta ? 'ring-slate-300' : 'ring-slate-200'}`}>
@@ -174,6 +197,10 @@ function Pessoa({ x, cor, msg, falouEm, aberta, onAlternar }) {
         <div role="button" tabIndex={0} onClick={onAlternar} onKeyDown={(e) => e.key === 'Enter' && onAlternar()} className="flex cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-3 hover:bg-slate-50">
           <div className="min-w-[200px] flex-1">
             <div className="text-[15px] font-semibold text-ink">{x.nome || 'Sem nome'}</div>
+            <div className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+              <span className={`rounded px-1.5 py-0.5 ${n <= 1 ? 'bg-slate-100 text-slate-600' : 'bg-sky-50 text-sky-800 ring-1 ring-sky-200'}`}>{etapa}</span>
+              {sit.reincidente && <span className="rounded bg-violet-50 px-1.5 py-0.5 text-violet-800 ring-1 ring-violet-200">inadimplente de novo{sit.ultimaVez ? ` (última vez em ${mesAno(sit.ultimaVez)})` : ''}</span>}
+            </div>
             <div className="text-xs text-slate-500">{detalhe}</div>
             {(falouEm || contatoHub) && <div className="text-xs text-emerald-700">{[falouEm && `você falou ${relativo(falouEm, ref)} (${fmtCurto(falouEm)})`, contatoHub].filter(Boolean).join(' · ')}</div>}
           </div>
@@ -184,11 +211,11 @@ function Pessoa({ x, cor, msg, falouEm, aberta, onAlternar }) {
           )}
           <span className="rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200">{aberta ? 'Fechar ▴' : 'Mensagem ▾'}</span>
           {falouEm === ref ? (
-            <button onClick={(e) => (parar(e), falarInadimplente(x.id, null))} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700" title="Desfazer">
+            <button onClick={(e) => (parar(e), falarInadimplente(x, null))} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700" title="Desfazer">
               falei hoje ✓
             </button>
           ) : (
-            <button onClick={(e) => (parar(e), falarInadimplente(x.id, ref), aberta && onAlternar())} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-white">
+            <button onClick={(e) => (parar(e), falarInadimplente(x, ref), aberta && onAlternar())} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-white">
               Falei hoje
             </button>
           )}
