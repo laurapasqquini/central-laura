@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, chaveApoiador, mensagens6x0, saiuDoRanken } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, chaveApoiador, mensagens6x0 } from '../lib/engine';
 import { today, addDays, fmtCurto } from '../lib/dates';
 import { supabase } from '../lib/supabase';
 import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../components/ui';
@@ -81,7 +81,6 @@ export default function Lolis() {
       <FrasesSorteio />
       <ContatosApoiadores />
       <Mensagem6x0 />
-      <Saiu6x0 />
 
       {late.length > 0 && (
         <Section title="Atrasadas: cobrar retorno" count={late.length} tone="red">
@@ -413,54 +412,6 @@ function ContatosApoiadores() {
           ))}
         </div>
       )}
-    </section>
-  );
-}
-
-// Quem saiu do RANKEN: não vai mais na arte do 6x0 nem recebe a mensagem (a lista fica só nos dados da Laura)
-function Saiu6x0() {
-  const { state, setSaiuDoRanken } = useStore();
-  const [nome, setNome] = useState('');
-  const fora = state.saiuDoRanken || [];
-  // os ganhadores lidos do Hub nesta semana, para tirar com um clique
-  const ganhadores = [...new Set((state.seisZero?.ganhadores || []).map((g) => g.nome))].filter((n) => !saiuDoRanken(state, n)).sort();
-  const add = () => nome.trim() && (setSaiuDoRanken(nome, true), setNome(''));
-  return (
-    <section className="space-y-3 rounded-lg bg-white p-4 shadow-sm ring-1 ring-slate-200">
-      <div>
-        <h2 className="text-sm font-bold uppercase tracking-wide text-amber-700">🚪 Saiu do RANKEN · fora do 6x0</h2>
-        <p className="text-xs text-slate-500">Quem está aqui não aparece na arte do 6x0 6x0 nem na mensagem da Lolis, mesmo que o Hub ainda mostre o jogo.</p>
-      </div>
-      {fora.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {fora.map((n) => (
-            <span key={n} className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 py-0.5 pl-2.5 pr-1 text-xs font-semibold text-slate-700">
-              {n}
-              <button onClick={() => setSaiuDoRanken(n, false)} title="Voltar para o 6x0" className="rounded-full px-1.5 text-slate-400 hover:bg-white hover:text-red-600">
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-      {ganhadores.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-xs font-semibold text-slate-600">Ganhadores do 6x0 desta semana (clique em quem saiu):</p>
-          <div className="flex flex-wrap gap-1.5">
-            {ganhadores.map((n) => (
-              <button key={n} onClick={() => setSaiuDoRanken(n, true)} className="rounded-full px-2.5 py-0.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-300 hover:bg-red-50 hover:text-red-700 hover:ring-red-200">
-                {n} ✕
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="flex gap-2">
-        <input value={nome} onChange={(e) => setNome(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && add()} placeholder="Ou digite o nome como está no Hub" className={inputCls} />
-        <button onClick={add} className="shrink-0 rounded-md px-3 py-1.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-slate-50">
-          Tirar
-        </button>
-      </div>
     </section>
   );
 }

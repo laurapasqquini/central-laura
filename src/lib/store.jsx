@@ -1046,12 +1046,6 @@ export function StoreProvider({ user, children }) {
           return { ...s, contatosApoiadores: c };
         }),
       // mensagem do 6x0 por cidade (vazio = volta ao texto padrão)
-      // quem saiu do RANKEN: some da arte e das mensagens do 6x0 (sim = tira, não = devolve)
-      setSaiuDoRanken: (nome, sim) =>
-        setState((s) => {
-          const lista = (s.saiuDoRanken || []).filter((n) => n.toLowerCase() !== nome.trim().toLowerCase());
-          return { ...s, saiuDoRanken: sim ? [...lista, nome.trim()] : lista };
-        }),
       setMensagem6x0: (cidade, texto) =>
         setState((s) => {
           const m = { ...(s.mensagens6x0 || {}) };

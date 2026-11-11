@@ -938,27 +938,18 @@ function contatoPatrocinador(state, re) {
 }
 const mensagemPadrao6x0 = (c) =>
   ['Que partida! 🎾', 'Você ganhou com um *6x0 6x0* impecável, domínio total do início ao fim! 🔥', '', '*Seu prêmio:*', ...c.itens.map((x) => `• ${x}`), '', 'Segue esse ritmo na próxima rodada. Bora! 💚', '_Prazo de 7 dias para retirada/consumo._'].join('\n');
-// quem saiu do RANKEN não entra mais na arte nem nas mensagens do 6x0 (lista guardada só no estado da Laura;
-// numa dupla "A / B", basta um dos dois na lista)
-const normNome = (n = '') => n.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
-export function saiuDoRanken(state, nome) {
-  const fora = new Set((state.saiuDoRanken || []).map(normNome));
-  return fora.size > 0 && [nome, ...String(nome || '').split('/')].some((p) => fora.has(normNome(p)));
-}
-
 export function mensagens6x0(state) {
   const bonna = contatoPatrocinador(state, /bonna/i);
-  const acai = '01 açaí de 500ml com 3 acompanhamentos (Gela Boca: peça pelo app ou pelo cardápio digital https://app.gelaboca.com.br/ · o cupom é o seu nome)';
   const cidades = [
     {
       cidade: 'Maringá',
-      premios: ['01 açaí', '01 pizza brotinho', '01 chopp'],
-      itens: [acai, `01 pizza brotinho (Bonna Pizza: ${bonna ? `fale com ${bonna.quem} no ${bonna.telefone}` : 'chame a Bonna Pizza'} para combinar a retirada)`, '01 chopp (é só retirar na Craft Sports Bar)'],
+      premios: ['01 pizza brotinho', '01 chopp'],
+      itens: [`01 pizza brotinho (Bonna Pizza: ${bonna ? `fale com ${bonna.quem} no ${bonna.telefone}` : 'chame a Bonna Pizza'} para combinar a retirada)`, '01 chopp (é só retirar na Craft Sports Bar)'],
     },
     {
       cidade: 'Londrina',
-      premios: ['01 açaí', '02 packs de água com gás Cristal'],
-      itens: [acai, '02 packs de água com gás Cristal (retirada na R. Araguaia, 725 - Jardim Agari)'],
+      premios: ['02 packs de água com gás Cristal'],
+      itens: ['02 packs de água com gás Cristal (retirada na R. Araguaia, 725 - Jardim Agari)'],
     },
   ];
   // ganhadores da semana lidos do Hub (quarta): todos os jogos no prazo lançados nos últimos 7 dias
@@ -967,7 +958,7 @@ export function mensagens6x0(state) {
     ...c,
     lidoEm: sz.dia || null,
     ganhadores: sz.ganhadores
-      .filter((g) => g.cidade === c.cidade && !saiuDoRanken(state, g.nome))
+      .filter((g) => g.cidade === c.cidade)
       // já entrou na lista de uma quarta anterior: saiu na arte e o 📷 não foi marcado no Hub
       .map((g) => {
         const visto = (state.seisZeroVistos || {})[`${g.nome}|R${g.rodada}`];
