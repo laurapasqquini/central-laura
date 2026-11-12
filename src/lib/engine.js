@@ -405,7 +405,7 @@ export function mensagemLolis(state, ref = today()) {
     for (const x of buildDay(state, d, f)) if (x.kind === 'routine' && x.freq !== 'daily' && !x.done && !adiantar.includes(x.title)) adiantar.push(x.title);
   }
   return [
-    `Oi Lolis! Lista de hoje (${fmtCurto(ref)}):`,
+    `Oii Lolis, tudo bem? Lista de hoje (${fmtCurto(ref)}):`,
     late.length ? '\n*Atrasadas (prioridade):*' : '',
     ...late.map((x) => `⚠️ ${x.title} (era ${relativo(x.date, ref)})`),
     '\n*Hoje:*',
@@ -447,7 +447,7 @@ function mensagemSemanaLolis(state, date, late) {
   }
   const andamento = noDate(state, f);
   return [
-    `Oi Lolis! Sua semana (${ddmm(date)} a ${ddmm(sexta)}):`,
+    `Oii Lolis, tudo bem? Sua semana (${ddmm(date)} a ${ddmm(sexta)}):`,
     ...listaAtrasadas(late, date),
     diarias.length ? '\n*Todo dia:*' : '',
     ...diarias.map((t) => `• ${t}`),
@@ -582,7 +582,7 @@ export function brindesDoDia(state, date) {
         telefone: g.telefone || '',
         title: `Lembrete de brinde: ${g.nome}`,
         linha,
-        texto: `Oi, ${nome}! Tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁${comoRetirar(doDia, g.local) ? `\n\n${comoRetirar(doDia, g.local)}` : ''}`,
+        texto: `Oii ${nome}, tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁${comoRetirar(doDia, g.local) ? `\n\n${comoRetirar(doDia, g.local)}` : ''}`,
       });
     else if (date === conferir)
       out.push({
@@ -593,7 +593,7 @@ export function brindesDoDia(state, date) {
         telefone: g.telefone || '',
         title: `Conferir brinde: ${g.nome}`,
         linha,
-        texto: `Oi, ${nome}! E aí, conseguiu retirar ${varios ? 'os seus brindes' : 'o seu brinde'} do sorteio diário (${premio})? ${conferir === prazo ? 'Hoje é o último dia do prazo' : `O prazo vai até ${diaNome(prazo)}, ${ddmm(prazo)}`}, tá? 😊`,
+        texto: `Oii ${nome}, tudo bem? Conseguiu retirar ${varios ? 'os seus brindes' : 'o seu brinde'} do sorteio diário (${premio})? ${conferir === prazo ? 'Hoje é o último dia do prazo' : `O prazo vai até ${diaNome(prazo)}, ${ddmm(prazo)}`}, tá? 😊`,
       });
   }
   return out.sort((a, b) => a.linha.localeCompare(b.linha));
@@ -796,7 +796,7 @@ function mensagemDiaLolis(state, date, late) {
   const hoje = buildDay(state, date, f).filter((x) => x.kind !== 'marco' && !x.done).sort(ordemLolis(state));
   const andamento = noDate(state, f);
   return [
-    `Oi Lolis! Sua lista de hoje (${fmtCurto(date)}):`,
+    `Oii Lolis, tudo bem? Sua lista de hoje (${fmtCurto(date)}):`,
     ...listaAtrasadas(late, date),
     ...(hoje.length ? ['\n*Hoje:*', ...hoje.map((x) => `• ${x.title}`)] : []),
     ...(andamento.length ? ['\n*Em andamento:*', ...andamento.map((x) => `• ${x.title}`)] : []),

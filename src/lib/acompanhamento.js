@@ -77,17 +77,17 @@ export function resumoDoDia(dia, metas, meta) {
 
 // ── Modelos das mensagens: um por tipo, editáveis pela Laura (state.lolisModelos), com variáveis entre chaves ──
 export const MODELOS_PADRAO = {
-  atraso: { grupo: 'cobrar', rotulo: 'Tarefa atrasada', vars: { tarefa: 'nome da tarefa', desde: 'data do prazo (dd/mm)', dias: 'dias úteis de atraso' }, texto: 'Lolis, "{tarefa}" está pendente desde {desde}. O que está travando? Me avisa se precisar de algo.' },
-  expansao: { grupo: 'cobrar', rotulo: 'Expansão com prazo vencido', vars: { cidade: 'cidade', faltam: 'locais que faltam', prazo: 'prazo (dd/mm)' }, texto: 'Lolis, o prazo de {cidade} venceu em {prazo} e ainda faltam {faltam} locais. Qual a previsão para terminar?' },
-  nao: { grupo: 'cobrar', rotulo: '"Não consegui" sem nota', vars: { tarefa: 'nome da tarefa', quando: 'hoje / em dd/mm' }, texto: 'Lolis, você marcou que não conseguiu "{tarefa}". O que aconteceu?' },
-  telefones: { grupo: 'cobrar', rotulo: 'Telefones abaixo da meta', vars: { feitos: 'telefones anotados', meta: 'meta do dia', quando: 'hoje / em dd/mm' }, texto: 'Lolis, {quando} foram {feitos} telefones e a meta é {meta}. O que dificultou?' },
-  sorteio: { grupo: 'cobrar', rotulo: 'Sorteio sem parabéns', vars: { quando: 'hoje / em dd/mm', feitos: 'sorteios feitos', total: 'sorteios do dia' }, texto: 'Lolis, o sorteio {quando} ficou sem o parabéns no grupo. Consegue postar?' },
-  cedo: { grupo: 'cobrar', rotulo: 'Saiu cedo sem puxar extra', vars: { quando: 'hoje / em dd/mm', hora: 'hora da saída', horas: 'horas trabalhadas' }, texto: 'Lolis, {quando} você saiu às {hora} e não puxou nada do "Acabou? Puxa daqui". Quando terminar antes, puxa de lá, por favor.' },
-  'elogio-telefones': { grupo: 'elogiar', rotulo: 'Bateu a meta de telefones', vars: { feitos: 'telefones anotados', meta: 'meta do dia', quando: 'hoje / em dd/mm' }, texto: 'Lolis, {feitos} telefones {quando}, meta batida. Muito bom.' },
-  'elogio-tudo': { grupo: 'elogiar', rotulo: 'Fechou todas as tarefas', vars: { total: 'tarefas do dia', quando: 'hoje / em dd/mm' }, texto: 'Lolis, todas as tarefas {quando} feitas. Obrigada.' },
-  'elogio-extra': { grupo: 'elogiar', rotulo: 'Puxou extra do "Acabou? Puxa daqui"', vars: { extra: 'o que ela puxou', total: 'quantos extras' }, texto: 'Lolis, vi que você puxou {extra} do "Acabou? Puxa daqui". Boa iniciativa, obrigada.' },
-  'elogio-sorteio': { grupo: 'elogiar', rotulo: 'Sorteio completo', vars: { quando: 'hoje / em dd/mm' }, texto: 'Lolis, sorteio {quando} completo, com parabéns. Obrigada.' },
-  'elogio-ponto': { grupo: 'elogiar', rotulo: 'Pontualidade e jornada', vars: { quando: 'hoje / em dd/mm', hora: 'hora da chegada' }, texto: 'Lolis, obrigada pela pontualidade {quando}.' },
+  atraso: { grupo: 'cobrar', rotulo: 'Tarefa atrasada', vars: { tarefa: 'nome da tarefa', desde: 'data do prazo (dd/mm)', dias: 'dias úteis de atraso' }, texto: 'Oii Lolis, tudo bem? "{tarefa}" está pendente desde {desde}. O que está travando? Me avisa se precisar de algo.' },
+  expansao: { grupo: 'cobrar', rotulo: 'Expansão com prazo vencido', vars: { cidade: 'cidade', faltam: 'locais que faltam', prazo: 'prazo (dd/mm)' }, texto: 'Oii Lolis, tudo bem? O prazo de {cidade} venceu em {prazo} e ainda faltam {faltam} locais. Qual a previsão para terminar?' },
+  nao: { grupo: 'cobrar', rotulo: '"Não consegui" sem nota', vars: { tarefa: 'nome da tarefa', quando: 'hoje / em dd/mm' }, texto: 'Oii Lolis, tudo bem? Você marcou que não conseguiu "{tarefa}". O que aconteceu?' },
+  telefones: { grupo: 'cobrar', rotulo: 'Telefones abaixo da meta', vars: { feitos: 'telefones anotados', meta: 'meta do dia', quando: 'hoje / em dd/mm' }, texto: 'Oii Lolis, tudo bem? Foram {feitos} telefones {quando} e a meta é {meta}. O que dificultou?' },
+  sorteio: { grupo: 'cobrar', rotulo: 'Sorteio sem parabéns', vars: { quando: 'hoje / em dd/mm', feitos: 'sorteios feitos', total: 'sorteios do dia' }, texto: 'Oii Lolis, tudo bem? O sorteio {quando} ficou sem o parabéns no grupo. Consegue postar?' },
+  cedo: { grupo: 'cobrar', rotulo: 'Saiu cedo sem puxar extra', vars: { quando: 'hoje / em dd/mm', hora: 'hora da saída', horas: 'horas trabalhadas' }, texto: 'Oii Lolis, tudo bem? Vi que {quando} você saiu às {hora} e não puxou nada do "Acabou? Puxa daqui". Quando terminar antes, puxa de lá, por favor.' },
+  'elogio-telefones': { grupo: 'elogiar', rotulo: 'Bateu a meta de telefones', vars: { feitos: 'telefones anotados', meta: 'meta do dia', quando: 'hoje / em dd/mm' }, texto: 'Oii Lolis, tudo bem? {feitos} telefones {quando}, meta batida. Muito bom.' },
+  'elogio-tudo': { grupo: 'elogiar', rotulo: 'Fechou todas as tarefas', vars: { total: 'tarefas do dia', quando: 'hoje / em dd/mm' }, texto: 'Oii Lolis, tudo bem? Todas as tarefas {quando} feitas. Obrigada.' },
+  'elogio-extra': { grupo: 'elogiar', rotulo: 'Puxou extra do "Acabou? Puxa daqui"', vars: { extra: 'o que ela puxou', total: 'quantos extras' }, texto: 'Oii Lolis, tudo bem? Vi que você puxou {extra} do "Acabou? Puxa daqui". Boa iniciativa, obrigada.' },
+  'elogio-sorteio': { grupo: 'elogiar', rotulo: 'Sorteio completo', vars: { quando: 'hoje / em dd/mm' }, texto: 'Oii Lolis, tudo bem? Sorteio {quando} completo, com parabéns. Obrigada.' },
+  'elogio-ponto': { grupo: 'elogiar', rotulo: 'Pontualidade e jornada', vars: { quando: 'hoje / em dd/mm', hora: 'hora da chegada' }, texto: 'Oii Lolis, tudo bem? Obrigada pela pontualidade {quando}.' },
 };
 // troca {variavel} pelo valor; variável desconhecida fica como está (a Laura vê que digitou errado)
 export const preencher = (texto = '', vars = {}) => texto.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null && vars[k] !== '' ? String(vars[k]) : m));
