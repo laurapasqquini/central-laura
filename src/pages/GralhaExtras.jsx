@@ -33,12 +33,13 @@ function BotaoCopiar({ texto, rotulo = 'Copiar mensagem' }) {
   );
 }
 
-// "Falta a 2ª parcela": contratos PIX 50/50 com a 1ª paga e a 2ª não, com a mensagem pronta
+// "Falta a 2ª parcela": todo contrato PIX 50/50 com a 2ª em aberto, com a mensagem pronta.
+// Não depende de marcar a 1ª: a produção só começa depois da entrada.
 export function SegundaParcela({ pedidos }) {
   const { setPosVenda } = useStore();
   const lista = pedidos
-    .filter((p) => p.stage === 'contrato' && !p.historico && p.pos?.pago1 && !p.pos?.pago2 && pagaEmDuas(p))
-    .map((p) => ({ p, previsao: p.pos.previsao || addDays(dataFechamento(p) || p.createdAt, 30) }))
+    .filter((p) => p.stage === 'contrato' && !p.historico && !p.pos?.pago2 && pagaEmDuas(p))
+    .map((p) => ({ p, previsao: p.pos?.previsao || addDays(dataFechamento(p) || p.createdAt, 30) }))
     .sort((a, b) => a.previsao.localeCompare(b.previsao));
   if (!lista.length) return null;
   const total = lista.reduce((s, { p }) => s + (valoresPedido(p).total || 0) - Math.round(((valoresPedido(p).total || 0) / 2) * 100) / 100, 0);
@@ -60,7 +61,7 @@ export function SegundaParcela({ pedidos }) {
               <div className="truncate text-sm font-semibold text-slate-800">{p.cliente}</div>
               <div className="text-xs text-slate-500">
                 <b className="text-slate-700">{brl(Math.round((v - Math.round((v / 2) * 100) / 100) * 100) / 100)}</b>
-                {p.pos.entregue ? ' · já enviado' : ` · entrega prevista ${fmtCurto(previsao).replace(/^[^,]+, /, '')}`}
+                {p.pos?.entregue ? ' · já enviado' : ` · entrega prevista ${fmtCurto(previsao).replace(/^[^,]+, /, '')}`}
               </div>
             </div>
             <BotaoCopiar texto={msg} />
@@ -69,7 +70,7 @@ export function SegundaParcela({ pedidos }) {
                 WhatsApp
               </a>
             )}
-            <button onClick={() => setPosVenda(p.id, { pago2: today() })} className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 hover:ring-emerald-400">
+            <button onClick={() => setPosVenda(p.id, { ...(p.pos?.pago1 ? {} : { pago1: dataFechamento(p) || today() }), pago2: today() })} className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 hover:ring-emerald-400">
               ✓ Recebida
             </button>
           </div>
