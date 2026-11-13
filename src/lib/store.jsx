@@ -11,7 +11,7 @@ import { CALENDARIOS } from '../data/calendarios';
 import { jaExiste, chaveDe } from './financas';
 import { aplicarHubLaura } from './hubLaura.js';
 import { planoInicial } from './plano';
-import { mensagemParcela2 } from './gralha';
+import { mensagemParcela2, pagaEmDuas, dataFechamento } from './gralha';
 import { guardarTelefones, escalar, diasUteisEntre, metasLolis } from './acompanhamento.js';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
@@ -411,6 +411,18 @@ function tarefasEnvio(s, ped) {
   if (!aberta && s.tasks.some((t) => t.pedidoEnvio === ped.id && t.done && t.title === title)) return s.tasks; // já conferiu
   const notes = `Data especial combinada com o cliente: o pedido ${ped.cliente} precisa ser ENVIADO até ${d}/${m}/${ped.envioAte.slice(0, 4)} (fora do prazo padrão). Confirme com a fábrica se a produção está no ritmo; se não for dar, avise o cliente já.`;
   return [{ id: aberta?.id || uid(), title, area: 'gralha', who: 'laura', urgent: false, due, done: false, createdAt: today(), postponed: 0, notes, pedidoEnvio: ped.id }, ...outras];
+}
+
+// Cobrança da 2ª parcela: 3 dias úteis antes da entrega prevista (hoje, se já passou)
+const COBRANCA2 = /50% restantes|2ª parcela/i;
+const previsaoDe = (ped, pos = ped.pos || {}) => pos.previsao || addDays(dataFechamento(ped) || ped.createdAt, PRAZO_PRODUCAO);
+function diaCobranca2(s, previsao) {
+  let d = previsao;
+  for (let c = 0; c < 3; ) {
+    d = addDays(d, -1);
+    if (isWorkday(s, d)) c++;
+  }
+  return d < today() ? today() : d;
 }
 
 // Notas da tarefa de cobrar a 2ª parcela: com quem falar e a mensagem pronta
@@ -1014,14 +1026,22 @@ export function StoreProvider({ user, children }) {
           for (const k of Object.keys(pos)) if (pos[k] == null) delete pos[k];
           let tasks = s.tasks;
           const fechar = (fn) => (tasks = tasks.map((t) => (fn(t) && !t.done ? { ...t, done: true, doneAt: today() } : t)));
-          if (patch.pago1) fechar((t) => t.pedidoId === id && /pagamento dos 50%/i.test(t.title));
+          const ehCobranca2 = (t) => t.pedidoPos === id && COBRANCA2.test(t.title);
+          const novaCobranca = (due, urgent) => ({ id: uid(), title: `Cobrar 2ª parcela: ${ped.cliente}`, area: 'gralha', who: 'laura', urgent, due, done: false, createdAt: today(), postponed: 0, notes: notaCobranca(ped), pedidoPos: id });
+          if (patch.pago1) {
+            fechar((t) => t.pedidoId === id && /pagamento dos 50%/i.test(t.title));
+            // 1ª paga (PIX 50/50): a cobrança da 2ª chega sozinha 3 dias úteis antes da entrega prevista
+            if (pagaEmDuas(ped) && !pos.pago2 && !tasks.some(ehCobranca2)) tasks = [novaCobranca(diaCobranca2(s, previsaoDe(ped, pos)), false), ...tasks];
+          }
           if (patch.entregue) {
             fechar((t) => t.pedidoPos === id && /produção e envio/i.test(t.title));
-            if (!pos.pago2 && !tasks.some((t) => t.pedidoPos === id && /50% restantes/i.test(t.title)))
-              tasks = [{ id: uid(), title: `Cobrar os 50% restantes: ${ped.cliente}`, area: 'gralha', who: 'laura', urgent: true, due: today(), done: false, createdAt: today(), postponed: 0, notes: notaCobranca(ped), pedidoPos: id }, ...tasks];
+            if (!pos.pago2 && !tasks.some((t) => ehCobranca2(t) && !t.done)) tasks = [novaCobranca(today(), true), ...tasks];
           }
-          if (patch.pago2) fechar((t) => t.pedidoPos === id && /50% restantes/i.test(t.title));
-          if (patch.previsao) tasks = tasks.map((t) => (t.pedidoPos === id && /produção e envio/i.test(t.title) && !t.done ? { ...t, due: addDays(patch.previsao, -3) } : t));
+          if (patch.pago2) fechar(ehCobranca2);
+          if (patch.previsao) {
+            tasks = tasks.map((t) => (t.pedidoPos === id && /produção e envio/i.test(t.title) && !t.done ? { ...t, due: addDays(patch.previsao, -3) } : t));
+            tasks = tasks.map((t) => (ehCobranca2(t) && !t.done && !pos.entregue ? { ...t, due: diaCobranca2(s, patch.previsao) } : t));
+          }
           return { ...s, tasks, pedidos: s.pedidos.map((p) => (p.id === id ? { ...p, pos } : p)) };
         }),
       // venda fechada antes da central existir: entra direto em "Contratos fechados", para o histórico e a comissão

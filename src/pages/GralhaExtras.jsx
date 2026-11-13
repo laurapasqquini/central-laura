@@ -1,17 +1,83 @@
 // Gralha › Pedidos: "Pra fazer agora" e o ritmo da meta. Gralha › Clientes: a ficha de cada cliente.
 import { useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
-import { agruparClientes, brl, cfgComissao, comissaoDe, dataFechamento, valoresPedido } from '../lib/gralha';
+import { agruparClientes, brl, cfgComissao, comissaoDe, dataFechamento, valoresPedido, mensagemParcela2, pagaEmDuas } from '../lib/gralha';
 import { addDays, fmtCurto, lastDayOfMonth, today } from '../lib/dates';
 import { dataEfetiva, isWorkday } from '../lib/engine';
 import { Empty, inputBase } from '../components/ui';
 
 const semAcento = (s = '') => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-// link do WhatsApp a partir do telefone do contrato ("(44) 99999-9999" → wa.me/5544999999999)
-const linkWhats = (tel) => {
+// link do WhatsApp a partir do telefone do contrato ("(44) 99999-9999" → wa.me/5544999999999), já com o texto se tiver
+const linkWhats = (tel, texto) => {
   const d = String(tel || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '');
-  return d.length >= 10 ? `https://wa.me/55${d}` : null;
+  return d.length >= 10 ? `https://wa.me/55${d}${texto ? `?text=${encodeURIComponent(texto)}` : ''}` : null;
 };
+
+function BotaoCopiar({ texto, rotulo = 'Copiar mensagem' }) {
+  const [ok, setOk] = useState(false);
+  return (
+    <button
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(texto);
+          setOk(true);
+          setTimeout(() => setOk(false), 1500);
+        } catch {
+          prompt('Copie a mensagem:', texto);
+        }
+      }}
+      className="shrink-0 rounded-lg bg-emerald-600 px-2 py-1 text-xs font-bold text-white"
+    >
+      {ok ? '✓ Copiado' : rotulo}
+    </button>
+  );
+}
+
+// "Falta a 2ª parcela": contratos PIX 50/50 com a 1ª paga e a 2ª não, com a mensagem pronta
+export function SegundaParcela({ pedidos }) {
+  const { setPosVenda } = useStore();
+  const lista = pedidos
+    .filter((p) => p.stage === 'contrato' && !p.historico && p.pos?.pago1 && !p.pos?.pago2 && pagaEmDuas(p))
+    .map((p) => ({ p, previsao: p.pos.previsao || addDays(dataFechamento(p) || p.createdAt, 30) }))
+    .sort((a, b) => a.previsao.localeCompare(b.previsao));
+  if (!lista.length) return null;
+  const total = lista.reduce((s, { p }) => s + (valoresPedido(p).total || 0) - Math.round(((valoresPedido(p).total || 0) / 2) * 100) / 100, 0);
+  return (
+    <section className="space-y-2 rounded-lg bg-white p-4 shadow-sm ring-1 ring-amber-200">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-amber-800">
+          💸 Falta a 2ª parcela <span className="text-amber-500">{lista.length}</span>
+        </h2>
+        <span className="text-xs font-semibold text-amber-700">{brl(total)} a receber</span>
+      </div>
+      {lista.map(({ p, previsao }) => {
+        const v = valoresPedido(p).total || 0;
+        const msg = mensagemParcela2(p);
+        const whats = linkWhats(p.contrato?.cliente?.telefone, msg);
+        return (
+          <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-lg px-3 py-2 ring-1 ring-slate-200">
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-slate-800">{p.cliente}</div>
+              <div className="text-xs text-slate-500">
+                <b className="text-slate-700">{brl(Math.round((v - Math.round((v / 2) * 100) / 100) * 100) / 100)}</b>
+                {p.pos.entregue ? ' · já enviado' : ` · entrega prevista ${fmtCurto(previsao).replace(/^[^,]+, /, '')}`}
+              </div>
+            </div>
+            <BotaoCopiar texto={msg} />
+            {whats && (
+              <a href={whats} target="_blank" rel="noreferrer" className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+                WhatsApp
+              </a>
+            )}
+            <button onClick={() => setPosVenda(p.id, { pago2: today() })} className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 hover:ring-emerald-400">
+              ✓ Recebida
+            </button>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
 
 // Dias úteis que ainda sobram no mês (contando hoje): o ritmo da meta
 export function uteisRestantes(state) {
@@ -50,7 +116,8 @@ export function PraFazer({ pedidos, onCliente }) {
       {!agora.length && <p className="text-sm text-slate-400">Nada pendente na Gralha hoje. 🎉</p>}
       {agora.map(({ t, data }) => {
         const ped = pedidos.find((p) => p.id === pedidoDaTarefa(t));
-        const whats = linkWhats(ped?.contrato?.cliente?.telefone);
+        const cobranca = ped && /50% restantes|2ª parcela/i.test(t.title) ? mensagemParcela2(ped) : null;
+        const whats = linkWhats(ped?.contrato?.cliente?.telefone, cobranca);
         const atrasada = data < hoje;
         return (
           <div key={t.id} className={`flex items-center gap-3 rounded-lg px-3 py-2 ring-1 ${atrasada || t.urgent ? 'ring-red-200' : 'ring-slate-200'}`}>
@@ -59,6 +126,7 @@ export function PraFazer({ pedidos, onCliente }) {
               <div className="truncate text-sm font-semibold text-slate-800">{t.title}</div>
               <div className={`text-xs ${atrasada ? 'font-semibold text-red-600' : 'text-slate-400'}`}>{atrasada ? `atrasada desde ${fmtCurto(data)}` : 'hoje'}</div>
             </div>
+            {cobranca && <BotaoCopiar texto={cobranca} />}
             {whats && (
               <a href={whats} target="_blank" rel="noreferrer" className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
                 WhatsApp

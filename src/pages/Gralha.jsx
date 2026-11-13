@@ -7,7 +7,7 @@ import { inputCls, inputBase, Empty, Pill, Segmented, AbasTopo } from '../compon
 import Contrato, { BotaoFaixa } from './Contrato';
 import ListaDoDia from '../components/ListaDoDia';
 import { pedidosParados } from '../lib/engine';
-import { PraFazer, Clientes, uteisRestantes, grupoDoPedido } from './GralhaExtras';
+import { PraFazer, Clientes, SegundaParcela, uteisRestantes, grupoDoPedido } from './GralhaExtras';
 
 // O catálogo (242 produtos) só carrega quando a aba é aberta.
 function useCatalogo() {
@@ -466,6 +466,7 @@ function Pedidos({ onContrato, onEditar, onDuplicar, onCliente }) {
       </section>
 
       <PraFazer pedidos={pedidos} onCliente={onCliente} />
+      <SegundaParcela pedidos={pedidos} />
 
       <div className="flex flex-wrap items-center gap-2">
         <Segmented
