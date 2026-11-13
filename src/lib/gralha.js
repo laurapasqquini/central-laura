@@ -148,6 +148,27 @@ export function mensagem({ cliente, cidade, itens, produtos, frete, freteTexto, 
 // ---- Comissão da Laura (padrão: 8% sobre o total do pedido) ----
 export const cfgComissao = (state) => ({ comissao: 8, base: 'total', meta: 1000, ...(state.gralhaCfg || {}) });
 
+// ---- Cobrança da 2ª parcela (PIX 50/50): mandar com o pedido pronto, para liberar o despacho ----
+export const pagaEmDuas = (p) => !p.contrato || (p.contrato.pagamento || 'pix5050') === 'pix5050';
+export function mensagemParcela2(p) {
+  const total = valoresPedido(p).total || 0;
+  const p1 = Math.round((total / 2) * 100) / 100; // mesma conta do contrato
+  const nome = String(p.contrato?.cliente?.nome || '').trim().split(/\s+/)[0] || '';
+  const pedido = (p.contrato?.pedido || p.cliente || '').trim();
+  return [
+    `Oii${nome ? ` ${nome[0].toUpperCase()}${nome.slice(1).toLowerCase()}` : ''}, tudo bem?`,
+    '',
+    `Segue o valor e o PIX da 2ª parcela${pedido ? ` da *${pedido}*` : ''}:`,
+    '',
+    `✅ 1ª parcela: ${brl(p1)} — *PAGO*`,
+    `⏳ 2ª parcela: *${brl(Math.round((total - p1) * 100) / 100)}*`,
+    '',
+    '*PIX (CNPJ):* 09.063.151/0001-63',
+    '',
+    'Consegue me mandar o comprovante aqui pra podermos liberar o despacho?',
+  ].join('\n');
+}
+
 // ---- Clientes: pedidos do mesmo cliente (turma, atlética) ----
 // Sugestão: mesmo nome sem o ano/turma ("Medicina UEM 2026" = "Medicina UEM 2027") ou mesmo telefone do contrato.
 // Ela confirma (clienteId = a chave) ou separa (clienteId = o próprio pedido). O que ela decidiu vale sempre.

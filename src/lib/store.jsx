@@ -11,6 +11,7 @@ import { CALENDARIOS } from '../data/calendarios';
 import { jaExiste, chaveDe } from './financas';
 import { aplicarHubLaura } from './hubLaura.js';
 import { planoInicial } from './plano';
+import { mensagemParcela2 } from './gralha';
 import { guardarTelefones, escalar, diasUteisEntre, metasLolis } from './acompanhamento.js';
 
 // Os dados ficam no Supabase (nuvem) e com uma cópia no navegador (localStorage).
@@ -386,7 +387,7 @@ const PRAZO_PRODUCAO = 30;
 function tarefasDoContrato(s, ped, data) {
   const out = [];
   if (!s.tasks.some((t) => t.pedidoPos === ped.id && /produção e envio/i.test(t.title)))
-    out.push({ id: uid(), title: `Conferir produção e envio: ${ped.cliente}`, area: 'gralha', who: 'laura', urgent: false, due: addDays(data, PRAZO_PRODUCAO - 3), done: false, createdAt: data, postponed: 0, notes: 'Prazo de produção de 20 a 30 dias. Ao enviar, marque "Entregue" no pedido (Gralha › Pedidos › Contratos fechados) para cobrar os 50% restantes.', pedidoPos: ped.id });
+    out.push({ id: uid(), title: `Conferir produção e envio: ${ped.cliente}`, area: 'gralha', who: 'laura', urgent: false, due: addDays(data, PRAZO_PRODUCAO - 3), done: false, createdAt: data, postponed: 0, notes: 'Prazo de produção de 20 a 30 dias. Com o pedido pronto, mande a cobrança da 2ª parcela antes do despacho (Gralha › Pedidos › Contratos fechados › o pedido › 💬 Mensagem de cobrança). Ao enviar, marque "Entregue".', pedidoPos: ped.id });
   const de = recorrente(ped, data);
   if (de && !s.tasks.some((t) => t.pedidoRecorrente === ped.id)) out.push(de);
   return out;
@@ -410,6 +411,13 @@ function tarefasEnvio(s, ped) {
   if (!aberta && s.tasks.some((t) => t.pedidoEnvio === ped.id && t.done && t.title === title)) return s.tasks; // já conferiu
   const notes = `Data especial combinada com o cliente: o pedido ${ped.cliente} precisa ser ENVIADO até ${d}/${m}/${ped.envioAte.slice(0, 4)} (fora do prazo padrão). Confirme com a fábrica se a produção está no ritmo; se não for dar, avise o cliente já.`;
   return [{ id: aberta?.id || uid(), title, area: 'gralha', who: 'laura', urgent: false, due, done: false, createdAt: today(), postponed: 0, notes, pedidoEnvio: ped.id }, ...outras];
+}
+
+// Notas da tarefa de cobrar a 2ª parcela: com quem falar e a mensagem pronta
+function notaCobranca(ped) {
+  const cli = ped.contrato?.cliente || {};
+  const quem = [cli.nome, cli.telefone].filter(Boolean).join(' · ');
+  return `${quem ? `Falar com ${quem}. ` : ''}Mensagem pronta (copie e mande no WhatsApp da Gralha):\n\n${mensagemParcela2(ped)}`;
 }
 
 function recorrente(ped, data) {
@@ -1010,7 +1018,7 @@ export function StoreProvider({ user, children }) {
           if (patch.entregue) {
             fechar((t) => t.pedidoPos === id && /produção e envio/i.test(t.title));
             if (!pos.pago2 && !tasks.some((t) => t.pedidoPos === id && /50% restantes/i.test(t.title)))
-              tasks = [{ id: uid(), title: `Cobrar os 50% restantes: ${ped.cliente}`, area: 'gralha', who: 'laura', urgent: true, due: today(), done: false, createdAt: today(), postponed: 0, notes: '', pedidoPos: id }, ...tasks];
+              tasks = [{ id: uid(), title: `Cobrar os 50% restantes: ${ped.cliente}`, area: 'gralha', who: 'laura', urgent: true, due: today(), done: false, createdAt: today(), postponed: 0, notes: notaCobranca(ped), pedidoPos: id }, ...tasks];
           }
           if (patch.pago2) fechar((t) => t.pedidoPos === id && /50% restantes/i.test(t.title));
           if (patch.previsao) tasks = tasks.map((t) => (t.pedidoPos === id && /produção e envio/i.test(t.title) && !t.done ? { ...t, due: addDays(patch.previsao, -3) } : t));

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useStore, STAGES } from '../lib/store';
-import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes, cidadesConhecidas, cidadeDe } from '../lib/gralha';
+import { cfgComissao, comissaoDe, dataFechamento, valoresPedido, resumoAtivacoes, cidadesConhecidas, cidadeDe, mensagemParcela2, pagaEmDuas } from '../lib/gralha';
 import { brl, priceFor, search, searchMany, detalhe, totals, mensagem, mensagemTabela, faixasLabel, isMaringa, prazoUteis, faixaMaior, dataBR } from '../lib/gralha';
 import { fmtCurto, relativo, today, addDays } from '../lib/dates';
 import { inputCls, inputBase, Empty, Pill, Segmented, AbasTopo } from '../components/ui';
@@ -859,7 +859,10 @@ function ChipPos({ p }) {
 }
 function PosVenda({ p }) {
   const { setPosVenda } = useStore();
+  const [cobrar, setCobrar] = useState(false);
   const pos = p.pos || {};
+  // 1ª paga e 2ª não: a mensagem de cobrança fica à mão (sai antes do despacho)
+  const podeCobrar = pos.pago1 && !pos.pago2 && pagaEmDuas(p);
   const passo = (chave, rotulo) => (
     <button
       onClick={() => setPosVenda(p.id, { [chave]: pos[chave] ? null : today() })}
@@ -881,7 +884,13 @@ function PosVenda({ p }) {
         </label>
         {passo('entregue', 'Enviado / entregue')}
         {passo('pago2', '2ª parcela (50%) recebida')}
+        {podeCobrar && (
+          <button onClick={() => setCobrar(!cobrar)} className="rounded-lg px-2.5 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
+            💬 Mensagem de cobrança
+          </button>
+        )}
       </div>
+      {cobrar && podeCobrar && <TextoCopiar texto={mensagemParcela2(p)} />}
       <p className="text-[11px] text-slate-400">Ao marcar "Enviado / entregue", a central cria a tarefa de cobrar os 50% restantes.</p>
     </div>
   );
