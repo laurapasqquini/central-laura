@@ -136,7 +136,7 @@ export function ItemRow({ item, showDate = false, onEdit }) {
 }
 
 // Número da pessoa para copiar e colar no WhatsApp (só números, com DDD, sem o 55)
-function CopiarNumero({ tel }) {
+export function CopiarNumero({ tel }) {
   const [ok, setOk] = useState(false);
   let d = String(tel || '').replace(/\D/g, '');
   if (d.startsWith('55') && d.length >= 12) d = d.slice(2);

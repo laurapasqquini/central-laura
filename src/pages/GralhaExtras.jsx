@@ -4,7 +4,7 @@ import { useStore, STAGES } from '../lib/store';
 import { agruparClientes, brl, cfgComissao, comissaoDe, dataFechamento, valoresPedido, mensagemParcela2, pagaEmDuas } from '../lib/gralha';
 import { addDays, fmtCurto, lastDayOfMonth, today } from '../lib/dates';
 import { dataEfetiva, isWorkday } from '../lib/engine';
-import { Empty, inputBase } from '../components/ui';
+import { Empty, inputBase, CopiarNumero } from '../components/ui';
 
 const semAcento = (s = '') => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 // link do WhatsApp a partir do telefone do contrato ("(44) 99999-9999" → wa.me/5544999999999), já com o texto se tiver
@@ -13,7 +13,7 @@ const linkWhats = (tel, texto) => {
   return d.length >= 10 ? `https://wa.me/55${d}${texto ? `?text=${encodeURIComponent(texto)}` : ''}` : null;
 };
 
-function BotaoCopiar({ texto, rotulo = 'Copiar mensagem' }) {
+function BotaoCopiar({ texto, rotulo = 'Copiar mensagem', grande }) {
   const [ok, setOk] = useState(false);
   return (
     <button
@@ -26,7 +26,7 @@ function BotaoCopiar({ texto, rotulo = 'Copiar mensagem' }) {
           prompt('Copie a mensagem:', texto);
         }
       }}
-      className="shrink-0 rounded-lg bg-emerald-600 px-2 py-1 text-xs font-bold text-white"
+      className={grande ? 'w-full rounded-lg bg-emerald-600 py-2 text-sm font-bold text-white hover:bg-emerald-700' : 'shrink-0 rounded-lg bg-emerald-600 px-2 py-1 text-xs font-bold text-white'}
     >
       {ok ? '✓ Copiado' : rotulo}
     </button>
@@ -36,7 +36,7 @@ function BotaoCopiar({ texto, rotulo = 'Copiar mensagem' }) {
 // "Falta a 2ª parcela": todo contrato PIX 50/50 com a 2ª em aberto, com a mensagem pronta.
 // Não depende de marcar a 1ª: a produção só começa depois da entrada.
 export function SegundaParcela({ pedidos }) {
-  const { setPosVenda } = useStore();
+  const [aberto, setAberto] = useState(null);
   const lista = pedidos
     .filter((p) => p.stage === 'contrato' && !p.historico && !p.pos?.pago2 && pagaEmDuas(p))
     .map((p) => ({ p, previsao: p.pos?.previsao || addDays(dataFechamento(p) || p.createdAt, 30) }))
@@ -51,32 +51,56 @@ export function SegundaParcela({ pedidos }) {
         </h2>
         <span className="text-xs font-semibold text-amber-700">{brl(total)} a receber</span>
       </div>
-      {lista.map(({ p, previsao }) => {
-        const v = valoresPedido(p).total || 0;
-        const msg = mensagemParcela2(p);
-        const whats = linkWhats(p.contrato?.cliente?.telefone, msg);
-        return (
-          <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-lg px-3 py-2 ring-1 ring-slate-200">
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-slate-800">{p.cliente}</div>
-              <div className="text-xs text-slate-500">
-                <b className="text-slate-700">{brl(Math.round((v - Math.round((v / 2) * 100) / 100) * 100) / 100)}</b>
-                {p.pos?.entregue ? ' · já enviado' : ` · entrega prevista ${fmtCurto(previsao).replace(/^[^,]+, /, '')}`}
-              </div>
-            </div>
-            <BotaoCopiar texto={msg} />
+      {lista.map(({ p, previsao }) => (
+        <CartaoParcela2 key={p.id} p={p} previsao={previsao} aberto={aberto === p.id} onAbrir={() => setAberto(aberto === p.id ? null : p.id)} />
+      ))}
+    </section>
+  );
+}
+
+// Um pedido do quadro: tocar abre a mensagem (como as cobranças Pix do RANKEN), com copiar mensagem e número
+function CartaoParcela2({ p, previsao, aberto, onAbrir }) {
+  const { setPosVenda } = useStore();
+  const v = valoresPedido(p).total || 0;
+  const valor2 = Math.round((v - Math.round((v / 2) * 100) / 100) * 100) / 100;
+  const msg = mensagemParcela2(p);
+  const tel = p.contrato?.cliente?.telefone;
+  const whats = linkWhats(tel, msg);
+  return (
+    <div>
+      <button onClick={onAbrir} className="flex w-full items-center gap-3 rounded-xl bg-white px-3 py-2.5 text-left shadow-sm ring-1 ring-slate-200/70 transition hover:ring-amber-300">
+        <span className="h-6 w-1 shrink-0 rounded-full bg-sky-500" />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[15px] font-medium text-slate-800">{p.cliente}</span>
+          <span className="block text-xs text-slate-500">
+            <b className="text-slate-700">{brl(valor2)}</b>
+            {p.pos?.entregue ? ' · já enviado' : ` · entrega prevista ${fmtCurto(previsao).replace(/^[^,]+, /, '')}`}
+            {p.contrato?.cliente?.nome && ` · ${p.contrato.cliente.nome.split(/\s+/)[0]}`}
+          </span>
+        </span>
+        <span className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200">{aberto ? 'fechar' : 'Mensagem'}</span>
+      </button>
+      {aberto && (
+        <div className="mx-1 -mt-1 space-y-2 rounded-b-xl bg-[#e7ffdb] p-3 ring-1 ring-emerald-100">
+          <pre className="whitespace-pre-wrap font-sans text-sm text-slate-800">{msg}</pre>
+          <BotaoCopiar texto={msg} grande />
+          {tel ? <CopiarNumero tel={tel} /> : <p className="text-center text-xs text-slate-500">Sem telefone no contrato.</p>}
+          <div className="flex gap-2">
             {whats && (
-              <a href={whats} target="_blank" rel="noreferrer" className="shrink-0 rounded-lg px-2 py-1 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200">
-                WhatsApp
+              <a href={whats} target="_blank" rel="noreferrer" className="flex-1 rounded-lg bg-white py-2 text-center text-sm font-bold text-emerald-700 ring-1 ring-emerald-300 hover:bg-emerald-50">
+                Abrir no WhatsApp
               </a>
             )}
-            <button onClick={() => setPosVenda(p.id, { ...(p.pos?.pago1 ? {} : { pago1: dataFechamento(p) || today() }), pago2: today() })} className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 hover:ring-emerald-400">
-              ✓ Recebida
+            <button
+              onClick={() => setPosVenda(p.id, { ...(p.pos?.pago1 ? {} : { pago1: dataFechamento(p) || today() }), pago2: today() })}
+              className="flex-1 rounded-lg bg-white py-2 text-sm font-bold text-slate-600 ring-1 ring-slate-300 hover:ring-emerald-400"
+            >
+              ✓ 2ª parcela recebida
             </button>
           </div>
-        );
-      })}
-    </section>
+        </div>
+      )}
+    </div>
   );
 }
 
