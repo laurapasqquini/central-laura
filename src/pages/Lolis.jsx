@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, chaveApoiador, mensagens6x0 } from '../lib/engine';
 import { today, addDays, fmtCurto } from '../lib/dates';
-import { supabase } from '../lib/supabase';
 import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../components/ui';
 import LolisPublica from './LolisPublica';
 import PontoLolis from '../components/PontoLolis';
 import BancoLolis from '../components/BancoLolis';
 import { EntregasResumo } from '../components/Entregas';
 import AcompanhamentoLolis from '../components/AcompanhamentoLolis';
+import DelegadasLolis from '../components/DelegadasLolis';
+import { desfazerMarcaLolis } from '../lib/lolisDesfazer';
 
 export default function Lolis() {
   const { state } = useStore();
@@ -50,6 +51,7 @@ export default function Lolis() {
         onChange={setVista}
         options={[
           ['pagina', '👀 O que ela vê', 'bg-amber-500 text-white ring-transparent'],
+          ['delegadas', '📒 Delegadas', 'bg-amber-500 text-white ring-transparent'],
           ['acomp', '📋 Acompanhamento', 'bg-amber-500 text-white ring-transparent'],
           ['ponto', '⏰ Ponto', 'bg-amber-500 text-white ring-transparent'],
           ['banco', '🙌 Acabou? Puxa daqui', 'bg-amber-500 text-white ring-transparent'],
@@ -57,7 +59,9 @@ export default function Lolis() {
         ]}
       />
 
-      {vista === 'acomp' ? (
+      {vista === 'delegadas' ? (
+        <DelegadasLolis onEdit={setEditing} />
+      ) : vista === 'acomp' ? (
         <AcompanhamentoLolis />
       ) : vista === 'ponto' ? (
         <PontoLolis />
@@ -122,14 +126,8 @@ function FeitasRecentes() {
 
   const desfazer = async (x) => {
     if (!confirm(`Desfazer "${x.title}"? Volta a ficar pendente para a Lolis.`)) return;
-    // primeiro tira a marca que a Lolis fez na página dela (em qualquer dia da última semana),
-    // senão a central lê de novo e marca outra vez
-    const token = state.lolisToken;
-    if (token) {
-      const chaves = [x.key, `r:${x.id}:${x.date}`, `t:${x.id}`];
-      const { data } = await supabase.from('lolis_feitos').select('dia, chave').eq('token', token).in('chave', chaves).gte('dia', addDays(ref, -8));
-      for (const r of data || []) await supabase.rpc('lolis_marcar', { p_token: token, p_dia: r.dia, p_chave: r.chave, p_feito: false });
-    }
+    // primeiro tira a marca que a Lolis fez na página dela, senão a central marca outra vez
+    await desfazerMarcaLolis(state.lolisToken, [x.key, `r:${x.id}:${x.date}`, `t:${x.id}`], ref);
     if (x.kind === 'task') toggleTask(x.id);
     else toggleRoutine(x.id, x.date, null);
   };
