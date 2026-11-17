@@ -2,6 +2,7 @@
 // com a situação de cada tarefa (feita, não conseguiu, atrasada, em aberto). Só tarefas avulsas:
 // as rotinas fixas dela ficam no Acompanhamento.
 import { addDays, weekday } from './dates.js';
+import { MODELOS_PADRAO, preencher } from './acompanhamento.js';
 
 const segundaDe = (d) => addDays(d, -((weekday(d) + 6) % 7));
 export function diaUtilAnterior(ref, ehUtil) {
@@ -59,4 +60,11 @@ export function delegadas(tasks, ctx, { de = '', ate = '9999', busca = '' } = {}
   const conta = { total: itens.length, feita: 0, nao: 0, aberto: 0, atrasada: 0 };
   for (const x of itens) conta[x.tipo]++;
   return { itens, conta };
+}
+
+// recado pronto para a tarefa atrasada (modelo editável em Acompanhamento › Modelos das mensagens)
+export function recadoAtrasada(x, ref, ehUtil, modelos = {}) {
+  const quando = x.prazo === diaUtilAnterior(ref, ehUtil) ? 'ontem' : `dia ${x.prazo.slice(8, 10)}/${x.prazo.slice(5, 7)}`;
+  const texto = modelos['delegada-atrasada']?.trim() ? modelos['delegada-atrasada'] : MODELOS_PADRAO['delegada-atrasada'].texto;
+  return preencher(texto, { tarefa: x.titulo, quando, dias: x.dias });
 }

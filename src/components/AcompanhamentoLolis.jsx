@@ -412,7 +412,7 @@ function Modelos() {
   );
 }
 
-function Copiar({ texto, rotulo = 'Copiar' }) {
+export function Copiar({ texto, rotulo = 'Copiar' }) {
   const [ok, setOk] = useState(false);
   const copiar = async () => {
     try {

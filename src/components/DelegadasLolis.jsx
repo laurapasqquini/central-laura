@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useStore } from '../lib/store';
 import { dataEfetiva, isWorkday } from '../lib/engine';
 import { today, fmtCurto } from '../lib/dates';
-import { delegadas, periodos } from '../lib/delegadas.js';
+import { delegadas, periodos, recadoAtrasada } from '../lib/delegadas.js';
+import { Copiar } from './AcompanhamentoLolis';
 import { desfazerMarcaLolis } from '../lib/lolisDesfazer';
 import { Empty, inputCls } from './ui';
 
@@ -93,7 +94,7 @@ export default function DelegadasLolis({ onEdit }) {
             <div key={g.dia || 'sem'} className="space-y-1.5">
               {(vista !== 'ontem' && vista !== 'hoje') || busca.trim() ? <div className="text-xs font-bold uppercase tracking-wide text-slate-400">{g.dia ? `Delegadas ${dm(g.dia)}` : 'Sem data'}</div> : null}
               {g.itens.map((x) => (
-                <Linha key={x.id} x={x} onEdit={() => onEdit(x.id)} onDesfazer={() => desfazer(x)} />
+                <Linha key={x.id} x={x} recado={x.tipo === 'atrasada' ? recadoAtrasada(x, ref, ehUtil, state.lolisModelos) : null} onEdit={() => onEdit(x.id)} onDesfazer={() => desfazer(x)} />
               ))}
             </div>
           ))}
@@ -103,12 +104,13 @@ export default function DelegadasLolis({ onEdit }) {
   );
 }
 
-function Linha({ x, onEdit, onDesfazer }) {
+function Linha({ x, recado, onEdit, onDesfazer }) {
   const [nome, cor] = SIT[x.tipo];
   const detalhe =
     x.tipo === 'feita' ? (x.em ? `feita ${dm(x.em)}` : 'feita') : x.tipo === 'nao' ? `marcou ${dm(x.em)}` : x.tipo === 'atrasada' ? `prazo ${dm(x.prazo)} · há ${x.dias} dia${x.dias === 1 ? '' : 's'} út${x.dias === 1 ? 'il' : 'eis'}` : x.prazo ? `prazo ${dm(x.prazo)}` : 'sem prazo';
   return (
-    <div className="flex items-start gap-2 rounded-lg px-2 py-2 ring-1 ring-slate-100 hover:bg-slate-50">
+    <div className="space-y-2 rounded-lg px-2 py-2 ring-1 ring-slate-100 hover:bg-slate-50">
+    <div className="flex items-start gap-2">
       <button onClick={onEdit} className="min-w-0 flex-1 text-left">
         <span className={`block text-sm ${x.tipo === 'feita' ? 'text-slate-400 line-through' : 'text-slate-800'}`}>{x.titulo}</span>
         <span className="block text-[11px] text-slate-400">
@@ -123,6 +125,13 @@ function Linha({ x, onEdit, onDesfazer }) {
           desfazer
         </button>
       )}
+    </div>
+    {recado && (
+      <div className="flex items-start gap-2">
+        <p className="min-w-0 flex-1 rounded-lg bg-[#e7ffdb] px-3 py-2 text-sm text-slate-700">{recado}</p>
+        <Copiar texto={recado} />
+      </div>
+    )}
     </div>
   );
 }

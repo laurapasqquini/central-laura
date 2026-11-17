@@ -1,7 +1,7 @@
 // Testes da subaba Lolis › Delegadas (rodar com: npm test). Dados de exemplo.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { delegadas, periodos, situacao, diaUtilAnterior } from '../src/lib/delegadas.js';
+import { delegadas, periodos, situacao, diaUtilAnterior, recadoAtrasada } from '../src/lib/delegadas.js';
 
 const REF = '2026-11-17'; // terça
 const util = (d) => ![0, 6].includes(new Date(`${d}T12:00`).getDay());
@@ -43,4 +43,10 @@ test('lista do período: só da Lolis, pelo dia em que delegou, com a contagem',
 test('busca procura em tudo, sem acento, no título e nas notas', () => {
   const tasks = [t('a', { title: 'Ligar para a Arena Nova', createdAt: '2026-10-01' }), t('b', { notes: 'falar da arena' }), t('c')];
   assert.deepEqual(delegadas(tasks, ctx(), { de: REF, ate: REF, busca: 'arêna' }).itens.map((x) => x.id).sort(), ['a', 'b']);
+});
+
+test('recado da atrasada: "ontem" quando o prazo foi o dia útil anterior; modelo editado vale', () => {
+  assert.equal(recadoAtrasada({ titulo: 'Terminar os troféus', prazo: '2026-11-16', dias: 1 }, REF, util), 'Oii Lolis, tudo bem? A tarefa "Terminar os troféus" estava pra ontem, boraa? Se travou em algo, me fala.');
+  assert.match(recadoAtrasada({ titulo: 'X', prazo: '2026-11-12', dias: 3 }, REF, util), /estava pra dia 12\/11/);
+  assert.equal(recadoAtrasada({ titulo: 'X', prazo: '2026-11-16', dias: 1 }, REF, util, { 'delegada-atrasada': 'Oii Lolis, tudo bem? {tarefa} era {quando}' }), 'Oii Lolis, tudo bem? X era ontem');
 });

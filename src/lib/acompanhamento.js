@@ -78,6 +78,7 @@ export function resumoDoDia(dia, metas, meta) {
 // ── Modelos das mensagens: um por tipo, editáveis pela Laura (state.lolisModelos), com variáveis entre chaves ──
 export const MODELOS_PADRAO = {
   atraso: { grupo: 'cobrar', rotulo: 'Tarefa atrasada', vars: { tarefa: 'nome da tarefa', desde: 'data do prazo (dd/mm)', dias: 'dias úteis de atraso' }, texto: 'Oii Lolis, tudo bem? "{tarefa}" está pendente desde {desde}. O que está travando? Me avisa se precisar de algo.' },
+  'delegada-atrasada': { grupo: 'cobrar', rotulo: 'Recado da tarefa atrasada (Delegadas)', vars: { tarefa: 'nome da tarefa', quando: 'ontem / dia dd/mm', dias: 'dias úteis de atraso' }, texto: 'Oii Lolis, tudo bem? A tarefa "{tarefa}" estava pra {quando}, boraa? Se travou em algo, me fala.' },
   expansao: { grupo: 'cobrar', rotulo: 'Expansão com prazo vencido', vars: { cidade: 'cidade', faltam: 'locais que faltam', prazo: 'prazo (dd/mm)' }, texto: 'Oii Lolis, tudo bem? O prazo de {cidade} venceu em {prazo} e ainda faltam {faltam} locais. Qual a previsão para terminar?' },
   nao: { grupo: 'cobrar', rotulo: '"Não consegui" sem nota', vars: { tarefa: 'nome da tarefa', quando: 'hoje / em dd/mm' }, texto: 'Oii Lolis, tudo bem? Você marcou que não conseguiu "{tarefa}". O que aconteceu?' },
   telefones: { grupo: 'cobrar', rotulo: 'Telefones abaixo da meta', vars: { feitos: 'telefones anotados', meta: 'meta do dia', quando: 'hoje / em dd/mm' }, texto: 'Oii Lolis, tudo bem? Foram {feitos} telefones {quando} e a meta é {meta}. O que dificultou?' },
