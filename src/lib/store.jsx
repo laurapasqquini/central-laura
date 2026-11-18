@@ -23,7 +23,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 32,
+    version: 33,
     createdAt: hoje,
     lolisAvisos: [AVISO_JOGOS],
     lolisBanco: bancoInicial(),
@@ -286,6 +286,11 @@ function migrate(s) {
   // v32: idem, mas o título dessas tarefas começa com "💬 " (a v31 não pegava)
   if (s.version < 32) {
     s = { ...s, version: 32, tasks: s.tasks.filter((t) => !/^(💬 )?RANKEN Hub · Pagamento Pix: \{/.test(t.title || '')) };
+  }
+  // v33: o Gela Boca saiu do RANKEN: tira a linha do açaí das mensagens do 6x0 que a Laura editou
+  if (s.version < 33) {
+    const m = Object.fromEntries(Object.entries(s.mensagens6x0 || {}).map(([c, t]) => [c, String(t).split('\n').filter((l) => !/gela ?boca|a[çc]a[íi]/i.test(l)).join('\n')]));
+    s = { ...s, version: 33, mensagens6x0: m };
   }
   return s;
 }
