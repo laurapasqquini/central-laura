@@ -13,7 +13,40 @@ test('primeira vez na lista: 1º contato com a mensagem do status', () => {
   assert.equal(situacao(h, ana, '2026-11-10').pedeAtencao, true);
 });
 
-test('depois de um contato, a próxima mensagem é o follow-up (e volta a pedir atenção em 5 dias)', () => {
+test('frequência: 2º contato 3 dias depois do 1º, 3º 7 dias depois do 2º, e depois "Sem retorno"', () => {
+  let h = atualizarHistorico({}, [ana], '2026-11-01');
+  h = marcarContato(h, ana, '2026-11-01', '2026-11-01');
+  assert.equal(situacao(h, ana, '2026-11-03').pedeAtencao, false);
+  let s = situacao(h, ana, '2026-11-04');
+  assert.equal(s.pedeAtencao, true);
+  assert.equal(s.tipo, 'followup');
+  h = marcarContato(h, ana, '2026-11-04', '2026-11-04');
+  assert.equal(situacao(h, ana, '2026-11-10').pedeAtencao, false);
+  s = situacao(h, ana, '2026-11-11');
+  assert.equal(s.pedeAtencao, true);
+  assert.equal(s.tipo, 'followup3');
+  h = marcarContato(h, ana, '2026-11-11', '2026-11-11');
+  s = situacao(h, ana, '2026-11-17');
+  assert.equal(s.pedeAtencao, false);
+  assert.equal(s.semRetorno, false);
+  s = situacao(h, ana, '2026-11-18');
+  assert.equal(s.pedeAtencao, false);
+  assert.equal(s.semRetorno, true);
+});
+
+test('virou bloqueado depois do contato: volta na hora para a lista', () => {
+  let h = atualizarHistorico({}, [ana], '2026-11-01');
+  h = marcarContato(h, ana, '2026-11-01', '2026-11-01');
+  const bloqueada = { ...ana, status: 'unpaid' };
+  const s = situacao(h, bloqueada, '2026-11-02');
+  assert.equal(s.virouBloqueado, true);
+  assert.equal(s.pedeAtencao, true);
+  assert.equal(s.tipo, 'followup');
+  h = marcarContato(h, bloqueada, '2026-11-02', '2026-11-02');
+  assert.equal(situacao(h, bloqueada, '2026-11-03').pedeAtencao, false);
+});
+
+test('depois de um contato, a próxima mensagem é o follow-up', () => {
   let h = atualizarHistorico({}, [ana], '2026-11-10');
   h = marcarContato(h, ana, '2026-11-10', '2026-11-10');
   assert.equal(situacao(h, ana, '2026-11-10').tipo, 'vai'); // o contato de hoje ainda é o 1º

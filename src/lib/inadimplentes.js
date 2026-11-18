@@ -3,7 +3,6 @@
 // state.inadHist = { [chave]: { visto: 'AAAA-MM-DD', episodios: [{ inicio, fim, contatos: ['AAAA-MM-DD', …] }] } }
 import { addDays, diffDays } from './dates.js';
 
-export const VOLTA_EM = 5; // dias depois do contato para a pessoa voltar a pedir atenção
 const SUMIU_DIAS = 3; // fora da lista por 3 dias ou mais = resolveu; se voltar depois, é outro episódio
 
 // a mesma pessoa em qualquer cobrança: o cliente do Stripe (se não vier, o id da cobrança)
@@ -53,7 +52,8 @@ export function atualizarHistorico(hist = {}, itens = [], dia, legado = {}) {
   return novo;
 }
 
-// marca (dia) ou desmarca (null) um contato no episódio atual
+// marca (dia) ou desmarca (null) um contato no episódio atual. Guarda o status do momento do contato
+// (se a pessoa passar de "vai bloquear" para "bloqueado" depois, ela volta na hora para a lista)
 export function marcarContato(hist = {}, x, dia, hoje) {
   const k = chaveInad(x);
   const h = hist[k] || { visto: hoje, episodios: [] };
@@ -64,28 +64,42 @@ export function marcarContato(hist = {}, x, dia, hoje) {
     eps.push(ep);
   }
   const contatos = dia ? [...new Set([...ep.contatos, dia])].sort() : ep.contatos.filter((d) => d !== hoje);
-  eps[eps.length - 1] = { ...ep, contatos };
+  eps[eps.length - 1] = { ...ep, contatos, ...(dia ? { statusContato: x.status || null } : {}) };
   return { ...hist, [k]: { ...h, episodios: eps } };
 }
 
-// a situação de uma pessoa da lista: contatos do episódio, se já foi inadimplente antes e qual mensagem usar
+// a frequência: 1ª mensagem quando aparece; a 2ª, 3 dias depois da 1ª; a 3ª, 7 dias depois da 2ª.
+// Depois da 3ª, a central para de pedir mensagem: 7 dias sem pagar, vai para "Sem retorno" (decidir caso a caso).
+export const PRAZOS = [3, 7]; // dias depois do 1º e do 2º contato
+export const MAX_CONTATOS = 3;
+
+// a situação de uma pessoa da lista: contatos do episódio, se já foi inadimplente antes, qual mensagem usar
+// e se ela pede atenção agora
 export function situacao(hist = {}, x, hoje) {
   const h = hist[chaveInad(x)];
   const eps = h?.episodios || [];
   const ep = episodioAtual(h) || { contatos: [] };
   const anteriores = eps.filter((e) => e.fim);
   const contatos = ep.contatos || [];
+  const n = contatos.length;
   const ultimo = contatos.at(-1) || null;
   // a mensagem de agora conta os contatos de antes de hoje (o de hoje é o que está sendo feito)
   const antesDeHoje = contatos.filter((d) => d < hoje).length;
   const reincidente = anteriores.length > 0;
-  const tipo = antesDeHoje > 0 ? 'followup' : reincidente ? 'reincidente' : x.status === 'unpaid' ? 'bloqueado' : 'vai';
+  const tipo = antesDeHoje >= 2 ? 'followup3' : antesDeHoje === 1 ? 'followup' : reincidente ? 'reincidente' : x.status === 'unpaid' ? 'bloqueado' : 'vai';
+  // falou com ela quando ainda ia bloquear e agora está bloqueada: avisar já
+  const virouBloqueado = n > 0 && ultimo < hoje && x.status === 'unpaid' && ep.statusContato && ep.statusContato !== 'unpaid';
+  const proximoEm = n === 0 ? hoje : n < MAX_CONTATOS ? addDays(ultimo, PRAZOS[n - 1]) : null;
+  const semRetorno = n >= MAX_CONTATOS && ultimo <= addDays(hoje, -PRAZOS.at(-1));
   return {
-    contatos: contatos.length,
+    contatos: n,
     ultimo,
     reincidente,
     ultimaVez: anteriores.at(-1)?.fim || null,
     tipo,
-    pedeAtencao: !ultimo || ultimo <= addDays(hoje, -VOLTA_EM),
+    virouBloqueado: !!virouBloqueado,
+    proximoEm,
+    semRetorno,
+    pedeAtencao: n === 0 || (n < MAX_CONTATOS && proximoEm <= hoje) || (!!virouBloqueado && n < MAX_CONTATOS + 1),
   };
 }
