@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Central da Lau",
-  "version": "1.43",
+  "version": "1.44",
   "description": "Botão ➕ Central no WhatsApp Web e números do Beach Tênis do RANKEN Hub direto na Central da Lau.",
   "permissions": [
     "storage",

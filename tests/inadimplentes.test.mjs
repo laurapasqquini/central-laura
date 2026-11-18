@@ -1,7 +1,7 @@
 // Testes do histórico de inadimplentes (rodar com: npm test). Nomes e ids inventados.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { atualizarHistorico, marcarContato, situacao } from '../src/lib/inadimplentes.js';
+import { atualizarHistorico, marcarContato, marcarNaoCobrar, situacao } from '../src/lib/inadimplentes.js';
 
 const ana = { id: '1', stripeCliente: 'cus_teste_ana', status: 'past_due' };
 const beto = { id: '2', stripeCliente: 'cus_teste_beto', status: 'unpaid' };
@@ -97,4 +97,19 @@ test('dias sem leitura (Chrome fechado) não encerram o episódio', () => {
   h = atualizarHistorico(h, [], '2026-11-03'); // leitura vazia: ignorada
   h = atualizarHistorico(h, [ana, beto], '2026-11-20');
   assert.equal(situacao(h, ana, '2026-11-20').reincidente, false);
+});
+
+test('"não cobrar mais": sai da cobrança, desfaz, e não vale se a pessoa voltar a dever depois', () => {
+  let h = atualizarHistorico({}, [ana], '2026-10-01');
+  h = marcarNaoCobrar(h, ana, '2026-10-02', '2026-10-02');
+  let s = situacao(h, ana, '2026-10-20');
+  assert.equal(s.naoCobrar, '2026-10-02');
+  assert.equal(s.pedeAtencao, false);
+  assert.equal(situacao(marcarNaoCobrar(h, ana, null, '2026-10-02'), ana, '2026-10-20').pedeAtencao, true);
+  h = atualizarHistorico(h, [beto], '2026-10-25'); // o Hub tirou da lista
+  h = atualizarHistorico(h, [beto], '2026-10-29');
+  h = atualizarHistorico(h, [ana], '2026-12-01'); // voltou a dever
+  s = situacao(h, ana, '2026-12-01');
+  assert.equal(s.naoCobrar, null);
+  assert.equal(s.tipo, 'reincidente');
 });

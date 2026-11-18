@@ -606,9 +606,9 @@ function lerPlanoApi() {
 // "unpaid" já esgotou as tentativas (acesso bloqueado). Vai para a aba Ranken › Inadimplentes, a cada 30 min.
 let ultimosInadimplentes = 0;
 function lerInadimplentes() {
-  if (Date.now() - ultimosInadimplentes < 30 * 60e3) return;
+  if (Date.now() - ultimosInadimplentes < 30 * 60e3) return Promise.resolve();
   ultimosInadimplentes = Date.now();
-  fetch('/api/cobrancas', { credentials: 'include', cache: 'no-store' })
+  return fetch('/api/cobrancas', { credentials: 'include', cache: 'no-store' })
     .then((r) => (r.ok ? r.json() : null))
     .then((j) => {
       if (!Array.isArray(j?.items)) return;
@@ -628,7 +628,8 @@ function lerInadimplentes() {
           desde: x.atualizado_em || null,
           stripeCliente: x.stripe_customer_id || null, // botão "Stripe ↗", igual ao do Hub
         }));
-      mandar('inadimplentes', { itens }, 'ultimosInadimplentes', `✓ ${itens.length} inadimplentes na Central`, true);
+      // hora: manda de novo a cada hora mesmo sem mudança, para o "lido às" da Central ficar certo
+      return mandar('inadimplentes', { itens, hora: new Date().getHours() }, 'ultimosInadimplentes', `✓ ${itens.length} inadimplentes na Central`, true);
     })
     .catch(() => {});
 }
@@ -700,6 +701,8 @@ async function comDescricaoLaura(n, buscar) {
 }
 
 async function rodarAutoLaura() {
+  // de hora em hora também atualiza os inadimplentes (antes só lia com o Hub aberto na mão)
+  await lerInadimplentes();
   for (let i = 0; i < 40; i++) {
     await new Promise((r) => setTimeout(r, 500));
     let n = lerAtividadesLaura();

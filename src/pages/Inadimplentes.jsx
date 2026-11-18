@@ -60,6 +60,7 @@ export default function Inadimplentes() {
   const [editar, setEditar] = useState(false);
   const [aberta, setAberta] = useState(null); // só uma mensagem aberta por vez
   const [verFalei, setVerFalei] = useState(false);
+  const [verNao, setVerNao] = useState(false);
   const hub = state.inadimplentesHub;
   const itens = hub?.itens || [];
   const hist = histDe(state);
@@ -71,8 +72,9 @@ export default function Inadimplentes() {
   // quem já recebeu contato espera o prazo do próximo em "Já falei"; depois do 3º sem pagar, "Sem retorno"
   const vai = itens.filter((x) => x.status !== 'unpaid' && pede(x)).sort(porValor);
   const bloqueados = itens.filter((x) => x.status === 'unpaid' && pede(x)).sort(porValor);
+  const naoCobrar = itens.filter((x) => sit[x.id].naoCobrar).sort((a, b) => sit[b.id].naoCobrar.localeCompare(sit[a.id].naoCobrar));
   const semRetorno = itens.filter((x) => !pede(x) && sit[x.id].semRetorno).sort(porValor);
-  const falei = itens.filter((x) => !pede(x) && !sit[x.id].semRetorno).sort((a, b) => (sit[a.id].proximoEm || '9').localeCompare(sit[b.id].proximoEm || '9'));
+  const falei = itens.filter((x) => !pede(x) && !sit[x.id].semRetorno && !sit[x.id].naoCobrar).sort((a, b) => (sit[a.id].proximoEm || '9').localeCompare(sit[b.id].proximoEm || '9'));
   const lidoEm = hub ? new Date(hub.em) : null;
   const msgDe = (x) => msgs[chaveMsg(sit[x.id], x)];
   const card = (x, cor) => <Pessoa key={x.id} x={x} cor={cor} msg={msgDe(x)} sit={sit[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />;
@@ -98,6 +100,7 @@ export default function Inadimplentes() {
           <Resumo cor="bg-amber-500" n={vai.length} rotulo={vai.length === 1 ? 'vai bloquear' : 'vão bloquear'} />
           <Resumo cor="bg-red-500" n={bloqueados.length} rotulo={bloqueados.length === 1 ? 'bloqueado' : 'bloqueados'} />
           <Resumo cor="bg-slate-300" n={falei.length} rotulo="já falei" />
+          {naoCobrar.length > 0 && <Resumo cor="bg-slate-200" n={naoCobrar.length} rotulo="não cobrar mais" />}
           {semRetorno.length > 0 && <Resumo cor="bg-violet-400" n={semRetorno.length} rotulo="sem retorno" />}
         </div>
       )}
@@ -155,6 +158,20 @@ export default function Inadimplentes() {
           {semRetorno.map((x) => card(x, COR.sem))}
         </Grupo>
       )}
+      {naoCobrar.length > 0 && (
+        <section className="space-y-2">
+          <button onClick={() => setVerNao(!verNao)} className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold uppercase tracking-wide ${COR.falei.titulo} hover:bg-slate-100`}>
+            <span>Não cobrar mais ({naoCobrar.length})</span>
+            <span className="text-xs normal-case tracking-normal">{verNao ? 'esconder ▴' : 'mostrar ▾'}</span>
+          </button>
+          {verNao && (
+            <div className="space-y-2">
+              <p className="px-1 text-xs text-slate-500">Avisaram que não vão mais jogar. A central não cobra mais; somem daqui quando o Hub tirar da lista (em até 30 dias).</p>
+              {naoCobrar.map((x) => card(x, COR.falei))}
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
@@ -181,7 +198,7 @@ function Grupo({ cor, titulo, dica, children }) {
 }
 
 function Pessoa({ x, cor, msg, sit, aberta, onAlternar }) {
-  const { falarInadimplente } = useStore();
+  const { falarInadimplente, naoCobrarInadimplente } = useStore();
   const ref = today();
   const [copiado, setCopiado] = useState('');
   const texto = msg.replaceAll('{nome}', primeiroNome(x.nome)).replaceAll('{esporte}', (x.esporte || 'tênis').toLowerCase());
@@ -214,6 +231,7 @@ function Pessoa({ x, cor, msg, sit, aberta, onAlternar }) {
             <div className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] font-semibold">
               <span className={`rounded px-1.5 py-0.5 ${n <= 1 ? 'bg-slate-100 text-slate-600' : 'bg-sky-50 text-sky-800 ring-1 ring-sky-200'}`}>{etapa}</span>
               {sit.virouBloqueado && <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-800 ring-1 ring-red-200">foi bloqueado depois do último contato</span>}
+              {sit.naoCobrar && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">não cobrar mais · desde {fmtCurto(sit.naoCobrar)}</span>}
               {proximo && <span className="rounded bg-slate-50 px-1.5 py-0.5 text-slate-500 ring-1 ring-slate-200">{proximo}</span>}
               {sit.reincidente && <span className="rounded bg-violet-50 px-1.5 py-0.5 text-violet-800 ring-1 ring-violet-200">inadimplente de novo{sit.ultimaVez ? ` (última vez em ${mesAno(sit.ultimaVez)})` : ''}</span>}
             </div>
@@ -226,7 +244,11 @@ function Pessoa({ x, cor, msg, sit, aberta, onAlternar }) {
             </a>
           )}
           <span className="rounded-md px-2 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-200">{aberta ? 'Fechar ▴' : 'Mensagem ▾'}</span>
-          {falouEm === ref ? (
+          {sit.naoCobrar ? (
+            <button onClick={(e) => (parar(e), naoCobrarInadimplente(x, null))} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-700 ring-1 ring-slate-300 hover:bg-white">
+              Voltar a cobrar
+            </button>
+          ) : falouEm === ref ? (
             <button onClick={(e) => (parar(e), falarInadimplente(x, null))} className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-700" title="Desfazer">
               falei hoje ✓
             </button>
@@ -252,6 +274,11 @@ function Pessoa({ x, cor, msg, sit, aberta, onAlternar }) {
                     {copiado === 'tel' ? 'Copiado ✓' : 'Copiar número'}
                   </button>
                 </>
+              )}
+              {!sit.naoCobrar && (
+                <button onClick={() => confirm(`${primeiroNome(x.nome)} avisou que não vai mais jogar? Paro de cobrar (some daqui quando o Hub tirar, em até 30 dias).`) && naoCobrarInadimplente(x, ref)} className="ml-auto rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 ring-1 ring-slate-300 hover:bg-slate-50 hover:text-slate-800">
+                  Não cobrar mais
+                </button>
               )}
             </div>
           </div>

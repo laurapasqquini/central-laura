@@ -68,6 +68,22 @@ export function marcarContato(hist = {}, x, dia, hoje) {
   return { ...hist, [k]: { ...h, episodios: eps } };
 }
 
+// "não cobrar mais" (dia) ou voltar a cobrar (null): quem já avisou que não vai mais jogar.
+// Vale só para este episódio: se a pessoa pagar e um dia voltar a dever, recomeça do zero.
+export function marcarNaoCobrar(hist = {}, x, dia, hoje) {
+  const k = chaveInad(x);
+  const h = hist[k] || { visto: hoje, episodios: [] };
+  const eps = [...h.episodios];
+  let ep = episodioAtual(h);
+  if (!ep) {
+    ep = { inicio: hoje, fim: null, contatos: [] };
+    eps.push(ep);
+  }
+  const { naoCobrar, ...resto } = ep;
+  eps[eps.length - 1] = dia ? { ...resto, naoCobrar: dia } : resto;
+  return { ...hist, [k]: { ...h, episodios: eps } };
+}
+
 // a frequência: 1ª mensagem quando aparece; a 2ª, 3 dias depois da 1ª; a 3ª, 7 dias depois da 2ª.
 // Depois da 3ª, a central para de pedir mensagem: 7 dias sem pagar, vai para "Sem retorno" (decidir caso a caso).
 export const PRAZOS = [3, 7]; // dias depois do 1º e do 2º contato
@@ -91,7 +107,9 @@ export function situacao(hist = {}, x, hoje) {
   const virouBloqueado = n > 0 && ultimo < hoje && x.status === 'unpaid' && ep.statusContato && ep.statusContato !== 'unpaid';
   const proximoEm = n === 0 ? hoje : n < MAX_CONTATOS ? addDays(ultimo, PRAZOS[n - 1]) : null;
   const semRetorno = n >= MAX_CONTATOS && ultimo <= addDays(hoje, -PRAZOS.at(-1));
+  if (ep.naoCobrar) return { contatos: n, ultimo, reincidente, ultimaVez: anteriores.at(-1)?.fim || null, tipo, virouBloqueado: false, proximoEm: null, semRetorno: false, naoCobrar: ep.naoCobrar, pedeAtencao: false };
   return {
+    naoCobrar: null,
     contatos: n,
     ultimo,
     reincidente,

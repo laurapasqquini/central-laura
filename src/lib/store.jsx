@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from './supabase';
 import { today, addDays, nextWorkday, toStr } from './dates';
-import { atualizarHistorico, marcarContato } from './inadimplentes.js';
+import { atualizarHistorico, marcarContato, marcarNaoCobrar } from './inadimplentes.js';
 import { seedRoutines, seedTasks, seedMarcos, TEMPLATES } from './seed';
 import { leituraDeBusca } from './whats';
 import { buildAgenda, dadosPaginaLolis, postsSorteio, brindesDoDia, ID_LEMBRETES, chaveApoiador, PIX_HUB, isWorkday } from './engine';
@@ -951,6 +951,12 @@ export function StoreProvider({ user, children }) {
         setState((s) => {
           const base = s.inadHist || atualizarHistorico({}, s.inadimplentesHub?.itens || [], today(), s.inadimplentesContato || {});
           return { ...s, inadHist: marcarContato(base, x, dia, today()) };
+        }),
+      // "não cobrar mais" (quem avisou que não vai mais jogar): dia marca, null volta a cobrar
+      naoCobrarInadimplente: (x, dia) =>
+        setState((s) => {
+          const base = s.inadHist || atualizarHistorico({}, s.inadimplentesHub?.itens || [], today(), s.inadimplentesContato || {});
+          return { ...s, inadHist: marcarNaoCobrar(base, x, dia, today()) };
         }),
       setMsgInadimplentes: (patch) => setState((s) => ({ ...s, msgInadimplentes: { ...(s.msgInadimplentes || {}), ...patch } })),
       // cobrança Pix (vem do Hub todo dia): passa para a Lolis ou volta para a Laura
