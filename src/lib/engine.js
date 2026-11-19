@@ -536,8 +536,11 @@ function programacoes(state) {
     const h = ret[k] || {};
     return { ...x, contatoRetirada: o.contato || h.contato || x.contato || '', telefoneRetirada: o.telefone || h.telefone || x.telefone || '' };
   };
-  return Object.values(state.programacao || {}).map((p) => ({ ...p, dias: Object.fromEntries(Object.entries(p.dias || {}).map(([d, v]) => [d, { ...v, patrocinadores: (v.patrocinadores || []).map(troca) }])) }));
+  return Object.values(state.programacao || {}).map((p) => ({ ...p, dias: Object.fromEntries(Object.entries(p.dias || {}).map(([d, v]) => [d, { ...v, patrocinadores: (v.patrocinadores || []).filter((x) => !saiuDoPatrocinio(x.nome)).map(troca) }])) }));
 }
+// apoiadores que saíram do RANKEN: somem das mensagens, posts e artes do sorteio mesmo se o Hub ainda listar
+const SAIRAM_DO_PATROCINIO = /cineflix|gela ?boca/i;
+export const saiuDoPatrocinio = (nome = '') => SAIRAM_DO_PATROCINIO.test(semAcento(String(nome)));
 
 // Patrocinadores do sorteio em que a pessoa ganhou (Programação do Hub, pelo dia da semana, cidade e esporte)
 function programacaoDoGanhador(state, g) {

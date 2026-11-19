@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, chaveApoiador, mensagens6x0 } from '../lib/engine';
+import { buildDay, buildOverdue, noDate, mensagemLolis, dadosPaginaLolis, chaveFrase, fraseAutomatica, chaveApoiador, mensagens6x0, saiuDoPatrocinio } from '../lib/engine';
 import { today, addDays, fmtCurto } from '../lib/dates';
 import { ItemRow, Section, Empty, TaskModal, Segmented, inputCls } from '../components/ui';
 import LolisPublica from './LolisPublica';
@@ -379,7 +379,7 @@ function ContatosApoiadores() {
   const porNome = {};
   for (const p of Object.values(state.programacao || {}))
     for (const d of Object.values(p.dias || {}))
-      for (const x of d.patrocinadores || []) {
+      for (const x of (d.patrocinadores || []).filter((y) => !saiuDoPatrocinio(y.nome))) {
         const k = chaveApoiador(x.nome);
         if (k && !porNome[k]) porNome[k] = { nome: x.nome, contato: state.retiradas?.[k]?.contato || x.contato || '', telefone: state.retiradas?.[k]?.telefone || x.telefone || '' }; // o da retirada (Hub)
       }
