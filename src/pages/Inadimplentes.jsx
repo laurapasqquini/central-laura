@@ -82,7 +82,7 @@ export default function Inadimplentes() {
   const falei = itens.filter((x) => !pede(x) && !sit[x.id].semRetorno && !sit[x.id].naoCobrar).sort((a, b) => (sit[a.id].proximoEm || '9').localeCompare(sit[b.id].proximoEm || '9'));
   const lidoEm = hub ? new Date(hub.em) : null;
   const msgDe = (x) => msgs[chaveMsg(sit[x.id], x)];
-  const card = (x, cor) => <Pessoa key={x.id} x={x} cor={cor} msg={msgDe(x)} sit={sit[x.id]} bloqueio={bloqueio[x.id]} urgente={urgente(x)} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />;
+  const card = (x, cor) => <Pessoa key={x.id} x={x} cor={cor} msg={msgDe(x)} sit={sit[x.id]} bloqueio={bloqueio[x.id]} urgente={pede(x) && urgente(x)} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />;
   const alternar = (id) => setAberta(aberta === id ? null : id);
 
   return (
