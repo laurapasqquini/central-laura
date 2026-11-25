@@ -525,7 +525,19 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
                               </span>
                             )}
                           </span>
-                          <BotaoWhats tel={g.telefone} />
+                          {/* dupla: um número para cada uma (a mensagem vai para as duas) */}
+                          {(g.pessoas || []).length > 1 ? (
+                            <span className="flex flex-wrap items-center gap-1.5">
+                              {g.pessoas.map((p) => (
+                                <span key={p.nome} className="inline-flex items-center gap-1 text-xs text-slate-500">
+                                  {p.nome.split(' ')[0]}
+                                  {p.telefone ? <BotaoWhats tel={p.telefone} /> : <span className="text-slate-400">(sem número)</span>}
+                                </span>
+                              ))}
+                            </span>
+                          ) : (
+                            <BotaoWhats tel={g.telefone} />
+                          )}
                         </div>
                       ))}
                       <BotaoArte6x0 cidade={c.cidade} nomes={c.ganhadores.filter((g) => !g.jaSaiu).map((g) => `${g.nome} (R${g.rodada})`)} />

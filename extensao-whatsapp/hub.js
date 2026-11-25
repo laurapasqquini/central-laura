@@ -316,11 +316,25 @@ async function ler6x0() {
     const i = (j.inscritos || []).find((x) => x.nome === nome || (x.nome_dupla && `${x.nome} / ${x.nome_dupla}` === nome) || nome.startsWith(`${x.nome} /`));
     return i?.whatsapp || '';
   };
+  // dupla ("A / B"): o WhatsApp de cada uma. A inscrição da dupla tem whatsapp (de quem inscreveu) e whatsapp_dupla
+  const pessoas = (vencedor) => {
+    const nomes = vencedor.split(' / ').map((s) => s.trim()).filter(Boolean);
+    if (nomes.length < 2) return [{ nome: vencedor, telefone: tel(vencedor) }];
+    const [a, b] = nomes;
+    const ins = j.inscritos || [];
+    const dupla = ins.find((x) => (x.nome === a && x.nome_dupla === b) || (x.nome === b && x.nome_dupla === a));
+    const de = (n) => {
+      if (dupla) return dupla.nome === n ? dupla.whatsapp || '' : dupla.whatsapp_dupla || '';
+      const x = ins.find((y) => y.nome === n && y.whatsapp) || ins.find((y) => y.nome_dupla === n && y.whatsapp_dupla);
+      return x ? (x.nome === n ? x.whatsapp : x.whatsapp_dupla) || '' : '';
+    };
+    return nomes.map((n) => ({ nome: n, telefone: de(n) }));
+  };
   const ganhadores = (j.itens || [])
     .filter((i) => i.etapa_status !== 'finished' && i.esporte === 'tenis' && CIDADE[i.cidade])
     .filter((i) => i.resultado_em && i.resultado_em.slice(0, 10) <= i.rodada_fim) // no prazo (verde)
     .filter((i) => !i.instagram_em) // ainda não saiu na arte do Instagram
-    .map((i) => ({ nome: i.vencedor, cidade: CIDADE[i.cidade], rodada: String(i.rodada), classe: (i.classe || '').replace(/^Classe\s*/, ''), lancado: ddmm(i.resultado_em), brinde: !!i.voucher_em, telefone: tel(i.vencedor) }))
+    .map((i) => ({ nome: i.vencedor, cidade: CIDADE[i.cidade], rodada: String(i.rodada), classe: (i.classe || '').replace(/^Classe\s*/, ''), lancado: ddmm(i.resultado_em), brinde: !!i.voucher_em, telefone: tel(i.vencedor), pessoas: pessoas(i.vencedor) }))
     .sort((x, y) => x.cidade.localeCompare(y.cidade) || x.nome.localeCompare(y.nome));
   return { dia: new Date().toLocaleDateString('sv-SE'), ganhadores };
 }
