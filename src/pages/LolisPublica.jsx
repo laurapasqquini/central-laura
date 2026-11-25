@@ -547,6 +547,14 @@ function Dia({ dia, andamento, banco, adiantar, expansao, token }) {
                     <p className="text-xs text-slate-400">{c.lidoEm ? 'Nenhum ganhador pendente nesta cidade.' : 'Aguardando a leitura do Hub.'}</p>
                   )}
                   <Texto rotulo="Mensagem no privado do ganhador" texto={c.mensagem} />
+                  {c.apoiador && (
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                        Avisar o {c.apoiador.nome} ({c.apoiador.quem}) de quem ganhou: <BotaoWhats tel={c.apoiador.telefone} />
+                      </div>
+                      <Texto rotulo={`Mensagem para o ${c.apoiador.nome}`} texto={c.apoiador.texto} />
+                    </div>
+                  )}
                 </div>
               ))}
             </Secao>

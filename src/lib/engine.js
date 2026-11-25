@@ -957,7 +957,8 @@ export function mensagens6x0(state) {
   ];
   // ganhadores da semana lidos do Hub (quarta): todos os jogos no prazo lançados nos últimos 7 dias
   const sz = state.seisZero || { ganhadores: [] };
-  return cidades.map((c) => ({
+  return cidades
+    .map((c) => ({
     ...c,
     lidoEm: sz.dia || null,
     ganhadores: sz.ganhadores
@@ -971,7 +972,23 @@ export function mensagens6x0(state) {
     // texto que a Laura editou na central (Lolis › Delegado, link e frases › Mensagem do 6x0), ou o padrão
     mensagem: (state.mensagens6x0 || {})[c.cidade]?.trim() || mensagemPadrao6x0(c),
     padrao: mensagemPadrao6x0(c),
-  }));
+  }))
+    // Maringá: avisar o Bonna Pizza (contato da retirada no Hub) de quem ganhou a pizza nesta semana
+    .map((c) => {
+      const nomes = c.ganhadores.filter((g) => !g.jaSaiu).map((g) => g.nome);
+      if (c.cidade !== 'Maringá' || !bonna || !nomes.length) return c;
+      const um = nomes.length === 1 && !nomes[0].includes(' / ');
+      const texto = [
+        `Oii ${bonna.quem}, tudo bem? 🍕`,
+        '',
+        `Passando pra avisar quem ganhou a pizza brotinho do *6x0 6x0* do RANKEN desta semana:`,
+        '',
+        ...nomes.map((n) => `• ${n}`),
+        '',
+        `${um ? 'A pessoa vai' : 'Eles vão'} te chamar pra combinar a retirada (prazo de 7 dias). Obrigada pela parceria! 💚`,
+      ].join('\n');
+      return { ...c, apoiador: { nome: 'Bonna Pizza', quem: bonna.quem, telefone: bonna.telefone, texto } };
+    });
 }
 
 export function dadosPaginaLolis(state, ref = today()) {
