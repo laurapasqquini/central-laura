@@ -627,6 +627,7 @@ function lerInadimplentes() {
           ultimoContato: x.ultimo_contato || null,
           desde: x.atualizado_em || null,
           stripeCliente: x.stripe_customer_id || null, // botão "Stripe ↗", igual ao do Hub
+          proxima: x.data_proxima_cobranca || null, // dia do ciclo: a Central calcula quando o Stripe bloqueia
         }));
       // hora: manda de novo a cada hora mesmo sem mudança, para o "lido às" da Central ficar certo
       return mandar('inadimplentes', { itens, hora: new Date().getHours() }, 'ultimosInadimplentes', `✓ ${itens.length} inadimplentes na Central`, true);
@@ -722,6 +723,12 @@ async function rodarAutoLaura() {
   chrome.runtime.sendMessage({ tipo: 'fechar-aba' });
 }
 if (AUTO_LAURA) rodarAutoLaura();
+// fim de semana e feriado: aba em segundo plano só para ler os inadimplentes (o Stripe bloqueia em 3 a 4 dias)
+// (a leitura também roda sozinha ao abrir o Hub; 20 s dá tempo de ela ir para a Central antes de fechar)
+if (new URLSearchParams(location.search).get('central') === 'inad') {
+  lerInadimplentes();
+  setTimeout(() => chrome.runtime.sendMessage({ tipo: 'fechar-aba' }), 20e3);
+}
 
 async function rodarAutoEquipe() {
   for (let i = 0; i < 40; i++) {

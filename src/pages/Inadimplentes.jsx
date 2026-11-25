@@ -3,13 +3,14 @@
 // Cada pessoa tem a mensagem pronta; quem paga ou cancela sai da lista do Hub e some daqui sozinha.
 import { useState } from 'react';
 import { useStore } from '../lib/store';
-import { today, fmtCurto, relativo } from '../lib/dates';
-import { atualizarHistorico, situacao } from '../lib/inadimplentes.js';
+import { today, fmtCurto, relativo, addDays } from '../lib/dates';
+import { atualizarHistorico, situacao, previsaoBloqueio, quandoBloqueia } from '../lib/inadimplentes.js';
+import { proximoDiaUtil } from '../lib/engine';
 import { Empty } from '../components/ui';
 
 // a mensagem certa sai sozinha do histórico da pessoa: 1º contato (pelo status), follow-up ou "inadimplente de novo"
 export const MSG_INADIMPLENTES = {
-  vai: 'Oii {nome}, tudo bem? Lau do ranken aquii\nO pagamento da sua mensalidade está dando algum probleminha, e se a próxima tentativa também falhar o app bloqueia o seu acesso aos jogos. Consegue conferir o cartão no app (Perfil › Assinaturas)? Qualquer dúvida fico a disposição.',
+  vai: 'Oii {nome}, tudo bem? Lau do ranken aquii\nO pagamento da sua mensalidade está dando algum probleminha, e se a próxima tentativa também falhar o app bloqueia o seu acesso aos jogos {bloqueio}. Consegue conferir o cartão no app (Perfil › Assinaturas)? Qualquer dúvida fico a disposição.',
   bloqueado: 'Oii {nome}, tudo bem? Lau do ranken aquii\nVi que o pagamento da sua mensalidade de {esporte} não passou nas últimas tentativas e por isso o seu acesso ao app ficou bloqueado. Aconteceu alguma coisa? Pra voltar a jogar, é só ir no app, em Perfil › Assinaturas, e pagar por pix ou trocar o cartão.\n\nQualquer coisa me fala!',
   followup: 'Oii {nome}, tudo bem? Eu de novo aquii kkkk\n\nO pagamento da sua mensalidade ainda não passou. Dá pra resolver rapidinho pelo próprio app: em Perfil › Assinaturas você paga por pix ou troca o cartão.\n\nA gente adoraria continuar contando com você nos jogos! Se a ideia for parar por agora, me conta se é esse o caso e qual o motivo? E se tiver qualquer dúvida sobre o cancelamento, fico à disposição.',
   followupBloqueado: 'Oii {nome}, tudo bem? Eu de novo aquii kkkk\n\nSeu acesso ao app continua bloqueado porque o pagamento da mensalidade de {esporte} não passou. Pra voltar a jogar é bem simples: pelo app, em Perfil › Assinaturas, dá pra pagar por pix ou trocar o cartão.\n\nSeria muito bom ter você de volta nas rodadas! Se a ideia for parar, me conta se é esse o caso e qual o motivo? E se tiver qualquer dúvida sobre o cancelamento, fico à disposição.',
@@ -70,14 +71,18 @@ export default function Inadimplentes() {
   const pede = (x) => sit[x.id].pedeAtencao;
   const porValor = (a, b) => (b.valor || 0) - (a.valor || 0);
   // quem já recebeu contato espera o prazo do próximo em "Já falei"; depois do 3º sem pagar, "Sem retorno"
-  const vai = itens.filter((x) => x.status !== 'unpaid' && pede(x)).sort(porValor);
+  // "vai bloquear": quem bloqueia antes primeiro; "mandar hoje" = hoje é o último dia útil antes do bloqueio
+  const bloqueio = Object.fromEntries(itens.map((x) => [x.id, previsaoBloqueio(x, ref)]));
+  const urgente = (x) => bloqueio[x.id] && proximoDiaUtil(state, addDays(bloqueio[x.id], -1), -1) <= ref;
+  const vai = itens.filter((x) => x.status !== 'unpaid' && pede(x)).sort((a, b) => (bloqueio[a.id] || '9').localeCompare(bloqueio[b.id] || '9') || porValor(a, b));
+  const urgentes = vai.filter(urgente);
   const bloqueados = itens.filter((x) => x.status === 'unpaid' && pede(x)).sort(porValor);
   const naoCobrar = itens.filter((x) => sit[x.id].naoCobrar).sort((a, b) => sit[b.id].naoCobrar.localeCompare(sit[a.id].naoCobrar));
   const semRetorno = itens.filter((x) => !pede(x) && sit[x.id].semRetorno).sort(porValor);
   const falei = itens.filter((x) => !pede(x) && !sit[x.id].semRetorno && !sit[x.id].naoCobrar).sort((a, b) => (sit[a.id].proximoEm || '9').localeCompare(sit[b.id].proximoEm || '9'));
   const lidoEm = hub ? new Date(hub.em) : null;
   const msgDe = (x) => msgs[chaveMsg(sit[x.id], x)];
-  const card = (x, cor) => <Pessoa key={x.id} x={x} cor={cor} msg={msgDe(x)} sit={sit[x.id]} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />;
+  const card = (x, cor) => <Pessoa key={x.id} x={x} cor={cor} msg={msgDe(x)} sit={sit[x.id]} bloqueio={bloqueio[x.id]} urgente={urgente(x)} aberta={aberta === x.id} onAlternar={() => alternar(x.id)} />;
   const alternar = (id) => setAberta(aberta === id ? null : id);
 
   return (
@@ -108,7 +113,7 @@ export default function Inadimplentes() {
       {editar && (
         <div className="space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
           <p className="text-xs text-slate-500">
-            A central escolhe sozinha qual usar e quando: a 1ª quando a pessoa aparece no Hub, a 2ª 3 dias depois, a 3ª 7 dias depois da 2ª (e &quot;inadimplente de novo&quot; no lugar da 1ª para quem já pagou uma vez e voltou). Depois da 3ª, a pessoa vai para &quot;Sem retorno&quot;. Use {'{nome}'} e {'{esporte}'}: entram sozinhos.
+            A central escolhe sozinha qual usar e quando: a 1ª quando a pessoa aparece no Hub, a 2ª 3 dias depois, a 3ª 7 dias depois da 2ª (e &quot;inadimplente de novo&quot; no lugar da 1ª para quem já pagou uma vez e voltou). Depois da 3ª, a pessoa vai para &quot;Sem retorno&quot;. Use {'{nome}'}, {'{esporte}'} e {'{bloqueio}'} (ex.: "amanhã (26/11/2026)", só em quem vai bloquear): entram sozinhos.
           </p>
           {ROTULO_MSG.map(([k, rot]) => (
             <div key={k} className="space-y-1">
@@ -130,7 +135,12 @@ export default function Inadimplentes() {
       {hub && !itens.length && <Empty>Ninguém inadimplente agora. 🎉</Empty>}
 
       {vai.length > 0 && (
-        <Grupo cor={COR.vai} titulo={`Vai bloquear (${vai.length})`} dica="O Stripe ainda vai tentar cobrar de novo: dá tempo de evitar o bloqueio.">
+        <Grupo cor={COR.vai} titulo={`Vai bloquear (${vai.length})`} dica="O Stripe ainda vai tentar cobrar de novo: dá tempo de evitar o bloqueio. A data do bloqueio é a prevista (3 dias depois da falha) e já entra na mensagem.">
+          {urgentes.length > 0 && (
+            <div className="rounded-lg bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900 ring-1 ring-amber-300">
+              ⏰ {urgentes.length === 1 ? 'Mande hoje: bloqueia' : `Mande hoje para ${urgentes.length}: bloqueiam`} antes do próximo dia útil
+            </div>
+          )}
           {vai.map((x) => card(x, COR.vai))}
         </Grupo>
       )}
@@ -197,11 +207,14 @@ function Grupo({ cor, titulo, dica, children }) {
   );
 }
 
-function Pessoa({ x, cor, msg, sit, aberta, onAlternar }) {
+function Pessoa({ x, cor, msg, sit, bloqueio, urgente, aberta, onAlternar }) {
   const { falarInadimplente, naoCobrarInadimplente } = useStore();
   const ref = today();
   const [copiado, setCopiado] = useState('');
-  const texto = msg.replaceAll('{nome}', primeiroNome(x.nome)).replaceAll('{esporte}', (x.esporte || 'tênis').toLowerCase());
+  const texto = msg
+    .replaceAll('{nome}', primeiroNome(x.nome))
+    .replaceAll('{esporte}', (x.esporte || 'tênis').toLowerCase())
+    .replaceAll(bloqueio ? '{bloqueio}' : ' {bloqueio}', bloqueio ? quandoBloqueia(bloqueio, ref) : '');
   const copiar = async (t, qual) => {
     try {
       await navigator.clipboard.writeText(t);
@@ -230,6 +243,7 @@ function Pessoa({ x, cor, msg, sit, aberta, onAlternar }) {
             <div className="text-[15px] font-semibold text-ink">{x.nome || 'Sem nome'}</div>
             <div className="mt-0.5 flex flex-wrap gap-1.5 text-[11px] font-semibold">
               <span className={`rounded px-1.5 py-0.5 ${n <= 1 ? 'bg-slate-100 text-slate-600' : 'bg-sky-50 text-sky-800 ring-1 ring-sky-200'}`}>{etapa}</span>
+              {bloqueio && <span className={`rounded px-1.5 py-0.5 ${urgente ? 'bg-amber-500 text-white' : 'bg-amber-50 text-amber-800 ring-1 ring-amber-200'}`}>{urgente ? '⏰ mande hoje · ' : ''}bloqueia {quandoBloqueia(bloqueio, ref)}</span>}
               {sit.virouBloqueado && <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-800 ring-1 ring-red-200">foi bloqueado depois do último contato</span>}
               {sit.naoCobrar && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">não cobrar mais · desde {fmtCurto(sit.naoCobrar)}</span>}
               {proximo && <span className="rounded bg-slate-50 px-1.5 py-0.5 text-slate-500 ring-1 ring-slate-200">{proximo}</span>}

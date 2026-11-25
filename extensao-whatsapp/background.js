@@ -126,6 +126,14 @@ chrome.alarms.onAlarm.addListener(async (a) => {
       chrome.tabs.create({ url: `${HUB}/atividades?central=laura`, active: false });
     }
   }
+  // fora do horário das Atividades (fim de semana, feriado, manhã cedo e noite): inadimplentes de 3 em 3 horas, das 8h às 22h
+  else if (minutos >= 8 * 60 && minutos < 22 * 60) {
+    const { sessao: s, autoInad = 0, autoLaura = 0 } = await chrome.storage.local.get(['sessao', 'autoInad', 'autoLaura']);
+    if (s && Date.now() - Math.max(autoInad, autoLaura) >= 3 * 3600e3) {
+      await chrome.storage.local.set({ autoInad: Date.now() });
+      chrome.tabs.create({ url: `${HUB}/assinaturas?central=inad`, active: false });
+    }
+  }
   if ([0, 6].includes(agora.getDay()) || agora.getHours() * 60 + agora.getMinutes() < 13 * 60 + 25) return;
   const { sessao, autoEquipe } = await chrome.storage.local.get(['sessao', 'autoEquipe']);
   if (!sessao || autoEquipe === dia) return;

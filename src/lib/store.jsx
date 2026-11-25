@@ -23,7 +23,7 @@ const uid = () => crypto.randomUUID().slice(0, 8);
 function initial() {
   const hoje = today();
   return {
-    version: 33,
+    version: 34,
     createdAt: hoje,
     lolisAvisos: [AVISO_JOGOS],
     lolisBanco: bancoInicial(),
@@ -291,6 +291,12 @@ function migrate(s) {
   if (s.version < 33) {
     const m = Object.fromEntries(Object.entries(s.mensagens6x0 || {}).map(([c, t]) => [c, String(t).split('\n').filter((l) => !/gela ?boca|a[çc]a[íi]/i.test(l)).join('\n')]));
     s = { ...s, version: 33, mensagens6x0: m };
+  }
+  // v34: inadimplentes: a 1ª mensagem volta ao padrão novo (com a data do bloqueio) e as editadas abrem com "Lau do ranken aquii"
+  if (s.version < 34) {
+    const { vai, ...resto } = s.msgInadimplentes || {};
+    const abre = (t) => String(t).replace(/^Oii,? \{nome\},? tudo bem\? Aqui é a Lau, do RANKEN[^\n]*\n+/, 'Oii {nome}, tudo bem? Lau do ranken aquii\n');
+    s = { ...s, version: 34, msgInadimplentes: Object.fromEntries(Object.entries(resto).map(([k, t]) => [k, t && abre(t)])) };
   }
   return s;
 }

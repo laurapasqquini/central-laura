@@ -1,7 +1,27 @@
 // Histórico de cada inadimplente: os "episódios" (cada vez que a pessoa entrou na lista do Hub) e os contatos
 // feitos em cada um. Daqui sai qual mensagem usar: 1º contato, follow-up ou "inadimplente de novo".
 // state.inadHist = { [chave]: { visto: 'AAAA-MM-DD', episodios: [{ inicio, fim, contatos: ['AAAA-MM-DD', …] }] } }
-import { addDays, diffDays } from './dates.js';
+import { addDays, diffDays, toStr, weekday, DIAS } from './dates.js';
+
+// Quando o Stripe deve bloquear quem ainda está em "vai bloquear": a cobrança falha no dia do ciclo
+// (a "próxima cobrança" do Hub menos 1 mês) e o bloqueio vem 3 a 4 dias depois (no Hub: falhou dia 19, bloqueou dia 23).
+// Conta pelo mais cedo (3 dias), para a mensagem sair antes.
+export const DIAS_ATE_BLOQUEAR = 3;
+export function previsaoBloqueio(x, hoje) {
+  if (x.status === 'unpaid' || !x.proxima) return null;
+  const [a, m, d] = x.proxima.slice(0, 10).split('-').map(Number);
+  const falha = toStr(new Date(a, m - 2, Math.min(d, new Date(a, m - 1, 0).getDate())));
+  const dia = addDays(falha, DIAS_ATE_BLOQUEAR);
+  return dia < hoje ? hoje : dia; // passou da conta: pode bloquear a qualquer momento
+}
+
+// "amanhã (26/11/2026)", "no sábado (28/11/2026)": entra no lugar de {bloqueio} na mensagem
+export function quandoBloqueia(dia, hoje) {
+  const dd = `${dia.slice(8, 10)}/${dia.slice(5, 7)}/${dia.slice(0, 4)}`;
+  const n = diffDays(dia, hoje);
+  const w = weekday(dia);
+  return n <= 0 ? `hoje (${dd})` : n === 1 ? `amanhã (${dd})` : `${[0, 6].includes(w) ? 'no' : 'na'} ${DIAS[w]} (${dd})`;
+}
 
 const SUMIU_DIAS = 3; // fora da lista por 3 dias ou mais = resolveu; se voltar depois, é outro episódio
 
