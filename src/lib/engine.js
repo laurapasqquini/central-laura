@@ -543,12 +543,16 @@ const SAIRAM_DO_PATROCINIO = /cineflix|gela ?boca/i;
 export const saiuDoPatrocinio = (nome = '') => SAIRAM_DO_PATROCINIO.test(semAcento(String(nome)));
 
 // Patrocinadores do sorteio em que a pessoa ganhou (Programação do Hub, pelo dia da semana, cidade e esporte)
-function programacaoDoGanhador(state, g) {
+function patrocinadoresDoDia(state, g) {
   const local = semAcento(g.local || '');
   const p = programacoes(state).find((x) => local.includes(semAcento(x.cidade)) && local.includes(semAcento(x.esporte).split(' ')[0]));
-  const pats = p?.dias?.[DIA_NOME[weekday(g.data)]]?.patrocinadores;
-  // só confia se o patrocinador que aparece no Hub está no dia
-  return pats?.length && pats.some((x) => semAcento(x.nome) === semAcento(g.patrocinador || '')) ? pats : null;
+  return p?.dias?.[DIA_NOME[weekday(g.data)]]?.patrocinadores || null;
+}
+function programacaoDoGanhador(state, g) {
+  const pats = patrocinadoresDoDia(state, g);
+  // só confia se o patrocinador que aparece no Hub está no dia (ou se ele saiu do patrocínio: aí vale o que sobrou no dia)
+  if (!pats?.length) return null;
+  return saiuDoPatrocinio(g.patrocinador) || pats.some((x) => semAcento(x.nome) === semAcento(g.patrocinador || '')) ? pats : null;
 }
 
 export function brindesDoDia(state, date) {
@@ -564,17 +568,32 @@ export function brindesDoDia(state, date) {
     const nome = capitaliza((g.nome || '').trim().split(/\s+/)[0]);
     // a lista de ganhadores do Hub só mostra o 1º prêmio ("+1" esconde o resto):
     // o prêmio completo vem da Programação daquele dia, na cidade e esporte do ganhador
-    const doDia = programacaoDoGanhador(state, g);
-    const varios = (doDia?.length || 0) > 1 || !!g.extra;
+    // extensão 1.47+: a API do Hub traz todos os prêmios do ganhador (patrocinador + prêmio); tira quem saiu do
+    // patrocínio e completa com a Programação do dia (local e contato da retirada)
+    let doDia;
+    if (g.premios?.length) {
+      const validos = g.premios.filter((p) => p.nome && !saiuDoPatrocinio(p.nome));
+      if (!validos.length) continue; // só tinha prêmio de quem saiu: não há brinde para lembrar
+      const dia = patrocinadoresDoDia(state, g) || [];
+      doDia = validos.map((p) => ({ ...(dia.find((x) => semAcento(x.nome) === semAcento(p.nome)) || { nome: p.nome, local: '' }), premio: p.premio || '' }));
+    } else doDia = programacaoDoGanhador(state, g);
+    // o 1º prêmio do Hub é de quem saiu do patrocínio (ex.: Cineflix): não vale mais
+    const saiu = !g.premios?.length && saiuDoPatrocinio(g.patrocinador);
+    if (saiu && !doDia && !g.extra) continue; // só tinha o prêmio de quem saiu: não há brinde para lembrar
+    const varios = g.premios?.length ? doDia.length > 1 : (doDia?.length || 0) > 1 || (!!g.extra && !saiu);
     const premio = doDia
       ? doDia.map((x) => premioComNome(x)).join(' + ')
-      : [g.premio, g.patrocinador && `(${g.patrocinador})`, g.extra ? '+ outro prêmio (confira no Hub)' : ''].filter(Boolean).join(' ');
+      : saiu
+        ? 'o prêmio do patrocinador do dia (confira no Hub)'
+        : [g.premio, g.patrocinador && `(${g.patrocinador})`, g.extra ? '+ outro prêmio (confira no Hub)' : ''].filter(Boolean).join(' ');
     const linha = [g.nome, g.local, premio].filter(Boolean).join(' · ');
     // no dia do sorteio: o que cada patrocinador precisa (avisar o dono, voucher no Canva...)
     if (date === acao) {
-      const regra = regraPatrocinador(g.patrocinador);
-      const extra = g.extra ? 'Tem mais um prêmio (+1): confira no Hub de qual patrocinador é e se ele tem alguma regra.' : '';
-      if (regra || extra) out.push({ key: `g:${id}:a`, tipo: 'acao', title: `Brinde: ${g.patrocinador} · ${g.nome}`, linha, texto: [regra, extra].filter(Boolean).join(' ') });
+      // com todos os prêmios do Hub: a regra de cada patrocinador (sem precisar conferir o "+1")
+      const completo = !!g.premios?.length;
+      const regra = completo ? doDia.map((x) => regraPatrocinador(x.nome)).filter(Boolean).join(' ') : saiu ? '' : regraPatrocinador(g.patrocinador);
+      const extra = !completo && g.extra ? (saiu ? `O ${g.patrocinador} saiu do patrocínio: vale só o outro prêmio do dia. Confira no Hub de qual patrocinador é e se ele tem alguma regra.` : 'Tem mais um prêmio (+1): confira no Hub de qual patrocinador é e se ele tem alguma regra.') : '';
+      if (regra || extra) out.push({ key: `g:${id}:a`, tipo: 'acao', title: `Brinde: ${completo ? doDia.map((x) => tituloBonito(x.nome)).join(' + ') : g.patrocinador} · ${g.nome}`, linha, texto: [regra, extra].filter(Boolean).join(' ') });
     }
     if (date === lembrete)
       out.push({

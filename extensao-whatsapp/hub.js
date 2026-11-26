@@ -554,6 +554,8 @@ async function ganhadoresDaApi() {
       patrocinador: x.patrocinador || '',
       premio: x.premio || '',
       extra: Math.max(0, (x.premios?.length || 1) - 1),
+      // todos os prêmios (a tela do Hub só mostra o 1º e "+1"): patrocinador e prêmio de cada um
+      premios: (x.premios || []).filter((p) => p && typeof p === 'object').map((p) => ({ nome: p.patrocinador || '', premio: p.premio || '' })),
       telefone: (x.whatsapp || '').replace(/\D/g, ''),
       api: true,
     }));
