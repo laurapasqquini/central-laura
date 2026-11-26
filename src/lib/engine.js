@@ -505,9 +505,9 @@ export function comoRetirar(pats, cidade = '') {
       const nome = tituloBonito(x.nome);
       // contato da RETIRADA (o que o Hub mostra em "Prêmio do sorteio"), não o do apoiador
       const contato = (x.contatoRetirada || '').trim();
-      if (r.contatoAtleta && contato && x.telefoneRetirada)
-        return `📞 ${nome}: fale com ${quemFala(contato, x.nome)} ${r.instrucao || 'para combinar a retirada'}: ${x.telefoneRetirada} · ${whatsDe(x.telefoneRetirada)}`;
       const local = r.local || x.local;
+      if (r.contatoAtleta && contato && x.telefoneRetirada)
+        return `📞 ${nome}: fale com ${quemFala(contato, x.nome)} ${r.instrucao || 'para combinar a retirada'}: ${x.telefoneRetirada} · ${whatsDe(x.telefoneRetirada)}${r.comLocal && local ? `\n📍 ${local}` : ''}`;
       return local ? `📍 ${nome}: ${local}` : '';
     })
     .filter(Boolean)
@@ -766,6 +766,8 @@ const REGRAS_PATROCINADOR = [
   { re: /bonna/i, regra: 'Encaminhar no privado do dono da Bonna Pizza quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para combinar a retirada da sua pizza' },
   { re: /olaia/i, regra: 'Avisar a Olaia Grill no privado quem ganhou.', avisar: true, contatoAtleta: true, instrucao: 'para fazer o pedido da sua marmita' },
   { re: /burgo|jacar[eé]/i, regra: 'Fazer o voucher e mandar no privado do ganhador.' },
+  // Casa Jacintho: o ganhador recebe o contato dela (retirada combinada) junto com o endereço
+  { re: /jacintho/i, contatoAtleta: true, comLocal: true, instrucao: 'para combinar a retirada da sua massa' },
   // regra só de uma cidade vem antes da geral
   // Lívia Madi Joias (quarta): o ganhador recebe o passo a passo do voucher (combinado com a Laura em 22/10)
   {
