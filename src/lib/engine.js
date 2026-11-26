@@ -560,9 +560,12 @@ export function brindesDoDia(state, date) {
   for (const [id, g] of Object.entries(state.ganhadores || {})) {
     if (!/\p{L}.*\p{L}/u.test(g.nome || '')) continue; // "nome" que é só ícone (leitura errada do Hub)
     const acao = proximoDiaUtil(state, g.data);
-    const lembrete = proximoDiaUtil(state, addDays(g.data, 3));
+    // almoço/marmita (ex.: Olaia Grill): só dá pra pedir até o almoço do último dia, então o lembrete vai na véspera
+    const almoco = /almo[cç]o|marmita|olaia/i.test(JSON.stringify([g.premio, g.patrocinador, g.premios || []]));
+    const vesperaPrazo = proximoDiaUtil(state, addDays(g.data, PRAZO_BRINDE - 1), -1);
+    const lembrete = almoco ? vesperaPrazo : proximoDiaUtil(state, addDays(g.data, 3));
     // pergunta no último dia do prazo (fim de semana: o dia útil antes), longe do lembrete
-    const conferir = proximoDiaUtil(state, addDays(g.data, PRAZO_BRINDE), -1);
+    const conferir = almoco ? '' : proximoDiaUtil(state, addDays(g.data, PRAZO_BRINDE), -1);
     if (date !== lembrete && date !== conferir && date !== acao) continue;
     const prazo = addDays(g.data, PRAZO_BRINDE);
     const nome = capitaliza((g.nome || '').trim().split(/\s+/)[0]);
@@ -604,7 +607,7 @@ export function brindesDoDia(state, date) {
         telefone: g.telefone || '',
         title: `Lembrete de brinde: ${g.nome}`,
         linha,
-        texto: `Oii ${nome}, tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} até ${diaNome(prazo)}, ${ddmm(prazo)}. Não deixa passar! 🎁${comoRetirar(doDia, g.local) ? `\n\n${comoRetirar(doDia, g.local)}` : ''}`,
+        texto: `Oii ${nome}, tudo bem? 😊 Passando pra lembrar que ${varios ? 'os brindes' : 'o brinde'} que você ganhou no sorteio diário da RANKEN de ${diaNome(g.data)} (${ddmm(g.data)}), ${premio}, ${varios ? 'podem ser solicitados' : 'pode ser solicitado'} ${almoco ? `até o almoço de ${lembrete === prazo ? 'hoje' : addDays(lembrete, 1) === prazo ? 'amanhã' : diaNome(prazo)} (${diaNome(prazo)}, ${ddmm(prazo)})` : `até ${diaNome(prazo)}, ${ddmm(prazo)}`}. Não deixa passar! 🎁${comoRetirar(doDia, g.local) ? `\n\n${comoRetirar(doDia, g.local)}` : ''}`,
       });
     else if (date === conferir)
       out.push({
